@@ -754,7 +754,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             }],
                             service_ids: [{
                                 required: true,
-                                message: '请选择服务标签',
+                                message: '请选择藏品标签',
                                 trigger: 'blur'
                             }]
                         },

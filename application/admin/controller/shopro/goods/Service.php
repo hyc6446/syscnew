@@ -5,7 +5,7 @@ namespace app\admin\controller\shopro\goods;
 use app\common\controller\Backend;
 
 /**
- * 服务标签
+ * 藏品标签
  *
  * @icon fa fa-circle-o
  */
@@ -32,7 +32,7 @@ class Service extends Backend
      */
 
     /**
-     * 获取所有服务标签
+     * 获取所有藏品标签
      */
     public function all()
     {

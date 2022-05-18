@@ -1,4 +1,4 @@
-<?php if (!defined('THINK_PATH')) exit(); /*a:6:{s:61:"D:\code\nft\public/../application/admin\view\index\index.html";i:1642752126;s:51:"D:\code\nft\application\admin\view\common\meta.html";i:1642752126;s:53:"D:\code\nft\application\admin\view\common\header.html";i:1642752126;s:51:"D:\code\nft\application\admin\view\common\menu.html";i:1642752126;s:54:"D:\code\nft\application\admin\view\common\control.html";i:1642752126;s:53:"D:\code\nft\application\admin\view\common\script.html";i:1642752126;}*/ ?>
+<?php if (!defined('THINK_PATH')) exit(); /*a:6:{s:61:"D:\code\nft\public/../application/admin\view\index\index.html";i:1652881997;s:51:"D:\code\nft\application\admin\view\common\meta.html";i:1642752126;s:53:"D:\code\nft\application\admin\view\common\header.html";i:1652883925;s:51:"D:\code\nft\application\admin\view\common\menu.html";i:1642752126;s:54:"D:\code\nft\application\admin\view\common\control.html";i:1642752126;s:53:"D:\code\nft\application\admin\view\common\script.html";i:1642752126;}*/ ?>
 <!DOCTYPE html>
 <html lang="<?php echo $config['language']; ?>">
     <head>
@@ -36,11 +36,11 @@
 
             <!-- 头部区域 -->
             <header id="header" class="main-header">
-                <?php if(preg_match('/\/admin\/|\/admin\.php|\/admin_d75KABNWt\.php/i', url())): ?>
-                <div class="alert alert-danger-light text-center" style="margin-bottom:0;border:none;">
-                    <?php echo __('Security tips'); ?>
-                </div>
-                <?php endif; ?>
+<!--                <?php if(preg_match('/\/admin\/|\/admin\.php|\/admin_d75KABNWt\.php/i', url())): ?>-->
+<!--                <div class="alert alert-danger-light text-center" style="margin-bottom:0;border:none;">-->
+<!--                    <?php echo __('Security tips'); ?>-->
+<!--                </div>-->
+<!--                <?php endif; ?>-->
 
                 <!-- Logo -->
 <a href="javascript:;" class="logo">
@@ -68,9 +68,9 @@
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">
 
-                <li class="hidden-xs">
-                    <a href="/" target="_blank"><i class="fa fa-home" style="font-size:14px;"></i> <?php echo __('Home'); ?></a>
-                </li>
+<!--                <li class="hidden-xs">-->
+<!--                    <a href="/" target="_blank"><i class="fa fa-home" style="font-size:14px;"></i> <?php echo __('Home'); ?></a>-->
+<!--                </li>-->
 
                 <!-- 清除缓存 -->
                 <li class="hidden-xs">
@@ -90,19 +90,19 @@
                 </li>
 
                 <!-- 多语言列表 -->
-                <?php if(\think\Config::get('lang_switch_on')): ?>
-                <li class="hidden-xs">
-                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-language"></i></a>
-                    <ul class="dropdown-menu">
-                        <li class="<?php echo $config['language']=='zh-cn'?'active':''; ?>">
-                            <a href="?ref=addtabs&lang=zh-cn">简体中文</a>
-                        </li>
-                        <li class="<?php echo $config['language']=='en'?'active':''; ?>">
-                            <a href="?ref=addtabs&lang=en">English</a>
-                        </li>
-                    </ul>
-                </li>
-                <?php endif; ?>
+<!--                <?php if(\think\Config::get('lang_switch_on')): ?>-->
+<!--                <li class="hidden-xs">-->
+<!--                    <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-language"></i></a>-->
+<!--                    <ul class="dropdown-menu">-->
+<!--                        <li class="<?php echo $config['language']=='zh-cn'?'active':''; ?>">-->
+<!--                            <a href="?ref=addtabs&lang=zh-cn">简体中文</a>-->
+<!--                        </li>-->
+<!--                        <li class="<?php echo $config['language']=='en'?'active':''; ?>">-->
+<!--                            <a href="?ref=addtabs&lang=en">English</a>-->
+<!--                        </li>-->
+<!--                    </ul>-->
+<!--                </li>-->
+<!--                <?php endif; ?>-->
 
                 <!-- 全屏按钮 -->
                 <li class="hidden-xs">
@@ -149,9 +149,9 @@
                     </ul>
                 </li>
                 <!-- 控制栏切换按钮 -->
-                <li class="hidden-xs">
-                    <a href="javascript:;" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>
-                </li>
+<!--                <li class="hidden-xs">-->
+<!--                    <a href="javascript:;" data-toggle="control-sidebar"><i class="fa fa-gears"></i></a>-->
+<!--                </li>-->
             </ul>
         </div>
     </div>

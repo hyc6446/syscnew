@@ -22,7 +22,7 @@ return [
     'Views'                  => '浏览人数',
     'Sales'                  => '真实销量',
     'Show_sales'             => '虚增销量',
-    'Service_ids'            => '服务标签',
+    'Service_ids'            => '藏品标签',
     'Dispatch_type'          => '发货方式',
     'Dispatch_type express'  => '物流快递',
     'Dispatch_type selfetch' => '自提',

@@ -4027,7 +4027,7 @@ CREATE TABLE IF NOT EXISTS `__PREFIX__shopro_goods` (
   `views` int(11) NOT NULL DEFAULT '0' COMMENT '浏览人数',
   `sales` int(11) NOT NULL DEFAULT '0' COMMENT '销量',
   `show_sales` int(11) NOT NULL COMMENT '显示销量',
-  `service_ids` varchar(255) DEFAULT NULL COMMENT '服务标签',
+  `service_ids` varchar(255) DEFAULT NULL COMMENT '藏品标签',
   `dispatch_type` set('express','selfetch','store','autosend') DEFAULT NULL COMMENT '发货方式:express=物流快递,selfetch=用户自提,store=商家配送,autosend=自动发货',
   `dispatch_ids` varchar(255) DEFAULT NULL COMMENT '发货模板',
   `createtime` int(11) DEFAULT NULL COMMENT '添加时间',
@@ -4064,7 +4064,7 @@ CREATE TABLE IF NOT EXISTS `__PREFIX__shopro_goods_service` (
   `updatetime` int(11) DEFAULT NULL,
   `deletetime` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='服务标签';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='藏品标签';
 
 CREATE TABLE IF NOT EXISTS `__PREFIX__shopro_goods_sku` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

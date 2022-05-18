@@ -4,7 +4,7 @@ return array (
   'name' => 'NFT数字藏品',
   'beian' => '',
   'cdnurl' => '',
-  'version' => '1.0.4',
+  'version' => '1.0.14',
   'timezone' => 'Asia/Shanghai',
   'forbiddenip' => '',
   'languages' => 
@@ -12,7 +12,7 @@ return array (
     'backend' => 'zh-cn',
     'frontend' => 'zh-cn',
   ),
-  'fixedpage' => 'dashboard',
+  'fixedpage' => 'shopro/dashboard',
   'categorytype' => 
   array (
     'default' => 'Default',

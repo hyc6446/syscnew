@@ -32,7 +32,7 @@ class Goods extends Validate
         'original_price.require' => '原价必须填写',
         'dispatch_type.require' => '发货方式必须选择',
         'dispatch_ids.require' => '配送模板必须选择',
-        'service_ids.require' => '服务标签必须选择',
+        'service_ids.require' => '藏品标签必须选择',
     ];
     /**
      * 验证场景

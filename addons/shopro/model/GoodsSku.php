@@ -5,7 +5,7 @@ namespace addons\shopro\model;
 use think\Model;
 
 /**
- * 商品服务标签模型
+ * 商品藏品标签模型
  */
 class GoodsSku extends Model
 {

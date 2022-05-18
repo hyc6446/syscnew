@@ -275,20 +275,22 @@
 <div id="categoryIndex" v-cloak v-loading="isAjax">
     <div class="custom-tabs-header display-flex" style="flex-direction: column;">
         <div class="custom-tabs-items">
-            <el-tabs v-if="tabsData.length>0" v-model="activeName" @tab-click="handleClick">
+            <el-tabs v-if="tabsData.length>0" v-model="activeName">
+<!--                     @tab-click="handleClick"-->
+
                 <el-tab-pane :name="tab.name" v-for="tab in tabsData">
                     <span slot="label">{{tab.name}}
-                        <img v-if="tab.id==activeId" class="tab-icons" src="/assets/addons/shopro/img/category/edit.png"
-                            @click.stop="operation('editCategory',tab.id)">
+<!--                        <img v-if="tab.id==activeId" class="tab-icons" src="/assets/addons/shopro/img/category/edit.png"-->
+<!--                            @click.stop="operation('editCategory',tab.id)">-->
                     </span>
                 </el-tab-pane>
             </el-tabs>
-            <div class="add-category flex-1 display-flex">
-                <div class="display-flex" @click="operation('addCategory')" style="width: 60px;">
-                    <i class="el-icon-plus"></i>
-                    <span style="line-height: 13px;">添加</span>
-                </div>
-            </div>
+<!--            <div class="add-category flex-1 display-flex">-->
+<!--                <div class="display-flex" @click="operation('addCategory')" style="width: 60px;">-->
+<!--                    <i class="el-icon-plus"></i>-->
+<!--                    <span style="line-height: 13px;">添加</span>-->
+<!--                </div>-->
+<!--            </div>-->
         </div>
         <div class="custom-tabs-line"></div>
     </div>
@@ -316,8 +318,8 @@
             <div class="custom-tree-header display-flex">
                 <div class="expanded-width-id display-flex-c">ID</div>
                 <div class="expanded-width-input">分类名称</div>
-                <div class="expanded-width-image display-flex-c">分类图片</div>
-                <div class="expanded-width-sort display-flex-c">描述</div>
+<!--                <div class="expanded-width-image display-flex-c">分类图片</div>-->
+<!--                <div class="expanded-width-sort display-flex-c">描述</div>-->
                 <div class="expanded-width-sort display-flex-c">排序
                     <el-popover placement="bottom" title="" width="190" trigger="hover">
                         <div class="popover-container">
@@ -368,31 +370,31 @@
                             </span>
                         </div>
                     </div>
-                    <div class="expanded-width-image display-flex-c">
-                        <el-popover placement="bottom" width="200" trigger="hover">
-                            <div>
-                                <div v-if="node.level==1">建议尺寸：广告图504X150</div>
-                                <div v-if="node.level!=1">建议尺寸：缩略图150X150</div>
-                            </div>
-                            <!-- <el-button>hover 激活</el-button> -->
-                            <div v-if="!(level==3 && node.level==2)" slot="reference"
-                                class="expanded-image display-flex-c" @click="()=>addImage(data)">
-                                <el-image v-if="data.image" :src="Fast.api.cdnurl(data.image)" fit="contain">
-                                    <div slot="error" class="image-slot">
-                                        <i class="el-icon-picture-outline"></i>
-                                    </div>
-                                </el-image>
-                                <i v-if="!data.image" class="el-icon-plus"></i>
-                            </div>
-                        </el-popover>
+<!--                    <div class="expanded-width-image display-flex-c">-->
+<!--                        <el-popover placement="bottom" width="200" trigger="hover">-->
+<!--                            <div>-->
+<!--                                <div v-if="node.level==1">建议尺寸：广告图504X150</div>-->
+<!--                                <div v-if="node.level!=1">建议尺寸：缩略图150X150</div>-->
+<!--                            </div>-->
+<!--                            &lt;!&ndash; <el-button>hover 激活</el-button> &ndash;&gt;-->
+<!--                            <div v-if="!(level==3 && node.level==2)" slot="reference"-->
+<!--                                class="expanded-image display-flex-c" @click="()=>addImage(data)">-->
+<!--                                <el-image v-if="data.image" :src="Fast.api.cdnurl(data.image)" fit="contain">-->
+<!--                                    <div slot="error" class="image-slot">-->
+<!--                                        <i class="el-icon-picture-outline"></i>-->
+<!--                                    </div>-->
+<!--                                </el-image>-->
+<!--                                <i v-if="!data.image" class="el-icon-plus"></i>-->
+<!--                            </div>-->
+<!--                        </el-popover>-->
 
-                        <!-- :preview-src-list="srcList" -->
-                    </div>
-                    <div class="expanded-width-sort display-flex-c">
-                        <el-input class="expanded-weigh" v-model="data.description" placeholder="描述" size="small">
-                        </el-input>
-                        <!-- {{data.weigh}} -->
-                    </div>
+<!--                        &lt;!&ndash; :preview-src-list="srcList" &ndash;&gt;-->
+<!--                    </div>-->
+<!--                    <div class="expanded-width-sort display-flex-c">-->
+<!--                        <el-input class="expanded-weigh" v-model="data.description" placeholder="描述" size="small">-->
+<!--                        </el-input>-->
+<!--                        &lt;!&ndash; {{data.weigh}} &ndash;&gt;-->
+<!--                    </div>-->
                     <div class="expanded-width-sort display-flex-c">
                         <el-input class="expanded-weigh" type="number" v-model="data.weigh" placeholder="权重"
                             size="small">

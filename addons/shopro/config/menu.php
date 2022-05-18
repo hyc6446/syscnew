@@ -1578,7 +1578,7 @@ return array (
           array (
             'type' => 'file',
             'name' => 'shopro/goods/service',
-            'title' => '服务标签',
+            'title' => '藏品标签',
             'icon' => 'fa fa-tags',
             'url' => '',
             'condition' => '',
