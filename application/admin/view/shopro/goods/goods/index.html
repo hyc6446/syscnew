@@ -215,6 +215,7 @@
         color: #444;
     }
 
+    .edit-text,
     .copy-text {
         margin: 0 14px;
     }
@@ -449,27 +450,27 @@
         </div>
         <el-collapse-transition>
             <div v-if="chooseType==1">
-                <div class="custom-choose-type display-flex">
-                    <div class="custom-choose-type-tip">
-                        活动类别
-                    </div>
-                    <div class="common-btn choose-btn" :class="activityType=='all'?'choose-btn-active':''"
-                        @click="chooseOpt('all')">
-                        全部
-                    </div>
-                    <div class="common-btn choose-btn" :class="activityType=='groupon'?'choose-btn-active':''"
-                        @click="chooseOpt('groupon')">
-                        拼团
-                    </div>
-                    <div class="common-btn choose-btn" :class="activityType=='seckill'?'choose-btn-active':''"
-                        @click="chooseOpt('seckill')">
-                        秒杀
-                    </div>
-                    <div class="common-btn choose-btn" :class="activityType=='score'?'choose-btn-active':''"
-                        @click="chooseOpt('score')">
-                        积分
-                    </div>
-                </div>
+<!--                <div class="custom-choose-type display-flex">-->
+<!--                    <div class="custom-choose-type-tip">-->
+<!--                        活动类别-->
+<!--                    </div>-->
+<!--                    <div class="common-btn choose-btn" :class="activityType=='all'?'choose-btn-active':''"-->
+<!--                        @click="chooseOpt('all')">-->
+<!--                        全部-->
+<!--                    </div>-->
+<!--                    <div class="common-btn choose-btn" :class="activityType=='groupon'?'choose-btn-active':''"-->
+<!--                        @click="chooseOpt('groupon')">-->
+<!--                        拼团-->
+<!--                    </div>-->
+<!--                    <div class="common-btn choose-btn" :class="activityType=='seckill'?'choose-btn-active':''"-->
+<!--                        @click="chooseOpt('seckill')">-->
+<!--                        秒杀-->
+<!--                    </div>-->
+<!--                    <div class="common-btn choose-btn" :class="activityType=='score'?'choose-btn-active':''"-->
+<!--                        @click="chooseOpt('score')">-->
+<!--                        积分-->
+<!--                    </div>-->
+<!--                </div>-->
                 <div class="custom-choose-type display-flex">
                     <div class="custom-choose-type-tip">
                         价格区间
@@ -508,7 +509,7 @@
                 </div>
                 <div class="common-btn  create-goods" @click="goodsOpt('create')">
                     <i class="el-icon-plus"></i>
-                    <span>新增商品</span>
+                    <span>新增藏品</span>
                 </div>
                 <div>
                     <el-radio-group v-model="activeStatus" fill="#7536D0">
@@ -519,10 +520,10 @@
                     </el-radio-group>
                 </div>
             </div>
-            <div class="common-btn  recycle-btn" @click="goodsOpt('recycle')">
-                <i class="fa fa-recycle"></i>
-                回收站
-            </div>
+<!--            <div class="common-btn  recycle-btn" @click="goodsOpt('recycle')">-->
+<!--                <i class="fa fa-recycle"></i>-->
+<!--                回收站-->
+<!--            </div>-->
         </div>
         <div v-loading="tableAjax">
             <el-table ref="multipleTable" :data="goodsData" tooltip-effect="dark" style="width: 100%" border
@@ -546,7 +547,7 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column label="商品" min-width="330">
+                <el-table-column label="藏品" min-width="330">
                     <template slot-scope="scope">
                         <div class="goods-name">
                             <div class="goods-img">
@@ -647,6 +648,13 @@
                         </div>
                     </template>
                 </el-table-column>
+                <el-table-column label="预售时间" min-width="148">
+                    <template slot-scope="scope">
+                        <div>
+                            {{moment(scope.row.sales_time*1000).format("YYYY-MM-DD HH:mm:ss")}}
+                        </div>
+                    </template>
+                </el-table-column>
                 <el-table-column label="更新时间" min-width="148">
                     <template slot-scope="scope">
                         <div>
@@ -697,8 +705,8 @@
                         </el-popover>
                         <span class="edit-text" @click="goodsOpt('edit',scope.row.id)">编辑
                         </span>
-                        <span class="copy-text" @click="goodsOpt('copy',scope.row.id)">复制
-                        </span>
+<!--                        <span class="copy-text" @click="goodsOpt('copy',scope.row.id)">复制-->
+<!--                        </span>-->
                         <span class="del-text" @click="goodsOpt('del',scope.row.id)">删除</span>
                     </template>
                 </el-table-column>

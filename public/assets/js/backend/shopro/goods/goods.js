@@ -99,14 +99,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         let that = this;
                         switch (type) {
                             case 'create':
-                                Fast.api.open('shopro/goods/goods/add', '新增商品', {
+                                Fast.api.open('shopro/goods/goods/add', '新增藏品', {
                                     callback() {
                                         that.getData();
                                     }
                                 })
                                 break;
                             case 'edit':
-                                Fast.api.open('shopro/goods/goods/edit/ids/' + id + "?id=" + id + "&type=edit", '编辑商品', {
+                                Fast.api.open('shopro/goods/goods/edit/ids/' + id + "?id=" + id + "&type=edit", '编辑藏品', {
                                     callback() {
                                         that.getData();
                                     }
@@ -146,7 +146,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     }
                                 }
                                 if (ids) {
-                                    that.$confirm('此操作将删除商品, 是否继续?', '提示', {
+                                    that.$confirm('此操作将删除藏品, 是否继续?', '提示', {
                                         confirmButtonText: '确定',
                                         cancelButtonText: '取消',
                                         type: 'warning'
@@ -168,7 +168,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 }
                                 break;
                             case 'copy':
-                                Fast.api.open('shopro/goods/goods/edit/ids/' + id + "?id=" + id + "&type=copy", '商品详情', {
+                                Fast.api.open('shopro/goods/goods/edit/ids/' + id + "?id=" + id + "&type=copy", '藏品详情', {
                                     callback() {
                                         that.getData();
                                     }
@@ -189,7 +189,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 Fast.api.open('shopro/goods/goods/recyclebin', '查看回收站')
                                 break;
                             default:
-                                Fast.api.open('shopro/goods/goods/edit/ids/' + type.id + "?id=" + type.id + "&type=edit", '编辑商品', {
+                                Fast.api.open('shopro/goods/goods/edit/ids/' + type.id + "?id=" + type.id + "&type=edit", '编辑藏品', {
                                     callback() {
                                         that.getData();
                                     }
@@ -645,6 +645,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             params_arr: [],
                             price: '',
                             service_ids: '',
+                            brand_ids: '',
                             show_sales: '',
                             status: 'up',
                             subtitle: '',
@@ -657,7 +658,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             stock_warning_switch: false,
                             stock_warning: null,
                             sn: '',
-                            autosend_content: ''
+                            autosend_content: '',
+                            note:'',
+                            sales_time:'',
                         },
                         timeData: {
                             images_arr: [],
@@ -665,88 +668,36 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             dispatch_type_arr: [], //类型
                             dispatch_ids_arr: [], //id数组
                             service_ids_arr: [], //服务
+                            brand_ids_arr: [], //发现方
                         },
                         rules: {
                             title: [{
                                 required: true,
-                                message: '请输入商品标题',
-                                trigger: 'blur'
-                            }],
-                            subtitle: [{
-                                required: true,
-                                message: '请输入商品副标题',
+                                message: '请输入藏品标题',
                                 trigger: 'blur'
                             }],
                             status: [{
                                 required: true,
-                                message: '请选择商品状态',
+                                message: '请选择藏品状态',
                                 trigger: 'blur'
                             }],
                             image: [{
                                 required: true,
-                                message: '请上传商品主图',
+                                message: '请上传藏品主图',
                                 trigger: 'change'
                             }],
-                            images: [{
-                                required: true,
-                                message: '请上传商品轮播图',
-                                trigger: 'change'
-                            }],
+
                             category_ids: [{
                                 required: true,
-                                message: '请选择商品分类',
+                                message: '请选择藏品分类',
                                 trigger: 'change'
                             }],
-                            dispatch_type: [{
-                                required: true,
-                                message: '请选择配送方式',
-                                trigger: 'blur'
-                            }],
-                            dispatch_ids: [{
-                                required: true,
-                                message: '请选择运费模板',
-                                trigger: 'blur'
-                            }],
-                            express_ids: [{
-                                required: true,
-                                message: '请选择运费模板',
-                                trigger: 'blur'
-                            }],
-                            store_ids: [{
-                                required: true,
-                                message: '请选择配送模板',
-                                trigger: 'blur'
-                            }],
-                            selfetch_ids: [{
-                                required: true,
-                                message: '请选择自提模板',
-                                trigger: 'blur'
-                            }],
-                            autosend_ids: [{
-                                required: true,
-                                message: '请选择发货模板',
-                                trigger: 'blur'
-                            }],
-                            is_sku: [{
-                                required: true,
-                                message: '请选择商品规格',
-                                trigger: 'blur'
-                            }],
+
                             price: [{
                                 required: true,
                                 message: '请输入价格',
                                 trigger: 'blur'
                             }],
-                            original_price: [{
-                                required: true,
-                                message: '请输入划线价格',
-                                trigger: 'blur'
-                            }],
-                            // weight: [{
-                            //     required: true,
-                            //     message: '请输入重量',
-                            //     trigger: 'blur'
-                            // }],
                             stock: [{
                                 required: true,
                                 message: '请输入库存',
@@ -756,7 +707,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 required: true,
                                 message: '请选择藏品标签',
                                 trigger: 'blur'
-                            }]
+                            }],
+                            brand_ids: [{
+                                required: true,
+                                message: '请选择藏品发行方',
+                                trigger: 'blur'
+                            }],
                         },
                         mustDel: ['express_ids', 'store_ids', 'selfetch_ids', 'autosend_ids'],
                         //选择分类
@@ -801,11 +757,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         },
                         selectedcatArr: [],
                         categoryTab: null,
-                        category_ids_all: {}
+                        category_ids_all: {},
+                        brandOptions:[],
                     }
                 },
                 mounted() {
                     this.getServiceOptions();
+                    this.getBrandOptions();
                     this.getDispatchType();
                     if (this.editId) {
                         this.goodsDetail = JSON.parse(JSON.stringify(this.goodsDetailInit));
@@ -832,6 +790,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         let that = this;
                         if (type == 'service') {
                             Fast.api.open("shopro/goods/service/add", "新建");
+                        }else if(type == 'brand'){
+                            Fast.api.open("shopro/goods/brand/add", "新建");
                         } else {
                             Fast.api.open("shopro/dispatch/" + type + "/add", "新建", {
                                 callback(data) {
@@ -912,6 +872,10 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     that.goodsDetail.selfetch_ids = res.data.detail.dispatch_group_ids_arr.selfetch ? res.data.detail.dispatch_group_ids_arr.selfetch : '';
 
                                     that.goodsDetail.autosend_ids = res.data.detail.dispatch_group_ids_arr.autosend ? res.data.detail.dispatch_group_ids_arr.autosend : '';
+                                }
+                                that.goodsDetail.sales_time = '';
+                                if (key=='sales_time' && res.data.detail['sales_time']>0){
+                                    that.goodsDetail.sales_time = res.data.detail['sales_time_text'];
                                 }
                             }
                             for (key in that.timeData) {
@@ -1178,6 +1142,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     serviceChange(val) {
                         this.goodsDetail.service_ids = val.join(',');
                     },
+                    brandChange(val) {
+                        this.goodsDetail.brand_ids = val.join(',');
+                    },
                     dispatchTypeChange(val) {
                         this.goodsDetail.dispatch_type = val.join(',');
                     },
@@ -1188,14 +1155,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     getDispatchTemplateData(type, fristEdit) {
                         let that = this;
                         if (this.goodsDetail.dispatch_type.indexOf(type) == -1 || fristEdit == 'edit' || fristEdit == 'virtual' || fristEdit == 'create') {
-                            Fast.api.ajax({
-                                url: 'shopro/dispatch/dispatch/select/type/' + type,
-                                loading: false,
-                                type: 'GET',
-                            }, function (ret, res) {
-                                that.$set(that.dispatchOptions, type, res.data)
-                                return false;
-                            })
+                            // Fast.api.ajax({
+                            //     url: 'shopro/dispatch/dispatch/select/type/' + type,
+                            //     loading: false,
+                            //     type: 'GET',
+                            // }, function (ret, res) {
+                            //     that.$set(that.dispatchOptions, type, res.data)
+                            //     return false;
+                            // })
                         }
                     },
 
@@ -1223,6 +1190,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             loading: false,
                         }, function (ret, res) {
                             that.serviceOptions = res.data
+                            return false;
+                        })
+                    },
+                    getBrandOptions() {
+                        let that = this;
+                        Fast.api.ajax({
+                            url: 'shopro/goods/brand/all',
+                            loading: false,
+                        }, function (ret, res) {
+                            that.brandOptions = res.data
                             return false;
                         })
                     },

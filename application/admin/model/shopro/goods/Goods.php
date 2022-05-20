@@ -36,7 +36,8 @@ class Goods extends Model
         'service_ids_arr',
         'dispatch_type_arr',
         'dispatch_ids_arr',
-        'images_arr'
+        'images_arr',
+        'sales_time_text'
     ];
     
     
@@ -185,5 +186,16 @@ class Goods extends Model
         return $this->hasMany(\app\admin\model\shopro\app\ScoreSkuPrice::class, 'goods_id', 'id')
         ->where('status', 'up')->order('id', 'asc');
     }
+
+    protected function setSalestimeAttr($value)
+    {
+        return $value === '' ? null : ($value && !is_numeric($value) ? strtotime($value) : $value);
+    }
+    public function getSalestimeTextAttr($value, $data)
+    {
+        $value = $value ? $value : (isset($data['sales_time']) ? $data['sales_time'] : '');
+        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
+    }
+
 
 }

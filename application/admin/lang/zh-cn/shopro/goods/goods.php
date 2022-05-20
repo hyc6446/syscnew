@@ -1,18 +1,18 @@
 <?php
 
 return [
-    'Type'                   => '商品类型',
-    'Type normal'            => '实体商品',
-    'Type virtual'           => '虚拟商品',
+    'Type'                   => '藏品类型',
+    'Type normal'            => '实体藏品',
+    'Type virtual'           => '虚拟藏品',
     'Title'                  => '标题',
     'Subtitle'               => '副标题',
-    'Status'                 => '商品状态',
+    'Status'                 => '藏品状态',
     'Status up'              => '上架',
     'Status hidden'          => '隐藏',
     'Status down'            => '下架',
     'Weigh'                  => '排序(从大到小)',
     'Category_ids'           => '所属分类',
-    'Image'                  => '商品主图',
+    'Image'                  => '藏品主图',
     'Images'                 => '轮播图',
     'Params'                 => '参数详情',
     'Content'                => '图文详情',

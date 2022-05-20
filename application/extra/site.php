@@ -4,7 +4,7 @@ return array (
   'name' => 'NFT数字藏品',
   'beian' => '',
   'cdnurl' => '',
-  'version' => '1.0.14',
+  'version' => '1.0.18',
   'timezone' => 'Asia/Shanghai',
   'forbiddenip' => '',
   'languages' => 

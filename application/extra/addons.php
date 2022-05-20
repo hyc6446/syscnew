@@ -9,6 +9,9 @@ return [
         'app_init' => [
             'shopro',
         ],
+        'config_init' => [
+            'ueditor',
+        ],
     ],
     'route' => [],
     'priority' => [],
