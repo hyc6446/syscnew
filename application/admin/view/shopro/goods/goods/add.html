@@ -676,6 +676,19 @@
 
                 </div>
                 <div v-if="stepActive==2">
+                    <el-form-item label="标志：">
+                        <div class="display-flex">
+                            <div class="flex-1">
+                                <el-select v-model="timeData.tag_arr" placeholder="请选择" multiple size="small"
+                                           @change="tagChange">
+                                    <el-option v-for="item in tagOptions" :key="item.value" :label="item.name"
+                                               :value="item.value">
+                                    </el-option>
+                                </el-select>
+                            </div>
+
+                        </div>
+                    </el-form-item>
                     <el-form-item label="藏品标签：">
                         <div class="display-flex">
                             <div class="flex-1">

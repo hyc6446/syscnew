@@ -34,10 +34,12 @@ class Goods extends Model
         'activity_type_text_arr',
         'app_type_text',
         'service_ids_arr',
+        'brand_ids_arr',
         'dispatch_type_arr',
         'dispatch_ids_arr',
         'images_arr',
-        'sales_time_text'
+        'sales_time_text',
+        'tag_arr',
     ];
     
     
@@ -138,7 +140,14 @@ class Goods extends Model
     {
         return (isset($data['service_ids']) && $data['service_ids']) ? array_values(array_filter(array_map("intval", explode(',', $data['service_ids'])))) : [];
     }
-
+    public function getBrandIdsArrAttr($value, $data)
+    {
+        return (isset($data['brand_ids']) && $data['brand_ids']) ? array_values(array_filter(array_map("intval", explode(',', $data['brand_ids'])))) : [];
+    }
+    public function getTagArrAttr($value, $data)
+    {
+        return (isset($data['tag']) && $data['tag']) ? explode(',', $data['tag']) : [];
+    }
     public function getDispatchIdsArrAttr($value, $data)
     {
         return (isset($data['dispatch_ids']) && $data['dispatch_ids']) ? array_values(array_filter(array_map("intval", explode(',', $data['dispatch_ids'])))) : [];

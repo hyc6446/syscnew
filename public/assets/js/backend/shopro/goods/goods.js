@@ -661,6 +661,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             autosend_content: '',
                             note:'',
                             sales_time:'',
+                            tag:'',
                         },
                         timeData: {
                             images_arr: [],
@@ -668,7 +669,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             dispatch_type_arr: [], //类型
                             dispatch_ids_arr: [], //id数组
                             service_ids_arr: [], //服务
-                            brand_ids_arr: [], //发现方
+                            brand_ids_arr: [],
+                            tag_arr: [],
                         },
                         rules: {
                             title: [{
@@ -759,6 +761,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         categoryTab: null,
                         category_ids_all: {},
                         brandOptions:[],
+                        tagOptions:[
+                            {name:'热门',value:'hot'}
+                        ],
                     }
                 },
                 mounted() {
@@ -1142,6 +1147,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     serviceChange(val) {
                         this.goodsDetail.service_ids = val.join(',');
                     },
+                    tagChange(val) {
+                        this.goodsDetail.tag = val.join(',');
+                    },
                     brandChange(val) {
                         this.goodsDetail.brand_ids = val.join(',');
                     },
@@ -1193,6 +1201,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             return false;
                         })
                     },
+
                     getBrandOptions() {
                         let that = this;
                         Fast.api.ajax({
