@@ -30,13 +30,9 @@ class User extends Base
     public function index()
     {
         $auth = \app\common\library\Auth::instance();
-        $auth->setAllowFields(['id', 'username', 'nickname', 'mobile', 'avatar', 'score', 'birthday', 'money', 'group', 'group_id', 'verification', 'child_user_count', 'child_user_count_1', 'child_user_count_2', 'total_consume']);
+        $auth->setAllowFields(['id', 'nickname', 'mobile', 'avatar', 'money',  'total_consume','referral_code']);
         $data = $auth->getUserinfo();
         $data['avatar'] = $data['avatar'] ? cdnurl($data['avatar'], true) : '';
-        if (!isset($data['group'])) {
-            $data['group'] = \addons\shopro\model\UserGroup::get($data['group_id']);
-        }
-
         $this->success('用户信息', $data);
     }
 
@@ -116,10 +112,33 @@ class User extends Base
             }
             //如果已经有账号则直接登录
             $ret = $this->auth->direct($user->id);
+        }else{
+            $extend = $this->getUserDefaultFields();
+            $invite = $this->auth->create_invite_code();
+            $ret = $this->auth->register($mobile, $invite, '', $mobile, $extend);
+            if ($ret) {
+                $user = $this->auth->getUser();
+                $user->nickname = $user->nickname . $user->referral_code;
+                $verification = $user->verification;
+                $verification->mobile = 1;
+                $user->verification = $verification;
+                $user->save();
+                $userInfo = $this->auth->getUserinfo();
+                $userInfo['token'] = $this->auth->getToken();
+                $userInfo['avatar'] = $userInfo['avatar'] ? cdnurl($userInfo['avatar'], true) : '';
+                $data = ['userinfo' => $userInfo];
+
+                $this->success(__('登陆成功'), $data);
+            } else {
+                $this->error($this->auth->getError());
+            }
         }
         if ($ret) {
             Sms::flush($mobile, 'mobilelogin');
-            $data = ['token' => $this->auth->getToken()];
+            $userInfo = $this->auth->getUserinfo();
+            $userInfo['token'] = $this->auth->getToken();
+            $userInfo['avatar'] = $userInfo['avatar'] ? cdnurl($userInfo['avatar'], true) : '';
+            $data = ['userinfo' => $userInfo];
             $this->success(__('Logged in successful'), $data);
         } else {
             $this->error($this->auth->getError());
@@ -264,17 +283,17 @@ class User extends Base
         if (!$newpassword || !$oldpassword) {
             $this->error(__('Invalid parameters'));
         }
-        if (strlen($newpassword) < 6 || strlen($newpassword) > 16) {
-            $this->error(__('密码长度 6-16 位')); //TODO:密码规则校验
+        if (!Validate::regex($newpassword, "^\d{6}$")) {
+            $this->error(__('密码必须为6位数字'));
         }
 
         $ret = $this->auth->changepwd($newpassword, $oldpassword);
 
         if ($ret) {
-            $this->auth->direct($user->id);
-            $data = ['userinfo' => $this->auth->getUserinfo()];
+//            $this->auth->direct($user->id);
+//            $data = ['userinfo' => $this->auth->getUserinfo()];
 
-            $this->success(__('Change password successful'), $data);
+            $this->success(__('Change password successful'));
         } else {
             $this->error($this->auth->getError());
         }
@@ -679,10 +698,10 @@ class User extends Base
     public function profile()
     {
         $user = $this->auth->getUser();
-        $username = $this->request->post('username');
+        $username = $this->request->post('username','');
         $nickname = $this->request->post('nickname');
         $bio = $this->request->post('bio', '');
-        $birthday = $this->request->post('birthday');
+        $birthday = $this->request->post('birthday','');
         $avatar = $this->request->post('avatar', '', 'trim,strip_tags,htmlspecialchars');
         if ($username) {
             $exists = \app\common\model\User::where('username', $username)->where('id', '<>', $this->auth->id)->find();
@@ -691,14 +710,14 @@ class User extends Base
             }
             $user->username = $username;
         }
-        $user->nickname = $nickname;
-        $user->bio = $bio;
-        $user->birthday = $birthday;
+        if ($nickname) $user->nickname = $nickname;
+//        $user->bio = $bio;
+//        $user->birthday = $birthday;
         if (!empty($avatar)) {
             $user->avatar = $avatar;
         }
         $user->save();
-        $this->success();
+        $this->success('修改成功');
     }
 
     private function getUserDefaultFields()

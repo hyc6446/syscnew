@@ -512,3 +512,31 @@ EOT;
         return $icon;
     }
 }
+
+/**
+ * 判断密码的简易程度  不能是连续的密码（如123465,456789等）
+ * 返回true 为6位连续数字
+ */
+function payPassIsContinuity($pass) {
+    //是纯数字  则判断是否连续
+    if (is_numeric($pass)) {
+        if (strlen($pass) != 6) {
+            return true;
+        }
+        static $num = 1;
+        for ($i = 0; $i < strlen($pass); $i++) {
+            if (substr($pass, $i, 1)+1 == substr($pass, $i+1, 1) ) {
+                $num++;
+            }
+        }
+
+        if ($num == strlen($pass)) {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+

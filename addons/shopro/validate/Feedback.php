@@ -38,7 +38,7 @@ class Feedback extends Validate
      * 验证场景
      */
     protected $scene = [
-        'add' => ['type', 'content', 'images', 'phone']
+        'add' => ['type', 'content']
     ];
 
 }

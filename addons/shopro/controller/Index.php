@@ -3,6 +3,7 @@
 namespace addons\shopro\controller;
 
 use addons\shopro\model\Config;
+use addons\shopro\model\News;
 use think\Db;
 use think\Config as FaConfig;
 use fast\Random;
@@ -11,6 +12,7 @@ use addons\shopro\library\commission\Agent as AgentLibrary;
 use addons\shopro\library\commission\Commission as CommissionLibrary;
 use addons\shopro\library\commission\Reward as RewardLibrary;
 use addons\shopro\model\Order;
+use think\Model;
 
 class Index extends Base
 {
@@ -123,6 +125,20 @@ class Index extends Base
         $id = $this->request->get('id');
         $data = \addons\shopro\model\Richtext::get(['id' => $id]);
         $this->success($data->title, $data);
+    }
+
+    public function news()
+    {
+        $page = $this->request->get('page',1);
+        $limit = $this->request->get('limit',20);
+        $data = (new News())->field('title,id')->paginate($limit,false,['page'=>$page]);
+        $this->success('',$data);
+    }
+    public function newsinfo()
+    {
+        $id = $this->request->get('id');
+        $data =\addons\shopro\model\News::get(['id' => $id]);
+        $this->success('', $data);
     }
 
     // 同步前端所有页面链接
@@ -289,7 +305,7 @@ class Index extends Base
         $attachment->data(array_filter($params));
         $attachment->save();
         \think\Hook::listen("upload_after", $attachment);
-        $this->success(__('Upload successful'), $resultData);
+        $this->success(__('上传成功'), $resultData);
     }
 
 

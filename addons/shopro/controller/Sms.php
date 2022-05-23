@@ -23,39 +23,44 @@ class Sms extends Base
     public function send()
     {
         $mobile = $this->request->post("mobile");
-        $event = $this->request->post("event");
-        $event = $event ? $event : 'register';
+        $event = $this->request->post("event",'mobilelogin');
+//        $event = $event ? $event : 'register';
 
         if (!$mobile || !\think\Validate::regex($mobile, "^1\d{10}$")) {
             $this->error(__('手机号不正确'));
         }
         $last = Smslib::get($mobile, $event);
-        if ($last && time() - $last['createtime'] < 60) {
-            $this->error(__('发送频繁'));
-        }
-        $ipSendTotal = \app\common\model\Sms::where(['ip' => $this->request->ip()])->whereTime('createtime', '-1 hours')->count();
-        if ($ipSendTotal >= 5) {
-            $this->error(__('发送频繁'));
-        }
-        if ($event) {
-            $userinfo = User::getByMobile($mobile);
-            if ($event == 'register' && $userinfo) {
-                //已被注册
-                $this->error(__('已被注册'));
-            } elseif (in_array($event, ['changemobile']) && $userinfo) {
-                //被占用
-                $this->error(__('已被占用'));
-            } elseif (in_array($event, ['changepwd', 'resetpwd', 'mobilelogin']) && !$userinfo) {
-                //未注册
-                $this->error(__('未注册'));
-            }
-        }
+//        if ($last && time() - $last['createtime'] < 60) {
+//            $this->error(__('发送频繁'));
+//        }
+//        $ipSendTotal = \app\common\model\Sms::where(['ip' => $this->request->ip()])->whereTime('createtime', '-1 hours')->count();
+//        if ($ipSendTotal >= 5) {
+//            $this->error(__('发送频繁'));
+//        }
+
+
+//        if ($event) {
+//            $userinfo = User::getByMobile($mobile);
+//            if ($event == 'register' && $userinfo) {
+//                //已被注册
+//                $this->error(__('已被注册'));
+//            } elseif (in_array($event, ['changemobile']) && $userinfo) {
+//                //被占用
+//                $this->error(__('已被占用'));
+//            } elseif (in_array($event, ['changepwd', 'resetpwd']) && !$userinfo) {
+//                //未注册
+//                $this->error(__('未注册'));
+//            }
+//        }
+
+
+
         if (!Hook::get('sms_send')) {
             $this->error(__('请在后台插件管理安装短信验证插件'));
         }
         $ret = Smslib::send($mobile, null, $event);
         if ($ret) {
-            $this->success(__('发送成功'));
+            $this->success(__('发送成功'),$ret);
         } else {
             $this->error(__('发送失败，请检查短信配置是否正确'));
         }

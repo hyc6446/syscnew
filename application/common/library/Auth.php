@@ -26,7 +26,7 @@ class Auth
     //默认配置
     protected $config = [];
     protected $options = [];
-    protected $allowFields = ['id', 'username', 'nickname', 'mobile', 'avatar', 'score'];
+    protected $allowFields = ['id', 'nickname', 'mobile', 'avatar','referral_code'];
 
     public function __construct($options = [])
     {
@@ -121,6 +121,17 @@ class Auth
         }
     }
 
+    public function create_invite_code(){
+        $d = substr(base_convert(md5(uniqid(md5(microtime(true)),true)), 16, 10), 0, 6);
+        $w['referral_code'] = array('eq', $d);
+        $user_info = Db::name('user')->field("id")->where($w)->find();
+        if ($user_info) {
+            $this->create_invite_code();
+        }
+
+        return $d;
+    }
+
     /**
      * 注册用户
      *
@@ -134,18 +145,18 @@ class Auth
     public function register($username, $password, $email = '', $mobile = '', $extend = [])
     {
         // 检测用户名、昵称、邮箱、手机号是否存在
-        if (User::getByUsername($username)) {
-            $this->setError('Username already exist');
-            return false;
-        }
-        if (User::getByNickname($username)) {
-            $this->setError('Nickname already exist');
-            return false;
-        }
-        if ($email && User::getByEmail($email)) {
-            $this->setError('Email already exist');
-            return false;
-        }
+//        if (User::getByUsername($username)) {
+//            $this->setError('Username already exist');
+//            return false;
+//        }
+//        if (User::getByNickname($username)) {
+//            $this->setError('Nickname already exist');
+//            return false;
+//        }
+//        if ($email && User::getByEmail($email)) {
+//            $this->setError('Email already exist');
+//            return false;
+//        }
         if ($mobile && User::getByMobile($mobile)) {
             $this->setError('Mobile already exist');
             return false;
@@ -171,7 +182,8 @@ class Auth
             'logintime' => $time,
             'loginip'   => $ip,
             'prevtime'  => $time,
-            'status'    => 'normal'
+            'status'    => 'normal',
+            'referral_code'=>$password
         ]);
         $params['password'] = $this->getEncryptPassword($password, $params['salt']);
         $params = array_merge($params, $extend);
@@ -271,7 +283,7 @@ class Auth
                 $newpassword = $this->getEncryptPassword($newpassword, $salt);
                 $this->_user->save(['loginfailure' => 0, 'password' => $newpassword, 'salt' => $salt]);
 
-                Token::delete($this->_token);
+//                Token::delete($this->_token);
                 //修改密码成功的事件
                 Hook::listen("user_changepwd_successed", $this->_user);
                 Db::commit();

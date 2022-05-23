@@ -19,6 +19,10 @@ class Feedback extends Base
     public function add() {
         $params = $this->request->post();
 
+        $params['type'] = 'feedback';
+        $params['images'] = '';
+        $params['phone'] = '';
+        // 表单验证
         // 表单验证
         $this->shoproValidate($params, get_class(), 'add');
 
