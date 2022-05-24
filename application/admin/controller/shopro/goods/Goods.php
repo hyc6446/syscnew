@@ -198,6 +198,7 @@ class Goods extends Backend
             $result['skuList'] = [];
             $result['skuPrice'] = [];
         }
+        $row['sales_time'] *= 1000;
         $result['detail'] = $row;
 
         return $this->success('获取成功', null, $result);
@@ -230,6 +231,7 @@ class Goods extends Backend
             $sku = $this->request->post("sku/a");
 
             if ($params) {
+                $params['sales_time'] = $params['sales_time']/1000;
                 $this->excludeFields = ['is_sku', 'type'];
                 $params = $this->preExcludeFields($params);
                 $result = false;
@@ -258,6 +260,7 @@ class Goods extends Backend
             }
             $this->error(__('Parameter %s can not be empty', ''));
         }
+        $row['sales_time'] *= 1000;
         $this->view->assign("row", $row);
         $skuList = \app\admin\model\shopro\goods\Sku::all(['pid' => 0, 'goods_id' => $ids]);
         if ($skuList) {

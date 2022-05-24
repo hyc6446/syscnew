@@ -633,10 +633,10 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="stock" label="库存" min-width="100">
+                <el-table-column prop="stock" label="发行数量" min-width="100">
                     <template slot="header" slot-scope="scope">
                         <div class="display-flex">
-                            <div>库存</div>
+                            <div>发行数量</div>
                             <div class="display-flex sort-order">
                                 <i class="el-icon-sort-up icon-top"
                                     :style="{color:(sort=='stock' && order=='asc')?'#7438d5':''}"
@@ -650,8 +650,8 @@
                 </el-table-column>
                 <el-table-column label="预售时间" min-width="148">
                     <template slot-scope="scope">
-                        <div>
-                            {{moment(scope.row.sales_time*1000).format("YYYY-MM-DD HH:mm:ss")}}
+                        <div v-if="scope.row.sales_time_text">
+                            {{scope.row.sales_time_text}}
                         </div>
                     </template>
                 </el-table-column>

@@ -702,7 +702,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             }],
                             stock: [{
                                 required: true,
-                                message: '请输入库存',
+                                message: '请输入发行数量',
                                 trigger: 'blur'
                             }],
                             service_ids: [{
@@ -878,10 +878,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
 
                                     that.goodsDetail.autosend_ids = res.data.detail.dispatch_group_ids_arr.autosend ? res.data.detail.dispatch_group_ids_arr.autosend : '';
                                 }
-                                that.goodsDetail.sales_time = '';
-                                if (key=='sales_time' && res.data.detail['sales_time']>0){
-                                    that.goodsDetail.sales_time = res.data.detail['sales_time_text'];
-                                }
                             }
                             for (key in that.timeData) {
                                 if (res.data.detail[key]) {
@@ -898,7 +894,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
 
                             Controller.api.bindevent();
                             $('#c-content').html(res.data.detail.content)
-                            // 库存预警
+                            // 发行数量预警
                             that.goodsDetail.stock_warning = res.data.detail.stock_warning
                             if (that.goodsDetail.stock_warning || that.goodsDetail.stock_warning == 0) {
                                 that.goodsDetail.stock_warning_switch = true
@@ -1029,7 +1025,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 let submitSkuList = []
                                 let submitSkuPrice = []
                                 if (arrForm.is_sku == 0) {
-                                    // 库存预警
+                                    // 发行数量预警
                                     if (!arrForm.stock_warning_switch) {
                                         arrForm.stock_warning = null;
                                     }
@@ -1335,7 +1331,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         }
 
                     },
-                    //组合新的规格价格库存重量编码图片
+                    //组合新的规格价格发行数量重量编码图片
                     buildSkuPriceTable() {
                         let arr = [];
                         //遍历sku子规格生成新数组，然后执行递归笛卡尔积

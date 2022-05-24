@@ -196,10 +196,7 @@ class Goods extends Model
         ->where('status', 'up')->order('id', 'asc');
     }
 
-    protected function setSalestimeAttr($value)
-    {
-        return $value === '' ? null : ($value && !is_numeric($value) ? strtotime($value) : $value);
-    }
+
     public function getSalestimeTextAttr($value, $data)
     {
         $value = $value ? $value : (isset($data['sales_time']) ? $data['sales_time'] : '');

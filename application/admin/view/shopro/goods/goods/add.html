@@ -619,7 +619,7 @@
                     </el-form-item>
 
                     <div v-if="goodsDetail.is_sku==0">
-                        <el-form-item label="藏品库存：" prop="stock">
+                        <el-form-item label="藏品发行数量：" prop="stock">
                             <div class="display-flex">
                                 <el-input v-positive-integer type="number" min="0" v-model="goodsDetail.stock"
                                           style="width:300px" size="small">
@@ -654,6 +654,7 @@
                         <el-date-picker
                                 v-model="goodsDetail.sales_time"
                                 type="datetime"
+                                value-format="timestamp"
                                 placeholder="选择预售时间">
                         </el-date-picker>
                             <div class="msg-tip">若选择预售则自动划入发售日历，时间一到自动上架销售</div>
