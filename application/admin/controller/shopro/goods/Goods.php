@@ -91,13 +91,35 @@ class Goods extends Backend
                 ->limit($offset, $limit)
                 ->select();
 
+            // 关联活动的商品
+            $goodsIds = array_column($list, 'children');
+            $goodsIdsArr = [];
+            foreach($goodsIds as $ids) {
+                $idsArr = explode(',', $ids);
+                $goodsIdsArr = array_merge($goodsIdsArr, $idsArr);
+            }
+            $goodsIdsArr = array_values(array_filter(array_unique($goodsIdsArr)));
+            if ($goodsIdsArr) {
+                // 查询商品
+                $goods = $this->model->where('id', 'in', $goodsIdsArr)->field('id,image,title')->select();
+                $goods = array_column($goods, null, 'id');
+            }
+
             // 恢复 sql mode
             recoverStrict($oldModes);
-
-            foreach ($list as $row) {
-                $row->visible(['id', 'type', 'activity_id', 'activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
+            foreach ($list  as $row) {
+                $row->visible(['id', 'type', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
             }
             $list = collection($list)->toArray();
+            foreach ($list  as $key => $row){
+                $list[$key]['children_list'] = [];
+                $idsArr = explode(',', $row['children']);
+                foreach ($idsArr as $id) {
+                    if (isset($goods[$id])) {
+                        $list[$key]['children_list'][] = $goods[$id];
+                    }
+                }
+            }
             $result = array("total" => $total, "rows" => $list);
 
             if ($this->request->get("page_type") == 'select') {
@@ -199,6 +221,15 @@ class Goods extends Backend
             $result['skuPrice'] = [];
         }
         $row['sales_time'] *= 1000;
+
+        $goods_ids_array = array_filter(explode(',', $row['children']));
+        $goodsList = [];
+        foreach ($goods_ids_array as $k => $g) {
+            $goods[$k] = $this->model->field('id,title,image')->where('id', $g)->find();
+            $goods[$k]['opt'] = 1;
+            $goodsList[] = $goods[$k];
+        }
+        $row['goods_list'] = $goodsList;
         $result['detail'] = $row;
 
         return $this->success('获取成功', null, $result);
@@ -261,6 +292,15 @@ class Goods extends Backend
             $this->error(__('Parameter %s can not be empty', ''));
         }
         $row['sales_time'] *= 1000;
+
+        $goods_ids_array = array_filter(explode(',', $row->children));
+        $goodsList = [];
+        foreach ($goods_ids_array as $k => $g) {
+            $goods[$k] = $this->model->field('id,title,image')->where('id', $g)->find();
+            $goods[$k]['opt'] = 1;
+            $goodsList[] = $goods[$k];
+        }
+        $row->goods_list = $goodsList;
         $this->view->assign("row", $row);
         $skuList = \app\admin\model\shopro\goods\Sku::all(['pid' => 0, 'goods_id' => $ids]);
         if ($skuList) {
@@ -562,6 +602,8 @@ class Goods extends Backend
         $min_price = $this->request->get("min_price", "");
         $max_price = $this->request->get("max_price", "");
         $category_id = $this->request->get('category_id', 0);
+        $type = $this->request->get('type', '');
+        $self = $this->request->get('self', '');
 
         $name = $this->model->getQuery()->getTable();
         $tableName = $name . '.';
@@ -581,6 +623,7 @@ class Goods extends Backend
         }
 
         $goods_ids = [];
+
         // 活动
         if ($activity_type != 'all') {
             // 同一请求，会组装两次请求条件,缓存 10 秒
@@ -619,7 +662,14 @@ class Goods extends Backend
         if ($status != 'all') {
             $goods = $goods->where('status', 'in', $status);
         }
-
+        //合成品不能选择自己
+        if ($self){
+            $goods = $goods->where($tableName.'id','<>', $self);
+        }
+        //合成品选择商品只能从费合成品选
+        if ($type=='hecheng'){
+            $goods = $goods->where('is_syn', 0);
+        }
         if(isset($category_id) && $category_id != 0) {
             $category_ids = [];
                 // 查询分类所有子分类,包括自己

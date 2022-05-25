@@ -424,7 +424,13 @@
     .el-table th {
         padding: 10px 0 9px;
     }
-
+    .activity-table-goods-image {
+        width: 36px;
+        height: 36px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid #e6e6e6;
+    }
     [v-cloak] {
         display: none
     }
@@ -547,7 +553,7 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column label="藏品" min-width="330">
+                <el-table-column label="藏品" min-width="200">
                     <template slot-scope="scope">
                         <div class="goods-name">
                             <div class="goods-img">
@@ -561,31 +567,41 @@
                                 <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;">
                                     {{scope.row.title}}
                                 </div>
-                                <div class="display-flex" style="margin-top: 13px;">
-                                    <span v-if="scope.row.is_sku==1"
-                                        style="color: #444;margin-right: 12px;line-height: 20px;">
-                                        {{scope.row.is_sku==1?'多规格':''}}
-                                    </span>
-                                    <div v-if="scope.row.activity_type || scope.row.app_type"
-                                        class="activity-type display-flex">
-                                        <div v-if="scope.row.app_type" class="activity-tags full-activity-tag">
-                                            {{scope.row.app_type_text}}
-                                        </div>
-                                        <template v-for="(b,a) in scope.row.activity_type_text_arr">
-                                            <template v-if="a=='groupon'">
-                                                <div class="activity-tags groupon-activity-tag">
-                                                    拼团
-                                                </div>
-                                            </template>
-                                            <div v-if="a=='seckill'" class="activity-tags seckill-activity-tag">{{b}}
-                                            </div>
-                                            <div v-if="a=='full_reduce' || a=='full_discount' || a=='free_shipping'"
-                                                class="activity-tags full-activity-tag">{{b}}</div>
-                                        </template>
-                                    </div>
-                                </div>
                             </div>
                         </div>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="goods_ids" label="合成品" min-width="200">
+                    <template slot-scope="scope">
+                        <div v-if="scope.row.children_list?.length>0" class="display-flex shopro-container-scrollbar" style="overflow: auto;">
+                            <div v-for="(ite,gindex) in scope.row.children_list">
+                                <el-popover placement="bottom" trigger="hover" width="240">
+                                    <div class="popover-container">
+                                        <div class="display-flex" style="align-items: flex-start;">
+                                            <div class="display-flex">
+                                                <div class="popover-tip">藏品ID</div>：
+                                            </div>
+                                            <div>{{ite.id}}</div>
+                                        </div>
+                                        <div class="display-flex" style="align-items: flex-start;">
+                                            <div class="display-flex" style="flex-shrink: 0;">
+                                                <div class="popover-tip">藏品标题</div>：
+                                            </div>
+                                            <div>{{ite.title}}</div>
+                                        </div>
+                                    </div>
+                                    <div class="activity-table-goods-image" slot="reference"
+                                         :style="{marginRight:gindex!=scope.row.children_list?.length-1?'6px':''}">
+                                        <el-image :src="Fast.api.cdnurl(ite.image)" fit="contain">
+                                            <div slot="error" class="image-slot">
+                                                <i class="el-icon-picture-outline"></i>
+                                            </div>
+                                        </el-image>
+                                    </div>
+                                </el-popover>
+                            </div>
+                        </div>
+                        <div v-else style="line-height: 36px;">无需合成</div>
                     </template>
                 </el-table-column>
                 <el-table-column prop="price" label="价格" min-width="90">

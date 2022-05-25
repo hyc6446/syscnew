@@ -100,6 +100,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         switch (type) {
                             case 'create':
                                 Fast.api.open('shopro/goods/goods/add', '新增藏品', {
+                                    area:['50%','80%'],
                                     callback() {
                                         that.getData();
                                     }
@@ -389,12 +390,20 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
 
                         multiple: new URLSearchParams(location.search).get('multiple'),
                         category_id: null,
-                        selectedIds: []
+                        selectedIds: [],
+                        self:0,
+                        type:'',
                     }
                 },
                 mounted() {
                     if (new URLSearchParams(location.search).get('ids')) {
                         this.selectedIds = new URLSearchParams(location.search).get('ids').split(',')
+                    }
+                    if (new URLSearchParams(location.search).get('id')) {
+                        this.self = new URLSearchParams(location.search).get('id')
+                    }
+                    if (new URLSearchParams(location.search).get('type')) {
+                        this.type = new URLSearchParams(location.search).get('type')
                     }
                     this.getList();
                     this.categoryData = Config.category
@@ -411,7 +420,9 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             data: {
                                 limit: 10,
                                 offset: that.offset,
-                                search: that.searchWhere
+                                search: that.searchWhere,
+                                self:that.self,
+                                type:that.type,
                             },
                             type: 'GET'
                         }, function (ret, res) {
@@ -662,6 +673,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             note:'',
                             sales_time:'',
                             tag:'',
+                            is_syn:0,
+                            can_sales:0,
+                            syn_end_time:'',
+                            goods_list:[],
+                            children:'',
                         },
                         timeData: {
                             images_arr: [],
@@ -673,48 +689,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             tag_arr: [],
                         },
                         rules: {
-                            title: [{
-                                required: true,
-                                message: '请输入藏品标题',
-                                trigger: 'blur'
-                            }],
-                            status: [{
-                                required: true,
-                                message: '请选择藏品状态',
-                                trigger: 'blur'
-                            }],
-                            image: [{
-                                required: true,
-                                message: '请上传藏品主图',
-                                trigger: 'change'
-                            }],
-
-                            category_ids: [{
-                                required: true,
-                                message: '请选择藏品分类',
-                                trigger: 'change'
-                            }],
-
-                            price: [{
-                                required: true,
-                                message: '请输入价格',
-                                trigger: 'blur'
-                            }],
-                            stock: [{
-                                required: true,
-                                message: '请输入发行数量',
-                                trigger: 'blur'
-                            }],
-                            service_ids: [{
-                                required: true,
-                                message: '请选择藏品标签',
-                                trigger: 'blur'
-                            }],
-                            brand_ids: [{
-                                required: true,
-                                message: '请选择藏品发行方',
-                                trigger: 'blur'
-                            }],
+                            title: [{required: true, message: '请输入藏品标题', trigger: 'blur'}],
+                            status: [{required: true, message: '请选择藏品状态', trigger: 'blur'}],
+                            image: [{required: true, message: '请上传藏品主图', trigger: 'change'}],
+                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'change'}],
+                            price: [{required: true, message: '请输入价格', trigger: 'blur'}],
+                            stock: [{required: true, message: '请输入发行数量', trigger: 'blur'}],
+                            service_ids: [{required: true, message: '请选择藏品标签', trigger: 'blur'}],
+                            brand_ids: [{required: true, message: '请选择藏品发行方', trigger: 'blur'}],
+                            is_syn: [{required: true, message: '请选择是否合成', trigger: 'blur'}],
+                            goods_list: [{required: true, message: '请选择藏品', trigger: 'blur'}],
                         },
                         mustDel: ['express_ids', 'store_ids', 'selfetch_ids', 'autosend_ids'],
                         //选择分类
@@ -783,6 +767,49 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     }
                 },
                 methods: {
+                    goodsSelect() {
+                        let that = this;
+                        let selectedGoodsList = that.goodsDetail.goods_list ? that.goodsDetail.goods_list : [];
+                        let idsArr = []
+                        selectedGoodsList.forEach(i => {
+                            idsArr.push(i.id)
+                        })
+                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&type=hecheng&ids=" + idsArr.join(',')+'&id='+that.editId, "选择商品", {
+                            callback: function (data) {
+                                let resData = []
+                                let goodsList = []
+                                if (Array.isArray(data.data)) {
+                                    resData = data.data
+                                } else {
+                                    resData.push(data.data)
+                                }
+                                resData.forEach(e => {
+                                    if (idsArr.includes(e.id)) {
+                                        selectedGoodsList.forEach(i => {
+                                            if (e.id == i.id) {
+                                                goodsList.push(i)
+                                            }
+                                        })
+                                    } else {
+                                        goodsList.push(JSON.parse(JSON.stringify({
+                                            actSkuPrice: "",
+                                            dispatch_type_text: e.dispatch_type_text,
+                                            id: e.id,
+                                            image: e.image,
+                                            opt: 0,
+                                            status_text: e.status_text,
+                                            title: e.title,
+                                            type_text: e.type_text,
+                                        })))
+                                    }
+                                })
+                                that.goodsDetail.goods_list = goodsList;
+                            }
+                        });
+                    },
+                    goodsDelete(index) {
+                        this.goodsDetail.goods_list.splice(index, 1)
+                    },
                     createCategory() {
                         let that = this;
                         Fast.api.open("shopro/category/index", "新建", {
@@ -995,6 +1022,20 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 }
                                 arrForm.params = JSON.stringify(arrForm.params_arr);
                                 arrForm.content = $("#c-content").val();
+
+                                // 处理goods_ids
+                                let children = []
+                                that.goodsDetail.goods_list.forEach(i => {
+                                    if (i.id) {
+                                        children.push(i.id)
+                                    }
+                                })
+                                if (children.length > 0) {
+                                    arrForm.children = children.join(',')
+                                } else {
+                                    that.goodsDetail.children = ''
+                                    that.goodsDetail.goods_list = []
+                                }
 
                                 var arrids = []
                                 // 发货模板id

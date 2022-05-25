@@ -256,7 +256,7 @@
                         </el-table-column>
                         <el-table-column prop="id" label="ID" min-width="70">
                         </el-table-column>
-                        <el-table-column label="商品名称" min-width="100" align="left">
+                        <el-table-column label="藏品名称" min-width="100" align="left">
                             <template slot-scope="scope">
                                 <div class="goods-image">
                                     <el-image :src="Fast.api.cdnurl(scope.row.image)" fit="contain">
@@ -268,25 +268,28 @@
                                 <div class="goods-title ellipsis-item">{{scope.row.title}}</div>
                             </template>
                         </el-table-column>
-                        <el-table-column label="参与活动" width="210">
+                        <el-table-column label="销量" width="210">
                             <template slot-scope="scope">
-                                <div v-if="scope.row.activity_type || scope.row.app_type" class="display-flex">
-                                    <div class="activity-text score-activity" v-if="scope.row.app_type">
-                                        {{scope.row.app_type_text}}
-                                    </div>
-                                    <template v-for="(b,a) in scope.row.activity_type_text_arr">
-                                        <template v-if="a=='groupon'">
-                                            <div class="activity-text groupon-activity">
-                                                拼团
-                                            </div>
-                                        </template>
-                                        <div v-if="a=='seckill'" class="activity-text seckill-activity">{{b}}</div>
-                                        <div v-if="a=='full_reduce' || a=='full_discount' || a=='free_shipping'"
-                                            class="activity-text full-activity">{{b}}</div>
-                                    </template>
-                                </div>
-                                <div class="display-flex" v-else>-</div>
+                                <div class="ellipsis-item">{{scope.row.sales}}</div>
                             </template>
+<!--                            <template slot-scope="scope">-->
+<!--                                <div v-if="scope.row.activity_type || scope.row.app_type" class="display-flex">-->
+<!--                                    <div class="activity-text score-activity" v-if="scope.row.app_type">-->
+<!--                                        {{scope.row.app_type_text}}-->
+<!--                                    </div>-->
+<!--                                    <template v-for="(b,a) in scope.row.activity_type_text_arr">-->
+<!--                                        <template v-if="a=='groupon'">-->
+<!--                                            <div class="activity-text groupon-activity">-->
+<!--                                                拼团-->
+<!--                                            </div>-->
+<!--                                        </template>-->
+<!--                                        <div v-if="a=='seckill'" class="activity-text seckill-activity">{{b}}</div>-->
+<!--                                        <div v-if="a=='full_reduce' || a=='full_discount' || a=='free_shipping'"-->
+<!--                                            class="activity-text full-activity">{{b}}</div>-->
+<!--                                    </template>-->
+<!--                                </div>-->
+<!--                                <div class="display-flex" v-else>-</div>-->
+<!--                            </template>-->
                         </el-table-column>
                         <el-table-column prop="stock" label="发行数量" width="80">
                         </el-table-column>

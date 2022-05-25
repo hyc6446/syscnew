@@ -200,7 +200,7 @@ class Goods extends Model
     public function getSalestimeTextAttr($value, $data)
     {
         $value = $value ? $value : (isset($data['sales_time']) ? $data['sales_time'] : '');
-        return is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
+        return $value!=0&&is_numeric($value) ? date("Y-m-d H:i:s", $value) : $value;
     }
 
 

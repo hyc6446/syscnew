@@ -520,7 +520,16 @@
     .table-stock-warning-switch-tip {
         margin-left: 8px;
     }
-
+    .table-goods-image {
+        width: 44px;
+        height: 44px;
+        margin-right: 15px;
+        flex-shrink: 0;
+        border: 1px solid #e6e6e6;
+    }
+    .table-good-status-delete {
+        color: #F54747;
+    }
     [v-cloak] {
         display: none
     }
@@ -599,7 +608,7 @@
                                                 @click.stop="deleteCategoryIds(tag.pid,tag.id,index)"></i>
                                         </div>
                                         <el-input class="category-inputs" size="mini" @focus="getCategoryOptions()"
-                                            style="background: none;border: none;width: 120px;height: 34px;"></el-input>
+                                            style="background: none;border: none;width: 150px;height: 34px;"></el-input>
                                     </div>
                                 </div>
                             </el-popover>
@@ -616,7 +625,7 @@
                         </div>
                     </el-form-item>
                     <div v-if="goodsDetail.is_sku==0">
-                        <el-form-item label="藏品发行数量：" prop="stock">
+                        <el-form-item label="发行数量：" prop="stock">
                             <div class="display-flex">
                                 <el-input type="number" min="0" v-model="goodsDetail.stock" style="width:300px"
                                           size="small">
@@ -646,7 +655,74 @@
                             </div>
                         </div>
                     </el-form-item>
+                    <el-form-item label="是否合成：" prop="is_syn">
+                        <el-radio-group v-model="goodsDetail.is_syn">
+                            <el-radio :label='0'>否</el-radio>
+                            <el-radio :label='1'>是</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                    <div v-if="goodsDetail.is_syn == 1">
+                        <el-form-item label="可直接购买：" prop="can_sales">
+                            <div class="display-flex">
+                                <el-radio-group v-model="goodsDetail.can_sales">
+                                    <el-radio :label="0">否</el-radio>
+                                    <el-radio :label="1">是</el-radio>
+                                </el-radio-group>
+                                <div class="msg-tip">合成藏品是否可直接进行出售</div>
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="合成期限：">
+                            <div class="display-flex">
+                                <el-date-picker
+                                        v-model="goodsDetail.syn_end_time"
+                                        type="datetime"
+                                        value-format="timestamp"
+                                        placeholder="选择合成期限" >
+                                </el-date-picker>
+                                <div class="msg-tip"></div>
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="合成藏品：" prop="goods_list">
+                            <div>
+                                <el-button type="primary"  @click="goodsSelect">
+                                    藏品选择
+                                </el-button>
+                            </div>
+                        </el-form-item>
+                        <el-form-item style="margin-bottom: 20px;">
+                            <el-table :data="goodsDetail.goods_list" style="width: 100%" v-if="goodsDetail.goods_list?.length>0">
+                                <el-table-column label="藏品信息" width="320" align="left">
+                                    <template slot-scope="scope">
+                                        <div class="display-flex">
+                                            <div class="table-goods-image">
+                                                <el-image v-if="scope.row.image" :src="Fast.api.cdnurl(scope.row.image)"
+                                                          fit="cover">
+                                                    <div slot="error" class="image-slot">
+                                                        <i class="el-icon-picture-outline"></i>
+                                                    </div>
+                                                </el-image>
+                                            </div>
+                                            <span class="ellipsis-item-2">{{scope.row.title}}</span>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column label="操作" min-width="100">
+                                    <template slot-scope="scope">
+                                        <template>
+                                        <span class="table-good-status-delete cursor-pointer"
+                                              @click="goodsDelete(scope.$index)">
+                                        移除
+                                        </span>
+                                        </template>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-form-item>
+                    </div>
 
+                </div>
+
+                <div v-if="stepActive==2">
                     <el-form-item label="预售时间：">
                         <el-date-picker
                                 v-model="goodsDetail.sales_time"
@@ -658,7 +734,7 @@
 
 
                     <el-form-item label="浏览人数：">
-                        <el-input type="number" v-model="goodsDetail.views" size="small"></el-input>
+                        <el-input type="number" v-model="goodsDetail.views"  style="width:300px;" size="small"></el-input>
                     </el-form-item>
 
                     <el-form-item label="排序：" prop="weigh">
@@ -668,10 +744,6 @@
                             <div class="msg-tip">排序的大小默认按照从大到小排列</div>
                         </div>
                     </el-form-item>
-                </div>
-
-                <div v-if="stepActive==2">
-
                     <el-form-item label="标志：">
                         <div class="display-flex">
                             <div class="flex-1">
