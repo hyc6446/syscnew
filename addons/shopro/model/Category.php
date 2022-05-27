@@ -44,6 +44,14 @@ class Category extends Model
         return $category;
     }
 
+
+    public static function getCategory($id)
+    {
+        $category = self::field('id,name')->where(['id' => $id, 'pid' => 0, 'status' => 'normal'])->with('children')->find();
+
+        return $category;
+    }
+
     private static function getAllChirdrenCategory($pid, $type = 'shop', $status = 'normal')
     {
         $where = [
@@ -107,7 +115,7 @@ class Category extends Model
 
     public function children () 
     {
-        return $this->hasMany(\addons\shopro\model\Category::class, 'pid', 'id')->where('status', 'normal')->order('weigh desc, id asc');
+        return $this->hasMany(\addons\shopro\model\Category::class, 'pid', 'id')->where('status', 'normal')->order('weigh desc, id asc')->field('id,name,pid');
     }
 
 }

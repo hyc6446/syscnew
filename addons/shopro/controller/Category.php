@@ -28,9 +28,9 @@ class Category extends Base
 
     public function index()
     {
-        $id = $this->request->get('id');
-        $data = CategoryModel::getCategoryList($id);
-        $this->success('商城分类', $data);
+        $id = $this->request->get('id',1);
+        $data = CategoryModel::getCategory($id);
+        $this->success('藏品分类', $data?$data['children']:[]);
 
     }
 

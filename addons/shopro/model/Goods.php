@@ -2,12 +2,10 @@
 
 namespace addons\shopro\model;
 
+use app\common\library\Auth;
 use think\Model;
 use addons\shopro\exception\Exception;
 use addons\shopro\library\traits\model\goods\GoodsActivity;
-use addons\shopro\model\GoodsSku;
-use addons\shopro\model\GoodsSkuPrice;
-use think\Db;
 use traits\model\SoftDelete;
 
 /**
@@ -28,23 +26,46 @@ class Goods extends Model
 
     protected $hidden = ['createtime', 'updatetime', 'status'];
     //列表动态隐藏字段
-    public static $list_hidden = ['content', 'params', 'images', 'service_ids'];
+    public static $list_hidden = ['type','weigh','sales','show_sales', 'params', 'images','note','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
 
     // 追加属性
     protected $append = [
-        'dispatch_type_arr'
+        'ser_tag_arr','brand_arr','is_ding'
     ];
+
+
+    public function getSerTagArrAttr($value, $data)
+    {
+        $tag = GoodsService::where( 'id','in',explode(',',$data['service_ids']))->select();
+        $item = array_column($tag,'name');
+
+        return $item;
+    }
+
+    public function getBrandArrAttr($value, $data)
+    {
+        return GoodsBrand::where( 'id','in',explode(',',$data['brand_ids']))->select();
+    }
+
+    public function getIsDingAttr($value, $data)
+    {
+        $auth = Auth::instance();
+        $ding =  GoodsDing::where( ['goods_id'=>$data['id'],'user_id'=>$auth->id??0])->find();
+        return $ding?1:0;
+    }
 
 
     /**
      * params 请求参数
      * is_page 是否分页
      */
-    public static function getGoodsList($params, $is_page = true)
+    public static function getGoodsList($params, $is_page = true,$per_sale=0)
     {
         extract($params);
         $where = [
             'status' => ['in', ((isset($type) && $type == 'all') ? ['up', 'hidden'] : ['up'])],     // type = all 查询全部
+            'can_sales'=>1,
+            'sales_time'=>['<=',time()]
         ];
         //排序字段
         if (isset($order)) {
@@ -61,6 +82,10 @@ class Goods extends Model
             $order = 'field(id, ' . $goods_ids . ')';       // 如果传了 goods_ids 就按照里面的 id 进行排序
             $goodsIdsArray = explode(',', $goods_ids);
             $where['id'] = ['in', $goodsIdsArray];
+        }
+        $per_sale = $per_sale??0;
+        if ($per_sale){
+            $where['sales_time'] = ['>',time()];
         }
 
         $category_ids = [];
@@ -87,48 +112,41 @@ class Goods extends Model
 
         $goods = $goods->field('*,(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
 
-        $cacheKey = 'goodslist-' . ($is_page ? 'page' : 'all') . '-' . md5(json_encode($params));
 
-        // 判断缓存
-        $goodsCache = cache($cacheKey);
-        if ($goodsCache) {
-            // 存在缓存直接 返回
-            $goodsCache = json_decode($goodsCache, true);
-            return $goodsCache ? : [];
-        } 
-
-        if ($is_page) {
+        $hidden = self::$list_hidden;
+        if (!$is_page||$per_sale){
+            //发售日历
+            $goods = $goodsData = $goods->select();
+        }else{
+            $hidden[] = 'content';
             $goods = $goods->paginate($per_page ?? 10);
             $goodsData = $goods->items();
-        } else {
-            $goods = $goodsData = $goods->select();
         }
 
         $data = [];
         if ($goodsData) {
             $collection = collection($goodsData);
-            $data = $collection->hidden(self::$list_hidden);
-            
-            // 处理活动
-            // load_relation($data, 'skuPrice');        // 只针对数组
-            $data->load('skuPrice');        // 延迟预加载
-
-            // if (!isset($no_activity) || !$no_activity) {        // 没有 传入 no_activity 或者 no_activity = false
-            // 默认查询活动， no_activity 的时候这里也要执行一下，这里计算了销量规格等信息
-            foreach ($data as $key => $g) {
-                $data[$key] = self::operActivity($g, $g['sku_price']);
-            }
-            // }
+            $data = $collection->hidden($hidden);
         }
 
-        if ($is_page) {
-            $goods->data = $data;
+        if (!$is_page||$per_sale){
+            //发售日历
+            $sales = [];
+            foreach ($data as $val){
+                $date = date('m-d H:i',$val['sales_time']);
+                $val['desc'] = StringToText($val['content'],100);
+                unset($val['content']);
+                $sales[$date][] = $val;
+            }
+            $goods = [];
+            foreach ($sales as $key=>$value){
+                $goods[] = [
+                    'date'=>$key,
+                    'list'=>$value
+                ];
+            }
         } else {
-            $goods = $data;
-            
-            // 目前只缓存不分页的请求, 
-            // 缓存暂时注释，如果需要，可以打开，请注意后台更新商品记得清除缓存
-            // cache($cacheKey, json_encode($goods), (600 + mt_rand(0, 300)));
+            $goods->data = $data;
         }
 
         return $goods;

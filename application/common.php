@@ -513,30 +513,26 @@ EOT;
     }
 }
 
-/**
- * 判断密码的简易程度  不能是连续的密码（如123465,456789等）
- * 返回true 为6位连续数字
- */
-function payPassIsContinuity($pass) {
-    //是纯数字  则判断是否连续
-    if (is_numeric($pass)) {
-        if (strlen($pass) != 6) {
-            return true;
-        }
-        static $num = 1;
-        for ($i = 0; $i < strlen($pass); $i++) {
-            if (substr($pass, $i, 1)+1 == substr($pass, $i+1, 1) ) {
-                $num++;
-            }
-        }
 
-        if ($num == strlen($pass)) {
-            return true;
+if (!function_exists('recoverStrict')) {
+    /**
+     * 提取富文本字符串的纯文本,并进行截取;
+     * @ApiParams $string 需要进行截取的富文本字符串
+     * @ApiParams $int 需要截取多少位
+     */
+    function StringToText($string='', $num=200)
+    {
+        if ($string) {
+            // 把一些预定义的 HTML 实体转换为字符
+            $html_string = htmlspecialchars_decode($string);
+            // 将空格替换成空
+            $content = str_replace(" ", "", $html_string);
+            // 函数剥去字符串中的 HTML、XML 以及 PHP 的标签,获取纯文本内容
+            $contents = strip_tags($content);
+            // 返回字符串中的前$num字符串长度的字符
+            return mb_strlen($contents, 'utf-8') > $num ? mb_substr($contents, 0, $num, "utf-8") . '....' : mb_substr($contents, 0, $num, "utf-8");
         } else {
-            return false;
+            return $string;
         }
-    } else {
-        return false;
     }
 }
-

@@ -7,7 +7,7 @@ use addons\shopro\exception\Exception;
 class Goods extends Base
 {
 
-    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store'];
+    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar'];
     protected $noNeedRight = ['*'];
 
     public function index()
@@ -44,6 +44,14 @@ class Goods extends Base
     {
         $params = $this->request->get();
         $data = \addons\shopro\model\Goods::getGoodsList($params);
+
+        $this->success('商品列表', $data);
+    }
+
+    public function calendar()
+    {
+        $params = $this->request->get();
+        $data = \addons\shopro\model\Goods::getGoodsList($params,false,true);
 
         $this->success('商品列表', $data);
 
