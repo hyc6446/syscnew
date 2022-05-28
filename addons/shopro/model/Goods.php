@@ -3,6 +3,7 @@
 namespace addons\shopro\model;
 
 use app\common\library\Auth;
+use think\Db;
 use think\Model;
 use addons\shopro\exception\Exception;
 use addons\shopro\library\traits\model\goods\GoodsActivity;
@@ -24,13 +25,13 @@ class Goods extends Model
     protected $updateTime = 'updatetime';
     protected $deleteTime = 'deletetime';
 
-    protected $hidden = ['createtime', 'updatetime', 'status'];
+    protected $hidden = ['createtime', 'updatetime', 'status','type','sales','show_sales', 'params', 'images','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
     //列表动态隐藏字段
-    public static $list_hidden = ['type','weigh','sales','show_sales', 'params', 'images','note','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
+    public static $list_hidden = ['weigh','note'];
 
     // 追加属性
     protected $append = [
-        'ser_tag_arr','brand_arr','stock_sku','sales_time_text','tag'
+        'ser_tag_arr','brand_arr','stock_sku','sales_time_text','tag','category_name','syn_end_time_text'
     ];
 
 
@@ -64,11 +65,16 @@ class Goods extends Model
 
     public function getStockSkuAttr($value, $data)
     {
-        $sku =  GoodsSkuPrice::where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales,goods_sku_ids')->find();
+        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales')->find();
         $sku['sell_out'] = 0;
         if ($sku['stock']-$sku['sales'] == 0) $sku['sell_out'] = 1;
         unset($sku['sales']);
         return $sku;
+    }
+
+    public function getCategoryNameAttr($value,$data)
+    {
+       return Category::where('id',$data['category_ids'])->value('name');
     }
 
 
@@ -146,7 +152,7 @@ class Goods extends Model
             $goods = $goodsData = $goods->select();
         }else{
             $hidden[] = 'content';
-            $goods = $goods->paginate($per_page ?? 10);
+            $goods = $goods->paginate($limit ?? 10);
             $goodsData = $goods->items();
         }
 
@@ -318,7 +324,7 @@ class Goods extends Model
     {
         $user = User::info();
 
-        $detail = (new self)->field('id,title,status,image,content,price,service_ids,brand_ids,note,sales_time,tag,is_syn,can_sales,syn_end_time,children')
+        $detail = (new self)->field('*')
             ->where('id', $id)->with(['favorite' => function ($query) use ($user) {
             $user_id = empty($user) ? 0 : $user->id;
             return $query->where(['user_id' => $user_id]);
@@ -333,7 +339,17 @@ class Goods extends Model
         // 处理活动规格
 //        $detail = self::operActivity($detail, $detail->sku_price);
 
-        $detail['favorite']  =  $detail['favorite']?1:0;
+        $detail['is_favorite']  =  $detail['favorite']?1:0;
+        $detail['is_while_sales']  = 1;
+        if (!$detail['sales_time'] || $detail['sales_time']<= time()){
+            $detail['is_while_sales'] = 0;
+            $detail['sales_time'] = 0;
+            $detail['can_sales'] = 1;
+        }
+        if ($detail['sales_time'] && $detail['sales_time']> time()){
+            $detail['can_sales'] = 0;
+        }
+        unset($detail['favorite']);
         return $detail;
     }
 

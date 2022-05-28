@@ -692,11 +692,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             title: [{required: true, message: '请输入藏品标题', trigger: 'blur'}],
                             status: [{required: true, message: '请选择藏品状态', trigger: 'blur'}],
                             image: [{required: true, message: '请上传藏品主图', trigger: 'change'}],
-                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'change'}],
+                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'blur'}],
                             price: [{required: true, message: '请输入价格', trigger: 'blur'}],
                             stock: [{required: true, message: '请输入发行数量', trigger: 'blur'}],
                             service_ids: [{required: true, message: '请选择藏品标签', trigger: 'blur'}],
-                            brand_ids: [{required: true, message: '请选择藏品发行方', trigger: 'blur'}],
+                            brand_ids: [{required: true, message: '请选择藏品创作方', trigger: 'blur'}],
                             is_syn: [{required: true, message: '请选择是否合成', trigger: 'blur'}],
                             goods_list: [{required: true, message: '请选择藏品', trigger: 'blur'}],
                         },
@@ -755,11 +755,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     this.getServiceOptions();
                     this.getBrandOptions();
                     this.getDispatchType();
+                    this.getCategoriesOptions();
                     if (this.editId) {
                         this.goodsDetail = JSON.parse(JSON.stringify(this.goodsDetailInit));
-                        this.getCategoryOptions(true);
+                        // this.getCategoryOptions(true);
+                        this.getEditData()
                     } else {
-                        this.getCategoryOptions();
+                        // this.getCategoryOptions();
                         this.goodsDetail = JSON.parse(JSON.stringify(this.goodsDetailInit));
                         this.getInit([], [])
                         this.$nextTick(() => {
@@ -1250,6 +1252,17 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             loading: false,
                         }, function (ret, res) {
                             that.serviceOptions = res.data
+                            return false;
+                        })
+                    },
+                    getCategoriesOptions() {
+
+                        let that = this;
+                        Fast.api.ajax({
+                            url: 'shopro/category/collect',
+                            loading: false,
+                        }, function (ret, res) {
+                            that.categoryOptions = res.data;
                             return false;
                         })
                     },

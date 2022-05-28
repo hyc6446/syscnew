@@ -171,4 +171,19 @@ class Category extends Backend
     }
 
 
+    public function collect()
+    {
+        //设置过滤方法
+        $this->request->filter(['strip_tags']);
+        if ($this->request->isAjax()) {
+            $list = $this->model->with('children.children.children')->where('pid', 1)->order('weigh desc, id asc')->select();
+            foreach ($list as &$val){
+                $val['id'] = (string)$val['id'];
+            }
+            $this->success('自定义分类', null, $list);
+        }
+        return $this->view->fetch();
+    }
+
+
 }

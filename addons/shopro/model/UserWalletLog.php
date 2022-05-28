@@ -19,7 +19,9 @@ class UserWalletLog extends Model
     // 定义时间戳字段名
     protected $createTime = 'createtime';
     protected $updateTime = 'updatetime';
-    protected $deleteTime = false;
+    protected $deleteTime = true;
+
+    protected $dateFormat = 'Y-m-d H:i:s';
 
     protected $hidden = ['deletetime'];
 
@@ -123,7 +125,7 @@ class UserWalletLog extends Model
         $user = User::get($user_id);
 
         // 分页列表
-        $walletLogs = self::buildSearch($params)->order('id', 'DESC')->paginate(10);
+        $walletLogs = self::buildSearch($params)->order('id', 'DESC')->paginate($params['limit']??10);
         // 收入
         $income = self::buildSearch($params)->where('wallet', '>=', 0)->sum('wallet');
         // 支出
@@ -159,6 +161,7 @@ class UserWalletLog extends Model
             'wallet_logs' => $walletLogs,
             'income' => $income,
             'expend' => $expend,
+            'money' => $user->money,
         ];
     }
 

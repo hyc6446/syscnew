@@ -109,8 +109,10 @@ class Goods extends Base
 
     public function favoriteList()
     {
-        $data = \addons\shopro\model\UserFavorite::getGoodsList();
-        $this->success('商品收藏列表', $data);
+        $page = $this->request->get('page',1);
+        $limit = $this->request->get('limit',10);
+        $data = \addons\shopro\model\UserFavorite::getGoodsList($page,$limit);
+        $this->success('收藏列表', $data);
     }
 
 
