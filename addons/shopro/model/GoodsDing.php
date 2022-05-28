@@ -19,4 +19,16 @@ class GoodsDing extends Model
     protected $updateTime = 'updatetime';
     protected $deleteTime = 'deletetime';
 
+    public static function ding($params)
+    {
+        $user = User::info();
+        $data = ['user_id'=>$user->id,'ding_time'=>$params['ding_time']];
+        if ($params['status']==0){
+            //取消
+             self::where($data)->delete();
+            return false;
+        }
+         self::create($data);
+        return true;
+    }
 }

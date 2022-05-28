@@ -726,7 +726,7 @@
 
                 </div>
                 <div v-if="stepActive==2">
-                    <el-form-item label="预售时间：">
+                    <el-form-item label="预售时间：" v-if="goodsDetail.can_sales == 1 || goodsDetail.is_syn == 0">
                         <div class="display-flex">
                             <el-date-picker
                                     v-model="goodsDetail.sales_time"

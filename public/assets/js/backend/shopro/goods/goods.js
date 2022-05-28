@@ -746,7 +746,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         category_ids_all: {},
                         brandOptions:[],
                         tagOptions:[
-                            {name:'热门',value:'hot'}
+                            {name:'热门',value:'hot'},
+                            {name:'精选',value:'select'},
                         ],
                     }
                 },
@@ -1022,20 +1023,34 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 }
                                 arrForm.params = JSON.stringify(arrForm.params_arr);
                                 arrForm.content = $("#c-content").val();
-
+                                if (arrForm.sales_time) arrForm.sales_time = arrForm.sales_time/1000;
+                                if (arrForm.syn_end_time) arrForm.syn_end_time = arrForm.syn_end_time/1000;
                                 // 处理goods_ids
                                 let children = []
-                                that.goodsDetail.goods_list.forEach(i => {
-                                    if (i.id) {
-                                        children.push(i.id)
-                                    }
-                                })
-                                if (children.length > 0) {
-                                    arrForm.children = children.join(',')
-                                } else {
-                                    that.goodsDetail.children = ''
-                                    that.goodsDetail.goods_list = []
+
+                                if (arrForm.is_syn == 0){
+                                    //不是和成品
+                                    that.goodsDetail.children ='';
+                                    arrForm.children = '';
+                                    that.goodsDetail.goods_list = [];
+                                    arrForm.can_sales = 1;//能直接购买
+                                    arrForm.syn_end_time = 0;//和成期限
+                                } else{
+                                    that.goodsDetail.goods_list.forEach(i => {
+                                        if (i.id) {
+                                            children.push(i.id)
+                                        }
+                                    })
                                 }
+
+                                if (children.length > 0) {
+                                    arrForm.children = children.join(',');
+                                } else {
+                                    that.goodsDetail.children = '';
+                                    that.goodsDetail.goods_list = [];
+                                }
+
+                            if(arrForm.can_sales == 0)arrForm.sales_time = 0;//不能直接购买那么就没有预售时间了
 
                                 var arrids = []
                                 // 发货模板id

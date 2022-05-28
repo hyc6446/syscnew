@@ -221,6 +221,7 @@ class Goods extends Backend
             $result['skuPrice'] = [];
         }
         $row['sales_time'] *= 1000;
+        $row['syn_end_time'] *= 1000;
 
         $goods_ids_array = array_filter(explode(',', $row['children']));
         $goodsList = [];
@@ -262,7 +263,6 @@ class Goods extends Backend
             $sku = $this->request->post("sku/a");
 
             if ($params) {
-                $params['sales_time'] = $params['sales_time']/1000;
                 $this->excludeFields = ['is_sku', 'type'];
                 $params = $this->preExcludeFields($params);
                 $result = false;
@@ -292,6 +292,7 @@ class Goods extends Backend
             $this->error(__('Parameter %s can not be empty', ''));
         }
         $row['sales_time'] *= 1000;
+        $row['syn_end_time'] *= 1000;
 
         $goods_ids_array = array_filter(explode(',', $row->children));
         $goodsList = [];

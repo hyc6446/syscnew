@@ -2,6 +2,7 @@
 
 namespace addons\shopro\controller;
 
+use addons\shopro\model\Banner;
 use addons\shopro\model\Config;
 use addons\shopro\model\News;
 use think\Db;
@@ -139,6 +140,13 @@ class Index extends Base
         $id = $this->request->get('id');
         $data =\addons\shopro\model\News::get(['id' => $id]);
         $this->success('', $data);
+    }
+
+
+    public function banner()
+    {
+        $data = (new Banner())->field('image,id')->select();
+        $this->success('',$data);
     }
 
     // 同步前端所有页面链接

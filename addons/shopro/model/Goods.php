@@ -9,7 +9,7 @@ use addons\shopro\library\traits\model\goods\GoodsActivity;
 use traits\model\SoftDelete;
 
 /**
- * 商品模型
+ * 藏品模型
  */
 class Goods extends Model
 {
@@ -30,7 +30,7 @@ class Goods extends Model
 
     // 追加属性
     protected $append = [
-        'ser_tag_arr','brand_arr','is_ding'
+        'ser_tag_arr','brand_arr','stock_sku','sales_time_text','tag'
     ];
 
 
@@ -42,16 +42,33 @@ class Goods extends Model
         return $item;
     }
 
+    public function getTagAttr($value, $data)
+    {
+        return $data['tag']?explode(',',$data['tag']):[];
+    }
+
+    public function getSalesTimeTextAttr($value,$data)
+    {
+        return $data['sales_time'] && $data['sales_time']>time()?date('m月d日 H:i'):'';
+    }
+
+    public function getSynEndTimeTextAttr($value,$data)
+    {
+        return $data['syn_end_time']?date('m月d日 H:i'):'';
+    }
+
     public function getBrandArrAttr($value, $data)
     {
         return GoodsBrand::where( 'id','in',explode(',',$data['brand_ids']))->select();
     }
 
-    public function getIsDingAttr($value, $data)
+    public function getStockSkuAttr($value, $data)
     {
-        $auth = Auth::instance();
-        $ding =  GoodsDing::where( ['goods_id'=>$data['id'],'user_id'=>$auth->id??0])->find();
-        return $ding?1:0;
+        $sku =  GoodsSkuPrice::where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales,goods_sku_ids')->find();
+        $sku['sell_out'] = 0;
+        if ($sku['stock']-$sku['sales'] == 0) $sku['sell_out'] = 1;
+        unset($sku['sales']);
+        return $sku;
     }
 
 
@@ -64,9 +81,11 @@ class Goods extends Model
         extract($params);
         $where = [
             'status' => ['in', ((isset($type) && $type == 'all') ? ['up', 'hidden'] : ['up'])],     // type = all 查询全部
-            'can_sales'=>1,
-            'sales_time'=>['<=',time()]
         ];
+        if ((isset($type) && $type != 'all') && (isset($tag) && $tag != 'select')){
+            $where['can_sales'] = 1;
+            $where['sales_time'] = ['<=',time()];
+        }
         //排序字段
         if (isset($order)) {
             $order = self::getGoodsListOrder($order);
@@ -83,6 +102,8 @@ class Goods extends Model
             $goodsIdsArray = explode(',', $goods_ids);
             $where['id'] = ['in', $goodsIdsArray];
         }
+
+
         $per_sale = $per_sale??0;
         if ($per_sale){
             $where['sales_time'] = ['>',time()];
@@ -101,7 +122,7 @@ class Goods extends Model
             }
         });
 
-        // 过滤有活动的商品
+        // 过滤有活动的藏品
         if (isset($no_activity) && $no_activity) {
             $goods = $goods->whereNotExists(function ($query) use ($where) {
                 $activityTableName = (new Activity())->getQuery()->getTable();
@@ -109,6 +130,12 @@ class Goods extends Model
                 $query->table($activityTableName)->where("find_in_set(" . $goodsTableName . ".id, goods_ids)")->where('deletetime', 'null');        // 必须手动加上 deletetime = null
             });
         }
+
+        //标志
+        if (isset($tag) && $tag !== '') {
+            $goods = $goods->where("find_in_set('".$tag."',tag)");
+        }
+
 
         $goods = $goods->field('*,(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
 
@@ -133,19 +160,31 @@ class Goods extends Model
             //发售日历
             $sales = [];
             foreach ($data as $val){
-                $date = date('m-d H:i',$val['sales_time']);
+                $date = date('m月d日 H:i',$val['sales_time']);
                 $val['desc'] = StringToText($val['content'],100);
                 unset($val['content']);
                 $sales[$date][] = $val;
             }
             $goods = [];
+            $auth = Auth::instance();
             foreach ($sales as $key=>$value){
+                //是否订阅
+                $timestamp = strtotime($key);
+                $ding =  GoodsDing::where(['user_id'=>$auth->id??0,'ding_time'=>$timestamp])->find();
                 $goods[] = [
-                    'date'=>$key,
+                    'date'=>mb_substr($key,0,6),
+                    'time'=>mb_substr($key,7),
+                    'ding_time'=>$value[0]['sales_time'],
+                    'status'=>$ding?1:0,
                     'list'=>$value
                 ];
             }
         } else {
+            foreach ($data as &$val){
+                //简述
+                $val['desc'] = StringToText($val['content'],100);
+                unset($val['content']);
+            }
             $goods->data = $data;
         }
 
@@ -198,7 +237,7 @@ class Goods extends Model
     }
 
 
-    // 获取秒杀商品列表
+    // 获取秒杀藏品列表
     public static function getSeckillGoodsList($params) {
         extract($params);
         $type = $type ?? 'all';
@@ -222,7 +261,7 @@ class Goods extends Model
             $activityList = Activity::where($where)->select();
         }
 
-        // 获取所有商品 id
+        // 获取所有藏品 id
         $goodsIds = '';
         foreach ($activityList as $key => $activity) {
             $goodsIds .= ',' . $activity['goods_ids'];
@@ -238,7 +277,7 @@ class Goods extends Model
     }
 
 
-    // 获取拼团商品列表
+    // 获取拼团藏品列表
     public static function getGrouponGoodsList($params) {
         extract($params);
         $type = 'ing';
@@ -258,7 +297,7 @@ class Goods extends Model
             $activityList = Activity::where($where)->select();
         }
 
-        // 获取所有商品 id
+        // 获取所有藏品 id
         $goodsIds = '';
         foreach ($activityList as $key => $activity) {
             $goodsIds .= ',' . $activity['goods_ids'];
@@ -279,20 +318,22 @@ class Goods extends Model
     {
         $user = User::info();
 
-        $detail = (new self)->where('id', $id)->with(['favorite' => function ($query) use ($user) {
+        $detail = (new self)->field('id,title,status,image,content,price,service_ids,brand_ids,note,sales_time,tag,is_syn,can_sales,syn_end_time,children')
+            ->where('id', $id)->with(['favorite' => function ($query) use ($user) {
             $user_id = empty($user) ? 0 : $user->id;
             return $query->where(['user_id' => $user_id]);
         }])->find();
 
         if (!$detail || $detail->status === 'down') {
-            new Exception('商品不存在或已下架');
+            new Exception('藏品不存在或已下架');
         }
         
-        $detail = $detail->append(['service', 'sku', 'coupons']);
+//        $detail = $detail->append(['sku', 'coupons']);
 
         // 处理活动规格
-        $detail = self::operActivity($detail, $detail->sku_price);
-        
+//        $detail = self::operActivity($detail, $detail->sku_price);
+
+        $detail['favorite']  =  $detail['favorite']?1:0;
         return $detail;
     }
 
@@ -311,14 +352,14 @@ class Goods extends Model
 
         $detail = (new self)->where('id', $id)->find();
         if (!$detail) {
-            new Exception('商品不存在');
+            new Exception('藏品不存在');
         }
 
         if (strpos($detail['dispatch_type'], 'selfetch') === false) {
-            new Exception('商品不支持自提');
+            new Exception('藏品不支持自提');
         }
 
-        // 商品支持自提，查询自提模板
+        // 藏品支持自提，查询自提模板
         $dispatch = Dispatch::where('type', 'selfetch')->where('id', 'in', $detail['dispatch_ids'])->find();
         if (!$dispatch) {
             new Exception('自提模板不存在');
@@ -350,7 +391,7 @@ class Goods extends Model
 
 
     /**
-     * 获取商品购买人
+     * 获取藏品购买人
      *
      * @param integer $goods_id
      * @param integer $activity_id
@@ -522,7 +563,7 @@ class Goods extends Model
                 ->order('id', 'asc');
     }
 
-    //商品列表排序
+    //藏品列表排序
     private static function getGoodsListOrder($orderStr)
     {
         $order = 'weigh desc';
