@@ -575,45 +575,18 @@
                             <el-radio label="down">下架</el-radio>
                         </el-radio-group>
                     </el-form-item>
-
                     <el-form-item label="藏品分类：" prop="category_ids">
                         <div class="display-flex">
-                            <el-popover placement="bottom-start" width="600" v-model="visible">
-                                <div>
-                                    <el-tabs v-if="categoryOptions && categoryOptions.length>0" v-model="categoryTab">
-                                        <el-tab-pane v-for="tab in categoryOptions" :label="tab.name" :name="tab.id">
-                                            <el-cascader-panel v-model="category_ids_all[categoryTab]"
-                                                :options="tab.children" :props="{ multiple: true, checkStrictly: true ,value:'id',label:'name',
-                                                children:'children',emitPath: false}" clearable
-                                                @change="changeCategoryIds">
-                                            </el-cascader-panel>
-                                        </el-tab-pane>
-                                    </el-tabs>
-                                    <div style="width: 100%;text-align: center;"
-                                        v-if="categoryOptions && categoryOptions.length==0">没有分类,请选择去创建</div>
-                                </div>
-                                <div slot="reference">
-                                    <div class="display-flex"
-                                        style="flex-wrap: wrap;border: 1px solid #e6e6e6;border-radius: 4px;padding: 0 5px">
-                                        <div style="margin-right: 5px;
-                                        bottom: 5px;
-                                        height: 28px;
-                                        line-height: 28px;
-                                        padding: 0 5px;
-                                        border: 1px solid #e6e6e6;
-                                        border-radius: 4px;background: #f9f9f9;" v-for="(tag,index) in selectedcatArr"
-                                            :key="tag">
-                                            {{tag.label}}
-                                            <i class="el-icon-close"
-                                                @click.stop="deleteCategoryIds(tag.pid,tag.id,index)"></i>
-                                        </div>
-                                        <el-input class="category-inputs" size="mini" @focus="getCategoryOptions()"
-                                            style="background: none;border: none;width: 150px;height: 34px;"></el-input>
-                                    </div>
-                                </div>
-                            </el-popover>
+                            <div class="flex-1">
+                                <el-select v-model="goodsDetail.category_ids" clearable  placeholder="请选择" size="small" style="width:300px"
+                                           @focus="getCategoriesOptions">
+                                    <el-option v-for="item in categoryOptions" :key="item.value" :label="item.name"
+                                               :value="item.id">
+                                    </el-option>
+                                </el-select>
+                            </div>
                             <div style="cursor: pointer;color: #7438D5;margin-left: 30px;flex-shrink: 0;"
-                                @click="createCategory">新建分类
+                                 @click="createCategory">新建分类
                             </div>
                         </div>
                     </el-form-item>
@@ -640,7 +613,7 @@
                             </div>
                         </el-form-item>
                     </div>
-                    <el-form-item label="藏品发行方：">
+                    <el-form-item label="藏品创作方：">
                         <div class="display-flex">
                             <div class="flex-1">
                                 <el-select v-model="timeData.brand_ids_arr" placeholder="请选择" multiple size="small"
@@ -651,7 +624,7 @@
                                 </el-select>
                             </div>
                             <div class="create-template" @click="createTemplate('brand')">
-                                新建发行方
+                                新建创作方
                             </div>
                         </div>
                     </el-form-item>
@@ -723,7 +696,7 @@
                 </div>
 
                 <div v-if="stepActive==2">
-                    <el-form-item label="预售时间：">
+                    <el-form-item label="预售时间：" v-if="goodsDetail.can_sales == 1 || goodsDetail.is_syn == 0">
                         <el-date-picker
                                 v-model="goodsDetail.sales_time"
                                 type="datetime"

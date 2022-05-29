@@ -692,11 +692,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             title: [{required: true, message: '请输入藏品标题', trigger: 'blur'}],
                             status: [{required: true, message: '请选择藏品状态', trigger: 'blur'}],
                             image: [{required: true, message: '请上传藏品主图', trigger: 'change'}],
-                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'change'}],
+                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'blur'}],
                             price: [{required: true, message: '请输入价格', trigger: 'blur'}],
                             stock: [{required: true, message: '请输入发行数量', trigger: 'blur'}],
                             service_ids: [{required: true, message: '请选择藏品标签', trigger: 'blur'}],
-                            brand_ids: [{required: true, message: '请选择藏品发行方', trigger: 'blur'}],
+                            brand_ids: [{required: true, message: '请选择藏品创作方', trigger: 'blur'}],
                             is_syn: [{required: true, message: '请选择是否合成', trigger: 'blur'}],
                             goods_list: [{required: true, message: '请选择藏品', trigger: 'blur'}],
                         },
@@ -746,7 +746,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         category_ids_all: {},
                         brandOptions:[],
                         tagOptions:[
-                            {name:'热门',value:'hot'}
+                            {name:'热门',value:'hot'},
+                            {name:'精选',value:'select'},
                         ],
                     }
                 },
@@ -754,11 +755,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                     this.getServiceOptions();
                     this.getBrandOptions();
                     this.getDispatchType();
+                    this.getCategoriesOptions();
                     if (this.editId) {
                         this.goodsDetail = JSON.parse(JSON.stringify(this.goodsDetailInit));
-                        this.getCategoryOptions(true);
+                        // this.getCategoryOptions(true);
+                        this.getEditData()
                     } else {
-                        this.getCategoryOptions();
+                        // this.getCategoryOptions();
                         this.goodsDetail = JSON.parse(JSON.stringify(this.goodsDetailInit));
                         this.getInit([], [])
                         this.$nextTick(() => {
@@ -1022,20 +1025,34 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 }
                                 arrForm.params = JSON.stringify(arrForm.params_arr);
                                 arrForm.content = $("#c-content").val();
-
+                                if (arrForm.sales_time) arrForm.sales_time = arrForm.sales_time/1000;
+                                if (arrForm.syn_end_time) arrForm.syn_end_time = arrForm.syn_end_time/1000;
                                 // 处理goods_ids
                                 let children = []
-                                that.goodsDetail.goods_list.forEach(i => {
-                                    if (i.id) {
-                                        children.push(i.id)
-                                    }
-                                })
-                                if (children.length > 0) {
-                                    arrForm.children = children.join(',')
-                                } else {
-                                    that.goodsDetail.children = ''
-                                    that.goodsDetail.goods_list = []
+
+                                if (arrForm.is_syn == 0){
+                                    //不是和成品
+                                    that.goodsDetail.children ='';
+                                    arrForm.children = '';
+                                    that.goodsDetail.goods_list = [];
+                                    arrForm.can_sales = 1;//能直接购买
+                                    arrForm.syn_end_time = 0;//和成期限
+                                } else{
+                                    that.goodsDetail.goods_list.forEach(i => {
+                                        if (i.id) {
+                                            children.push(i.id)
+                                        }
+                                    })
                                 }
+
+                                if (children.length > 0) {
+                                    arrForm.children = children.join(',');
+                                } else {
+                                    that.goodsDetail.children = '';
+                                    that.goodsDetail.goods_list = [];
+                                }
+
+                            if(arrForm.can_sales == 0)arrForm.sales_time = 0;//不能直接购买那么就没有预售时间了
 
                                 var arrids = []
                                 // 发货模板id
@@ -1235,6 +1252,17 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             loading: false,
                         }, function (ret, res) {
                             that.serviceOptions = res.data
+                            return false;
+                        })
+                    },
+                    getCategoriesOptions() {
+
+                        let that = this;
+                        Fast.api.ajax({
+                            url: 'shopro/category/collect',
+                            loading: false,
+                        }, function (ret, res) {
+                            that.categoryOptions = res.data;
                             return false;
                         })
                     },

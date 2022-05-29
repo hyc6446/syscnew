@@ -5,7 +5,7 @@ namespace app\admin\controller\shopro\goods;
 use app\common\controller\Backend;
 
 /**
- * 藏品发行方
+ * 藏品创作方
  *
  * @icon fa fa-circle-o
  */
@@ -34,7 +34,7 @@ class Brand extends Backend
      */
 
     /**
-     * 获取所有藏品发行方
+     * 获取所有藏品创作方
      */
     public function all()
     {
