@@ -7,7 +7,7 @@ use addons\shopro\exception\Exception;
 class Goods extends Base
 {
 
-    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar'];
+    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar','composeList'];
     protected $noNeedRight = ['*'];
 
     public function index()
@@ -132,10 +132,17 @@ class Goods extends Base
 
 
     //订阅提醒
-    public function ding(){
+    public function ding()
+    {
         $params = $this->request->post();
         $result = \addons\shopro\model\GoodsDing::ding($params);
         $this->success($result ? '订阅成功' : '取消订阅');
     }
 
+    public function composeList()
+    {
+        $params = $this->request->get();
+        $data = \addons\shopro\model\Goods::composeList($params);
+        $this->success('合成藏品列表', $data);
+    }
 }

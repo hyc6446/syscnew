@@ -34,9 +34,12 @@ class Goods extends Model
         'ser_tag_arr','brand_arr','stock_sku','sales_time_text','tag','category_name','syn_end_time_text'
     ];
 
+    public static $list_field = '*';
+
 
     public function getSerTagArrAttr($value, $data)
     {
+        if (!isset($data['service_ids'])) return [];
         $tag = GoodsService::where( 'id','in',explode(',',$data['service_ids']))->select();
         $item = array_column($tag,'name');
 
@@ -45,21 +48,22 @@ class Goods extends Model
 
     public function getTagAttr($value, $data)
     {
-        return $data['tag']?explode(',',$data['tag']):[];
+        return isset($data['tag'])&&$data['tag']?explode(',',$data['tag']):[];
     }
 
     public function getSalesTimeTextAttr($value,$data)
     {
-        return $data['sales_time'] && $data['sales_time']>time()?date('m月d日 H:i'):'';
+        return isset($data['sales_time'])&&$data['sales_time'] && $data['sales_time']>time()?date('m月d日 H:i'):'';
     }
 
     public function getSynEndTimeTextAttr($value,$data)
     {
-        return $data['syn_end_time']?date('m月d日 H:i'):'';
+        return  isset($data['syn_end_time'])&&$data['syn_end_time']?date('m月d日 H:i'):'';
     }
 
     public function getBrandArrAttr($value, $data)
     {
+        if (!isset($data['brand_ids'])) return [];
         return GoodsBrand::where( 'id','in',explode(',',$data['brand_ids']))->select();
     }
 
@@ -74,6 +78,7 @@ class Goods extends Model
 
     public function getCategoryNameAttr($value,$data)
     {
+        if (!isset($data['category_ids']))return '';
        return Category::where('id',$data['category_ids'])->value('name');
     }
 
@@ -99,6 +104,7 @@ class Goods extends Model
         }else{
             $order = 'weigh desc';
         }
+
         if (isset($keywords) && $keywords !== '') {
             $where['title|subtitle'] = ['like', "%$keywords%"];
         }
@@ -109,6 +115,14 @@ class Goods extends Model
             $where['id'] = ['in', $goodsIdsArray];
         }
 
+        if (isset($is_syn) && $is_syn !== ''){
+            //查询合成品列表
+            $where['is_syn'] = $is_syn;
+            if ($is_syn == 1){
+                $where['syn_end_time'] = [['>',time()],['=',0],'or'];
+                $where['children'] = ['<>',''];
+            }
+        }
 
         $per_sale = $per_sale??0;
         if ($per_sale){
@@ -120,7 +134,6 @@ class Goods extends Model
             // 查询分类所有子分类,包括自己
             $category_ids = Category::getCategoryIds($category_id);
         }
-
         $goods = self::where($where)->where(function ($query) use ($category_ids) {
             // 所有子分类使用 find_in_set or 匹配，亲测速度并不慢
             foreach($category_ids as $key => $category_id) {
@@ -143,7 +156,7 @@ class Goods extends Model
         }
 
 
-        $goods = $goods->field('*,(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
+        $goods = $goods->field(self::$list_field.',(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
 
 
         $hidden = self::$list_hidden;
@@ -163,7 +176,6 @@ class Goods extends Model
         }
 
         if (!$is_page||$per_sale){
-            //发售日历
             $sales = [];
             foreach ($data as $val){
                 $date = date('m月d日 H:i',$val['sales_time']);
@@ -171,20 +183,26 @@ class Goods extends Model
                 unset($val['content']);
                 $sales[$date][] = $val;
             }
-            $goods = [];
-            $auth = Auth::instance();
-            foreach ($sales as $key=>$value){
-                //是否订阅
-                $timestamp = strtotime($key);
-                $ding =  GoodsDing::where(['user_id'=>$auth->id??0,'ding_time'=>$timestamp])->find();
-                $goods[] = [
-                    'date'=>mb_substr($key,0,6),
-                    'time'=>mb_substr($key,7),
-                    'ding_time'=>$value[0]['sales_time'],
-                    'status'=>$ding?1:0,
-                    'list'=>$value
-                ];
+            if ($per_sale){
+                //发售日历
+                $goods = [];
+                $auth = Auth::instance();
+                foreach ($sales as $key=>$value){
+                    //是否订阅
+                    $timestamp = strtotime($key);
+                    $ding =  GoodsDing::where(['user_id'=>$auth->id??0,'ding_time'=>$timestamp])->find();
+                    $goods[] = [
+                        'date'=>mb_substr($key,0,6),
+                        'time'=>mb_substr($key,7),
+                        'ding_time'=>$value[0]['sales_time'],
+                        'status'=>$ding?1:0,
+                        'list'=>$value
+                    ];
+                }
+            }else{
+                $goods = $data;
             }
+
         } else {
             foreach ($data as &$val){
                 //简述
@@ -601,5 +619,18 @@ class Goods extends Model
         }
         return $order;
 
+    }
+
+    public static function composeList($params)
+    {
+        $goodsList = self::getGoodsList(array_merge($params, ['is_syn' => 1]));
+        foreach ($goodsList as &$val){
+            if (!$val['children']){
+                unset($val);
+                continue;
+            }
+            $val['children_list'] = self::getGoodsList(['goods_ids'=>$val['children']],false);
+        }
+        return $goodsList;
     }
 }
