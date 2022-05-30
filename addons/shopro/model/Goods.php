@@ -621,15 +621,28 @@ class Goods extends Model
 
     }
 
-    public static function composeList($params)
+    public  function composeList($params,$uid)
     {
         $goodsList = self::getGoodsList(array_merge($params, ['is_syn' => 1]));
+        $collection = collection($goodsList->items());
+        $goodsList->data = $collection->visible(['id','children','title','image','list']);
         foreach ($goodsList as &$val){
             if (!$val['children']){
                 unset($val);
                 continue;
             }
-            $val['children_list'] = self::getGoodsList(['goods_ids'=>$val['children']],false);
+            $val->unsetAppend();//删除追加属性,默认全部
+
+            $list = self::alias('a')
+                ->field('a.id,a.title,a.image,ifnull(sa.id,0) own')
+                ->join('shopro_user_collect sa','a.id=sa.goods_id and sa.status<2 and sa.user_id='.$uid,'left')
+                ->whereIn('a.id',explode(',',$val['children']))
+                ->select();
+            foreach ($list as &$v){
+                $v['own'] = $v['own']?1:0;
+                $v->unsetAppend();
+            }
+            $val->list = $list;
         }
         return $goodsList;
     }

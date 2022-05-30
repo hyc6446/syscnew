@@ -142,7 +142,7 @@ class Goods extends Base
     public function composeList()
     {
         $params = $this->request->get();
-        $data = \addons\shopro\model\Goods::composeList($params);
+        $data = (new \addons\shopro\model\Goods())->composeList($params,$this->auth->id?:0);
         $this->success('合成藏品列表', $data);
     }
 }
