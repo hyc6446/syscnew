@@ -43,10 +43,10 @@ class Feedback extends Model
 
         $self = self::create([
             "user_id" => $user->id,
-            "type" => $type,
-            "content" => $content,
-            "images" => implode(',', $images),
-            "phone" => $phone,
+            "type" => 'feedback',
+            "content" => $content??'',
+//            "images" => implode(',', $images),
+//            "phone" => $phone,
             'status' => 0
         ]);
 
