@@ -151,7 +151,7 @@ class Goods extends Base
     public function compose()
     {
         $goodsId = $this->request->post('id',0);
-        $result = (new \addons\shopro\model\Goods())->compose($goodsId);
+        $result = (new \addons\shopro\model\Goods())->compose($goodsId,$this->auth->id);
         if (isset($result['msg']) && $result['msg']) {
             $this->error($result['msg'], $result);
         } else {

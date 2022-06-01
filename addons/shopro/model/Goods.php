@@ -631,14 +631,13 @@ class Goods extends Model
     {
         $goodsList = self::getGoodsList(array_merge($params, ['is_syn' => 1]));
         $collection = collection($goodsList->items());
-        $goodsList->data = $collection->visible(['id','children','title','image','list']);
+        $goodsList->data = $collection->visible(['id','children','title','image','list','syn_end_time']);
         foreach ($goodsList as &$val){
             if (!$val['children']){
                 unset($val);
                 continue;
             }
-            $val->unsetAppend();//删除追加属性,默认全部
-
+            $val->append = ['category_name','syn_end_time_text'];
             $list = self::alias('a')
                 ->field('a.id,a.title,a.image,ifnull(sa.id,0) own')
                 ->join('shopro_user_collect sa','a.id=sa.goods_id and sa.status<2 and sa.user_id='.$uid,'left')
@@ -654,7 +653,7 @@ class Goods extends Model
         return $goodsList;
     }
 
-    public function compose($goodsId)
+    public function compose($goodsId,$uid)
     {
         $goods =self::alias('a')
             ->field('a.*,sa.stock')
@@ -672,22 +671,25 @@ class Goods extends Model
             new Exception('已超过合成期限');
         }
 
-        $children = self::whereIn('id',explode(',',$goods['children']))->where('statuss','up')->column('id');
+        $children = self::whereIn('id',explode(',',$goods['children']))->where('status','up')->column('id');
         if (!$children){
             new Exception('该藏品无需子藏品合成');
         }
-        $goodsChildren = UserCollect::where(['status'=>['<',2]])->whereIn('goods_id',$children)->select();
+
+        $goodsChildren = UserCollect::where(['status'=>['<',2],'user_id'=>$uid])->whereIn('goods_id',$children)->column('id');
         if (count($goodsChildren)!=count($children)){
             new Exception('请先收集完所需藏品');
         }
-        $user = User::info();
+
+        //todo::上链
         $res = UserCollect::edit([
-            'user_id'=>$user->id,
+            'user_id'=>$uid,
             'goods_id'=>$goodsId,
             'original_price'=>$goods['price'],
             'type'=>2,
         ]);
         if (!$res) new Exception('合成失败');
+        UserCollect::whereIn('id',$goodsChildren)->update(['status'=>3,'status_time'=>time()]);
         return true;
 
     }
