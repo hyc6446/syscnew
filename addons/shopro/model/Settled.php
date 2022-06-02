@@ -37,7 +37,7 @@ class Settled extends Model
             "user_id" => $user->id,
             "contact" => $contact,
             "mobile" => $mobile,
-            "company" => $company,
+            "company" => $company??'',
             "content" => $content,
             'status' => 0
         ]);

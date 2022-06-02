@@ -71,7 +71,8 @@ class Goods extends Model
     {
         $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales')->find();
         $sku['sell_out'] = 0;
-        if ($sku['stock']-$sku['sales'] == 0) $sku['sell_out'] = 1;
+        if (!$sku['stock']) $sku['sell_out'] = 1;
+        $sku['stock_limit'] = $sku['stock']+ $sku['sales'];//总库存
         unset($sku['sales']);
         return $sku;
     }
@@ -84,8 +85,10 @@ class Goods extends Model
 
 
     /**
+     * 藏品列表
      * params 请求参数
      * is_page 是否分页
+     * per_sale 是否是预售藏品
      */
     public static function getGoodsList($params, $is_page = true,$per_sale=0)
     {
@@ -121,6 +124,8 @@ class Goods extends Model
             if ($is_syn == 1){
                 $where['syn_end_time'] = [['>',time()],['=',0],'or'];
                 $where['children'] = ['<>',''];
+                $goodsIdsArray = GoodsSkuPrice::where('stock','>',0)->column('goods_id');
+                $where['id'] = ['in', $goodsIdsArray];
             }
         }
 
@@ -621,22 +626,23 @@ class Goods extends Model
 
     }
 
+
     public  function composeList($params,$uid)
     {
         $goodsList = self::getGoodsList(array_merge($params, ['is_syn' => 1]));
         $collection = collection($goodsList->items());
-        $goodsList->data = $collection->visible(['id','children','title','image','list']);
+        $goodsList->data = $collection->visible(['id','children','title','image','list','syn_end_time']);
         foreach ($goodsList as &$val){
             if (!$val['children']){
                 unset($val);
                 continue;
             }
-            $val->unsetAppend();//删除追加属性,默认全部
-
+            $val->append = ['category_name','syn_end_time_text'];
             $list = self::alias('a')
                 ->field('a.id,a.title,a.image,ifnull(sa.id,0) own')
                 ->join('shopro_user_collect sa','a.id=sa.goods_id and sa.status<2 and sa.user_id='.$uid,'left')
                 ->whereIn('a.id',explode(',',$val['children']))
+                ->where('a.status','up')
                 ->select();
             foreach ($list as &$v){
                 $v['own'] = $v['own']?1:0;
@@ -645,5 +651,46 @@ class Goods extends Model
             $val->list = $list;
         }
         return $goodsList;
+    }
+
+    public function compose($goodsId,$uid)
+    {
+        $goods =self::alias('a')
+            ->field('a.*,sa.stock')
+            ->join('shopro_goods_sku_price sa','a.id=sa.goods_id','left')
+            ->where('a.id',$goodsId)
+            ->where('a.status','up')
+            ->find();
+        if (!$goods){
+            new Exception('藏品不存在或已下架');
+        }
+        if ($goods['stock']<1){
+            new Exception('藏品已售罄');
+        }
+        if ($goods['syn_end_time']<time() && $goods['syn_end_time']>0){
+            new Exception('已超过合成期限');
+        }
+
+        $children = self::whereIn('id',explode(',',$goods['children']))->where('status','up')->column('id');
+        if (!$children){
+            new Exception('该藏品无需子藏品合成');
+        }
+
+        $goodsChildren = UserCollect::where(['status'=>['<',2],'user_id'=>$uid])->whereIn('goods_id',$children)->column('id');
+        if (count($goodsChildren)!=count($children)){
+            new Exception('请先收集完所需藏品');
+        }
+
+        //todo::上链
+        $res = UserCollect::edit([
+            'user_id'=>$uid,
+            'goods_id'=>$goodsId,
+            'original_price'=>$goods['price'],
+            'type'=>2,
+        ]);
+        if (!$res) new Exception('合成失败');
+        UserCollect::whereIn('id',$goodsChildren)->update(['status'=>3,'status_time'=>time()]);
+        return true;
+
     }
 }
