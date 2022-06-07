@@ -342,18 +342,21 @@ class Goods extends Model
     }
 
 
-
-    public static function getGoodsDetail($id)
+    public static function getGoodsDetail($id,$withTrashed=false)
     {
         $user = User::info();
-
-        $detail = (new self)->field('*')
+        $model = (new self());
+        if ($withTrashed){
+            //获取包括软删除的数据
+            $model = self::withTrashed();
+        }
+        $detail =$model->field('*')
             ->where('id', $id)->with(['favorite' => function ($query) use ($user) {
             $user_id = empty($user) ? 0 : $user->id;
             return $query->where(['user_id' => $user_id]);
         }])->find();
 
-        if (!$detail || $detail->status === 'down') {
+        if (!$detail || ($detail->status === 'down' && !$withTrashed)) {
             new Exception('藏品不存在或已下架');
         }
         
