@@ -342,6 +342,14 @@ class Goods extends Model
     }
 
 
+    /**
+     * @param $id 藏品id
+     * @param false $withTrashed  是否查询已经删除的藏品(针对用户已经收集成功后的展示)
+     * @return array|bool|\PDOStatement|string|Model|null
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
     public static function getGoodsDetail($id,$withTrashed=false)
     {
         $user = User::info();
@@ -367,7 +375,7 @@ class Goods extends Model
 
         $detail['is_favorite']  =  $detail['favorite']?1:0;
         $detail['is_while_sales']  = 1;
-        if (!$detail['sales_time'] || $detail['sales_time']<= time()){
+        if (!$detail['sales_time'] || $detail['sales_time']<= time() || $withTrashed == true){
             $detail['is_while_sales'] = 0;
             $detail['sales_time'] = 0;
             $detail['can_sales'] = 1;
