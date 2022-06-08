@@ -1006,12 +1006,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         this.category_ids_all[pid].splice(idx, 1);
                         this.selectedcatArr.splice(index, 1)
                     },
-                    submitForm(formName) {
+                    submitForm(formName,issue) {
                         this.$refs[formName].validate((valid) => {
                             if (valid) {
                                 let that = this;
                                 let arrForm = JSON.parse(JSON.stringify(that.goodsDetail));
                                 let params_arrflg = true;
+                                arrForm.issue = issue?issue:0;
                                 arrForm.params_arr.forEach(i => {
                                     for (key in i) {
                                         if (!i[key]) {

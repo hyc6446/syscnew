@@ -104,8 +104,17 @@ class Order extends Base
 
     public function createOrder()
     {
-        $params = $this->request->post();
-
+        $post = $this->request->post();
+        $params['goods_list'] = [];
+        $params['goods_list'][0]['goods_id'] = $post['goods_id'];
+        $params['goods_list'][0]['goods_num'] = 1;
+        $params['goods_list'][0]['sku_price_id'] = $post['sku_price_id'];
+        $params['goods_list'][0]['goods_price'] = $post['goods_price'];
+        $params['goods_list'][0]['dispatch_type'] = 'virtual';
+        $params['address_id'] = '';
+        $params['buy_type'] = 'alone';
+        $params['coupons_id'] = 0;
+        $params['from'] = 'goods';
         // 表单验证
         $this->shoproValidate($params, get_class(), 'createOrder');
 
