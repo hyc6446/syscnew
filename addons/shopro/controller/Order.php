@@ -118,10 +118,16 @@ class Order extends Base
         // 表单验证
         $this->shoproValidate($params, get_class(), 'createOrder');
 
+        //验证藏品是否可购买
+        $goods = \addons\shopro\model\Goods::getGoodsDetail($post['goods_id']);
+        if ($goods['sales_time'] && $goods['sales_time']> time()) {
+            $this->error('预售藏品暂不支持购买');
+        }
         $order = \addons\shopro\model\Order::createOrder($params);
 
         $this->success('订单添加成功', $order);
     }
+
 
 
     // 获取可用优惠券列表

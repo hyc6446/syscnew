@@ -333,7 +333,7 @@ trait OrderOper
             // 添加 订单 item
             foreach ($new_goods_list as $key => $buyinfo) {
                 $detail = $buyinfo['detail'];
-                $current_sku_price = $detail['current_sku_price'];
+                $current_sku_price = $detail['current_sku_price']??[];
 
                 $orderItem = new OrderItem();
 
@@ -352,15 +352,15 @@ trait OrderOper
                 // 当前商品规格对应的 活动下对应商品规格的 id
                 $orderItem->item_goods_sku_price_id = isset($current_sku_price['item_goods_sku_price']) ?
                     $current_sku_price['item_goods_sku_price']['id'] : 0;
-                $orderItem->goods_sku_text = $current_sku_price['goods_sku_text'];
+                $orderItem->goods_sku_text = $current_sku_price['goods_sku_text']??'';
                 $orderItem->goods_title = $detail->title;
                 $orderItem->goods_image = empty($current_sku_price['image']) ? $detail->image : $current_sku_price['image'];
                 $orderItem->goods_original_price = $detail->original_price;
                 $orderItem->discount_fee = $buyinfo['discount_fee'];        // 平均计算单件商品所享受的折扣
                 $orderItem->pay_price = $buyinfo['pay_price'];        // 平均计算单件商品不算运费，算折扣时候的金额
-                $orderItem->goods_price = $detail->current_sku_price->price;
+                $orderItem->goods_price = (isset($detail->current_sku_price))?$detail->current_sku_price->price:($detail['price']);
                 $orderItem->goods_num = $buyinfo['goods_num'] ?? 1;
-                $orderItem->goods_weight = $detail->current_sku_price->weight;
+                $orderItem->goods_weight = (isset($detail->current_sku_price))?$detail->current_sku_price->weight:'';
                 $orderItem->dispatch_status = 0;
                 $orderItem->dispatch_fee = $buyinfo['dispatch_amount'];
                 $orderItem->dispatch_type = $buyinfo['dispatch_type'];
@@ -369,6 +369,7 @@ trait OrderOper
                 $orderItem->aftersale_status = 0;
                 $orderItem->comment_status = 0;
                 $orderItem->refund_status = 0;
+                $orderItem->user_collect_id = $buyinfo['user_collect_id']??0;
 
                 $ext = [];
                 if (isset($buyinfo['dispatch_date'])) {

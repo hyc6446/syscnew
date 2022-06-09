@@ -106,4 +106,31 @@ class UserCollect extends Base
         $data['collect_info'] = $collect->visible(['asset_id','shard_id','give_user_id','owner_addr','querysds','token','card_id','trans_hash','card_time','add']);
         $this->success('寄售大厅藏品详情',$data);
     }
+
+
+
+    public function createCollectOrder()
+    {
+        $post = $this->request->post();
+        if (!$post['id'])$this->error('请选择购买的藏品');
+        $collect = (new \addons\shopro\model\UserCollect())->getOne($post['id'],0);
+        if ($collect['status']!=1)$this->error('该藏品暂未出售');
+
+        $params['goods_list'] = [];
+        $params['goods_list'][0]['goods_id'] = $collect['goods_id'];
+        $params['goods_list'][0]['goods_num'] = 1;
+        $params['goods_list'][0]['sku_price_id'] = 0;
+        $params['goods_list'][0]['goods_price'] = $post['price'];
+        $params['goods_list'][0]['dispatch_type'] = 'usercollect';
+        $params['goods_list'][0]['user_collect_id'] =$post['id'];
+        $params['address_id'] = '';
+        $params['buy_type'] = 'alone';
+        $params['coupons_id'] = 0;
+        $params['from'] = 'goods';
+
+
+        $order = \addons\shopro\model\Order::createOrder($params);
+
+        $this->success('订单添加成功', $order);
+    }
 }
