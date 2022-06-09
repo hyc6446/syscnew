@@ -93,7 +93,7 @@ trait OrderOperCreate
                 // 积分商城商品详情
                 $detail = ScoreGoodsSkuPrice::getGoodsDetail($buyinfo['goods_id']);
             } else {
-                $detail = Goods::getGoodsDetail($buyinfo['goods_id']);
+                $detail = Goods::getGoodsDetail($buyinfo['goods_id'],true);
                 // 如果有活动，判断活动是否正在进行中
                 if (isset($detail['activity']) && $detail['activity']) {
                     $activity = $detail['activity'];
@@ -265,7 +265,7 @@ trait OrderOperCreate
             $goods_amount = bcadd($goods_amount, $current_goods_amount, 2);
 
             // 获取配送数据
-            if ($buyinfo['dispatch_type']) {
+            if ($buyinfo['dispatch_type'] && $buyinfo['dispatch_type']!='virtual') {
                 try {
                     // 捕获里面的异常，然后使用封装的异常处理
                     $dispatchData = Dispatch::getDispatch($buyinfo['dispatch_type'], $detail, [

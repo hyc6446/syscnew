@@ -456,27 +456,7 @@
         </div>
         <el-collapse-transition>
             <div v-if="chooseType==1">
-<!--                <div class="custom-choose-type display-flex">-->
-<!--                    <div class="custom-choose-type-tip">-->
-<!--                        活动类别-->
-<!--                    </div>-->
-<!--                    <div class="common-btn choose-btn" :class="activityType=='all'?'choose-btn-active':''"-->
-<!--                        @click="chooseOpt('all')">-->
-<!--                        全部-->
-<!--                    </div>-->
-<!--                    <div class="common-btn choose-btn" :class="activityType=='groupon'?'choose-btn-active':''"-->
-<!--                        @click="chooseOpt('groupon')">-->
-<!--                        拼团-->
-<!--                    </div>-->
-<!--                    <div class="common-btn choose-btn" :class="activityType=='seckill'?'choose-btn-active':''"-->
-<!--                        @click="chooseOpt('seckill')">-->
-<!--                        秒杀-->
-<!--                    </div>-->
-<!--                    <div class="common-btn choose-btn" :class="activityType=='score'?'choose-btn-active':''"-->
-<!--                        @click="chooseOpt('score')">-->
-<!--                        积分-->
-<!--                    </div>-->
-<!--                </div>-->
+
                 <div class="custom-choose-type display-flex">
                     <div class="custom-choose-type-tip">
                         价格区间
@@ -526,10 +506,6 @@
                     </el-radio-group>
                 </div>
             </div>
-<!--            <div class="common-btn  recycle-btn" @click="goodsOpt('recycle')">-->
-<!--                <i class="fa fa-recycle"></i>-->
-<!--                回收站-->
-<!--            </div>-->
         </div>
         <div v-loading="tableAjax">
             <el-table ref="multipleTable" :data="goodsData" tooltip-effect="dark" style="width: 100%" border
@@ -649,18 +625,21 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="stock" label="发行数量" min-width="100">
+                <el-table-column prop="issue_num" label="发行数量" min-width="100">
                     <template slot="header" slot-scope="scope">
                         <div class="display-flex">
                             <div>发行数量</div>
-                            <div class="display-flex sort-order">
-                                <i class="el-icon-sort-up icon-top"
-                                    :style="{color:(sort=='stock' && order=='asc')?'#7438d5':''}"
-                                    @click="sortOrder('stock','asc')"></i>
-                                <i class="el-icon-sort-down icon-bottom"
-                                    :style="{color:(sort=='stock' && order=='desc')?'#7438d5':''}"
-                                    @click="sortOrder('stock','desc')"></i>
-                            </div>
+
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="是否发行" min-width="150">
+                    <template  slot-scope="scope">
+                        <div v-if="scope.row.issue">
+                            <span style="color:#67C23A">已发行到百度超级链</span>
+                        </div>
+                        <div v-else>
+                            <span style="color:#E6A23C">暂未发行</span>
                         </div>
                     </template>
                 </el-table-column>

@@ -3,6 +3,10 @@
 return [
     'autoload' => false,
     'hooks' => [
+        'app_init' => [
+            'epay',
+            'shopro',
+        ],
         'config_init' => [
             'qcloudsms',
             'ueditor',
@@ -17,9 +21,6 @@ return [
             'qcloudsms',
         ],
         'upgrade' => [
-            'shopro',
-        ],
-        'app_init' => [
             'shopro',
         ],
     ],
