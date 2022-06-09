@@ -122,11 +122,11 @@ trait OrderOperCreate
 
 
                 //寄售商品不用做此判断
-                if (!$detail || ($buyinfo['dispatch_type']!='usercollect' && $order_type != 'score' && $detail->status === 'down')) {
+                if (!$detail || (!isset($buyinfo['user_collect_id'])  && $order_type != 'score' && $detail->status === 'down')) {
                     self::checkAndException('商品不存在或已下架', true);
                 }
 
-                if ($buyinfo['dispatch_type']!='usercollect' && (!isset($detail->current_sku_price) || !$detail->current_sku_price)) {
+                if (!isset($buyinfo['user_collect_id']) && (!isset($detail->current_sku_price) || !$detail->current_sku_price)) {
                     self::checkAndException('商品规格不存在', true);
                 }
 
@@ -189,7 +189,7 @@ trait OrderOperCreate
             }
 
             // 当前库存，小于要购买的数量 + 开团人数
-            if ($buyinfo['dispatch_type']!='usercollect' && $detail->current_sku_price['stock'] < ($buyinfo['goods_num'] + $groupon_num)) {
+            if (!isset($buyinfo['user_collect_id']) && $detail->current_sku_price['stock'] < ($buyinfo['goods_num'] + $groupon_num)) {
                 if ($detail->current_sku_price['stock'] < $buyinfo['goods_num']) {
                     // 不够自己买
                     self::checkAndException('商品库存不足');
@@ -266,7 +266,7 @@ trait OrderOperCreate
             $goods_original_amount = bcadd($goods_original_amount, $current_goods_original_amount, 2);
 
             // 当前商品现在总价
-            if ($buyinfo['dispatch_type']=='usercollect'){
+            if (isset($buyinfo['user_collect_id']) && $buyinfo['user_collect_id']){
                 //寄售藏品价格
                 $collect = UserCollect::get($buyinfo['user_collect_id']);
                 $current_goods_amount = bcmul($collect['price'], $buyinfo['goods_num'], 2);
@@ -277,7 +277,7 @@ trait OrderOperCreate
             $goods_amount = bcadd($goods_amount, $current_goods_amount, 2);
 
             // 获取配送数据
-            if ($buyinfo['dispatch_type'] && !in_array($buyinfo['dispatch_type'],['virtual','usercollect'])) {
+            if ($buyinfo['dispatch_type'] && !in_array($buyinfo['dispatch_type'],['autosend'])) {
                 try {
                     // 捕获里面的异常，然后使用封装的异常处理
                     $dispatchData = Dispatch::getDispatch($buyinfo['dispatch_type'], $detail, [

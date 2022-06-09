@@ -110,7 +110,7 @@ class Order extends Base
         $params['goods_list'][0]['goods_num'] = 1;
         $params['goods_list'][0]['sku_price_id'] = $post['sku_price_id'];
         $params['goods_list'][0]['goods_price'] = $post['goods_price'];
-        $params['goods_list'][0]['dispatch_type'] = 'virtual';
+        $params['goods_list'][0]['dispatch_type'] = 'autosend';
         $params['address_id'] = '';
         $params['buy_type'] = 'alone';
         $params['coupons_id'] = 0;

@@ -3,7 +3,9 @@
 namespace addons\shopro\library\traits\model\order;
 
 use addons\shopro\exception\Exception;
+use addons\shopro\model\Category;
 use addons\shopro\model\Coupons;
+use addons\shopro\model\Goods;
 use addons\shopro\model\User;
 use addons\shopro\model\GoodsComment;
 use addons\shopro\model\Order;
@@ -395,9 +397,9 @@ trait OrderOper
             \think\Hook::listen('order_create_after', $data);
 
             // 重新获取订单
-            $order = self::where('id', $order['id'])->find();
+            $orders = self::where('id', $order['id'])->find();
 
-            return $order;
+            return $orders;
         });
 
         return $order;
@@ -410,8 +412,8 @@ trait OrderOper
         $user = User::info();
         extract($params);
 
-        $order = (new self())->where('user_id', $user->id)->with('item');
-
+        $order = (new self())->field('id,type,order_sn,total_amount,status,pay_type,paytime,createtime,ext,activity_type')->where('user_id', $user->id)->with('item');
+        $type = $type??'all';
         switch ($type) {
             case 'all':
                 $order = $order;
@@ -433,7 +435,9 @@ trait OrderOper
                 break;
         }
 
-        $orders = $order->order('id', 'desc')->paginate(10);
+        $orders = $order->order('id', 'desc')->paginate($limit??10);
+        $goodsCate = Category::all();
+        $goodsCate = array_column($goodsCate,null,'id');
 
         // 处理未支付订单 item status_code
         $orders = $orders->toArray();
@@ -441,6 +445,13 @@ trait OrderOper
             $data = $orders['data'];
             foreach ($data as $key => $od) {
                 $data[$key] = self::setOrderItemStatusByOrder($od);
+                $item = $od['item'];
+                $arr = [];
+                    foreach ($item as $k=>$v){
+                        $goods = Goods::get($v['goods_id']);
+                        $arr[] = ['id' => $v['id'], 'image' => $v['goods_image'], 'title' => $v['goods_title'],'category'=>$goodsCate[$goods['category_ids']]['name']??''];
+                    }
+                $data[$key]['item'] = $arr;
             }
 
             $orders['data'] = $data;

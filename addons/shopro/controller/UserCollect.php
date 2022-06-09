@@ -121,7 +121,7 @@ class UserCollect extends Base
         $params['goods_list'][0]['goods_num'] = 1;
         $params['goods_list'][0]['sku_price_id'] = 0;
         $params['goods_list'][0]['goods_price'] = $post['price'];
-        $params['goods_list'][0]['dispatch_type'] = 'usercollect';
+        $params['goods_list'][0]['dispatch_type'] = 'autosend';
         $params['goods_list'][0]['user_collect_id'] =$post['id'];
         $params['address_id'] = '';
         $params['buy_type'] = 'alone';
