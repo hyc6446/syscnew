@@ -11,6 +11,8 @@ use addons\shopro\model\PrizeRecord;
 
 class Box extends Base
 {
+    protected $noNeedLogin = ['recommend','box_detail'];
+    protected $noNeedRight = ['*'];
 
     public function recommend()
     {
@@ -31,7 +33,7 @@ class Box extends Base
                 // 查询前6个商品图片
                 // $firstGoods = Detail::where('box_id', $item->box_id)->order('weigh', 'desc')->limit(6)->column('goods_id');
                 // $goods_images = Goods::whereIn('id', $firstGoods)->column('image');
-                $goods_images = Detail::alias('a')->join("goods b","b.id = a.goods_id")->where('a.box_id', $item->box_id)->order('a.weigh', 'desc')->limit(6)->column('b.image');
+                $goods_images = Detail::alias('a')->join("shopro_goods b","b.id = a.goods_id")->where('a.box_id', $item->box_id)->order('a.weigh', 'desc')->limit(6)->column('b.image');
 
                 foreach ($goods_images as &$image) {
                     $image = cdnurl($image, true);
@@ -50,7 +52,7 @@ class Box extends Base
                 $item->goods_images = $goods_images;
             });
 
-        $this->success('查询成功', $list);
+         $this->success('查询成功', $list);
         
     }
 
@@ -74,7 +76,7 @@ class Box extends Base
         $list = PrizeRecord::alias('prize')
             ->field('prize.id record_id,prize.goods_name,prize.goods_image,prize.create_time,prize.exchange_time')
             ->field('order.coin_price box_coin_price,order.rmb_price box_rmb_price,order.pay_method')
-            ->join('shopro_order order', 'order.id = prize.order_id')
+            ->join('shopro_box_order order', 'order.id = prize.order_id')
             ->where('prize.user_id', $this->auth->id)
             ->where('prize.status', $status) // 奖品状态:bag=盒柜,exchange=已回收,delivery=申请发货,received=已收货
             ->order($order)
@@ -112,7 +114,7 @@ class Box extends Base
         $is_star = $this->auth->isLogin() ? Star::check($this->auth->id, $box_id) : 0;
 
         // 查询盲盒基础信息
-        $box = Box::field('box_banner_images,box_banner_images_desc,box_name,coin_price')->where('id', $box_id)->find();
+        $box = BoxModel::field('box_banner_images,box_banner_images_desc,box_name,coin_price')->where('id', $box_id)->find();
         if (empty($box)) {
             $this->error('盲盒有误');
         }
