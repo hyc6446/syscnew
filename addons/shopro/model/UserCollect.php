@@ -145,7 +145,7 @@ class UserCollect extends Model
             $where = ['a.user_id'=>$uid, 'a.is_consume'=>0, 'a.status'=>['<',2]];
         }
         if (isset($params['cate_id'])&&$params['cate_id']){
-            $where['a.category_ids'] = $params['cate_id'];
+            $where['sg.category_ids'] = $params['cate_id'];
         }
         if (isset($params['keywords'])&&$params['keywords']){
             $where['sg.title'] = ['like','%'.$params['keywords'].'%'];
