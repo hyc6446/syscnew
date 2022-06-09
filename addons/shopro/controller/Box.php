@@ -18,16 +18,23 @@ class Box extends Base
     {
         $pagesize = input('pagesize/d', 10);
         $page = input('page/d', 1);
+        $category_id = input('category_id/d', '');
 
         // 查询空盲盒
         $existboxid = Detail::field('box_id')->distinct(true)->buildSql();
         $emptyBoxIds = BoxModel::where('id', 'exp', 'not in ' . $existboxid)->column('id');
+        $where = ['a.switch'=>1];
+        if($category_id){
+            $where['a.category_id'] = $category_id;
+        }
 
-        $list = BoxModel::alias('box')
-            ->field('id box_id,box_name,coin_price')
-            ->whereNotIn('id', $emptyBoxIds)
+
+        $list = BoxModel::alias('box')->alias('a')
+            ->field('a.id box_id,a.box_name,a.coin_price,b.name cate_name,b.weigh,a.category_id')
+            ->join('shopro_box_category b','a.category_id=b.id')
+            ->whereNotIn('a.id', $emptyBoxIds)
             ->order('sort', 'asc')
-            ->where("switch",1)
+            ->where($where)
             ->paginate($pagesize, false, ['page' => $page])
             ->each(function ($item) {
                 // 查询前6个商品图片
@@ -108,10 +115,10 @@ class Box extends Base
         }
 
         // 查询金币余额
-        $mycoin = $this->auth->isLogin() ? $this->auth->coin : 0;
+        $mycoin = $this->auth->isLogin() ? $this->auth->money : 0;
 
         // 查询是否收藏
-        $is_star = $this->auth->isLogin() ? Star::check($this->auth->id, $box_id) : 0;
+//        $is_star = $this->auth->isLogin() ? Star::check($this->auth->id, $box_id) : 0;
 
         // 查询盲盒基础信息
         $box = BoxModel::field('box_banner_images,box_banner_images_desc,box_name,coin_price')->where('id', $box_id)->find();
@@ -134,17 +141,17 @@ class Box extends Base
         //     ->whereIn('id', array_slice(array_keys($detail), 0, 1000))
         //     ->select();
 
-        $firstGoods =  Detail::alias("a")->join("goods b","b.id = a.goods_id")->where('a.box_id', $box_id)->field("b.image,b.coin_price,b.goods_name,b.tag")->order("a.weigh desc")->select();
+        $firstGoods =  Detail::alias("a")->join("shopro_goods b","b.id = a.goods_id")->where('a.box_id', $box_id)->field("b.image,b.price,b.title,b.tag")->order("a.weigh desc")->select();
 
         foreach ($firstGoods as &$first) {
             $first->image = $first->image ? cdnurl($first->image, true) : $first->image;
             $first->tag = $tagName[$first->tag];
-            $first->price = round(Setting::getRmbFromCoin($first->coin_price ?: 0), 2);
+            $first->price = round($first->price, 2);
             $first->hidden(['coin_price']);
         }
 
         // 查询全部商品
-        $moreGoods = Goods::field('id,image,coin_price,goods_name,tag')
+        $moreGoods = Goods::field('id,image,price,title,tag')
             ->where('status', 'online')
             ->whereIn('id', array_keys($detail))
             ->select();
@@ -159,7 +166,7 @@ class Box extends Base
             }
             $more->image = $more->image ? cdnurl($more->image, true) : $more->image;
             $more->tag = $tagName[$more->tag];
-            $more->price = round(Setting::getRmbFromCoin($more->coin_price ?: 0), 2);
+            $more->price = round($more->price, 2);
             $more->hidden(['id,coin_price']);
         }
 
@@ -214,7 +221,6 @@ class Box extends Base
 
         $ret = [
             'mycoin' => $mycoin,
-            'is_star' => $is_star,
             'box_banner_images' => $box_banner_images,
             'box_banner' => $box_banner,
             'box_name' => $box->box_name,
