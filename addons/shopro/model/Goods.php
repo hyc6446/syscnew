@@ -31,7 +31,7 @@ class Goods extends Model
 
     // 追加属性
     protected $append = [
-        'ser_tag_arr','brand_arr','sales_time_text','tag','category_name','syn_end_time_text'
+        'ser_tag_arr','brand_arr','sales_time_text','tag','category_name','syn_end_time_text','sale_sta'
     ];
 
     public static $list_field = '*';
@@ -83,6 +83,21 @@ class Goods extends Model
        return Category::where('id',$data['category_ids'])->value('name');
     }
 
+    public function getSaleStaAttr($value,$data)
+    {
+        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales')->find();
+        if ($data['issue']==0) return ['status'=>0,'txt'=>'即将发售'];
+
+        if ($sku['stock']==0){
+            return ['status'=>2,'txt'=>'已售罄'];
+        }elseif ($data['sales_time']>time()){
+            return ['status'=>0,'txt'=>'即将发售'];
+        }elseif ($data['can_sales']==1 && $data['sales_time']<=time()){
+            return ['status'=>1,'txt'=>'正在发售'];
+        }else{
+            return ['status'=>0,'txt'=>'即将发售'];
+        }
+    }
 
     /**
      * 藏品列表
@@ -97,7 +112,7 @@ class Goods extends Model
             'status' => ['in', ((isset($type) && $type == 'all') ? ['up', 'hidden'] : ['up'])],     // type = all 查询全部
             'issue'=>1,
         ];
-        if ((isset($type) && $type != 'all') && (isset($tag) && $tag != 'select')){
+        if ((isset($islist) && $islist) && (isset($tag) && $tag != 'select')){
             $where['can_sales'] = 1;
             $where['sales_time'] = ['<=',time()];
         }
