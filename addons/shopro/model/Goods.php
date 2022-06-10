@@ -31,7 +31,7 @@ class Goods extends Model
 
     // 追加属性
     protected $append = [
-        'ser_tag_arr','brand_arr','stock_sku','sales_time_text','tag','category_name','syn_end_time_text'
+        'ser_tag_arr','brand_arr','sales_time_text','tag','category_name','syn_end_time_text'
     ];
 
     public static $list_field = '*';
@@ -95,6 +95,7 @@ class Goods extends Model
         extract($params);
         $where = [
             'status' => ['in', ((isset($type) && $type == 'all') ? ['up', 'hidden'] : ['up'])],     // type = all 查询全部
+            'issue'=>1,
         ];
         if ((isset($type) && $type != 'all') && (isset($tag) && $tag != 'select')){
             $where['can_sales'] = 1;
@@ -367,12 +368,16 @@ class Goods extends Model
         if (!$detail || ($detail->status === 'down' && !$withTrashed)) {
             new Exception('藏品不存在或已下架');
         }
+        if (!$detail->issue) {
+            new Exception('藏品暂未发行');
+        }
         
 //        $detail = $detail->append(['sku', 'coupons']);
 
         // 处理活动规格
-//        $detail = self::operActivity($detail, $detail->sku_price);
+        $detail = self::operActivity($detail, $detail->sku_price);
 
+//        $detail['sku_price'] = $detail->sku_price;
         $detail['is_favorite']  =  $detail['favorite']?1:0;
         $detail['is_while_sales']  = 1;
         if (!$detail['sales_time'] || $detail['sales_time']<= time() || $withTrashed == true){

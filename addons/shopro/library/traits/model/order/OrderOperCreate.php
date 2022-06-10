@@ -7,6 +7,7 @@ use addons\shopro\model\ScoreGoodsSkuPrice;
 use addons\shopro\model\Goods;
 use addons\shopro\model\User;
 use addons\shopro\model\UserAddress;
+use addons\shopro\model\UserCollect;
 use addons\shopro\model\UserCoupons;
 use addons\shopro\model\Dispatch;
 use think\Cache;
@@ -93,7 +94,7 @@ trait OrderOperCreate
                 // 积分商城商品详情
                 $detail = ScoreGoodsSkuPrice::getGoodsDetail($buyinfo['goods_id']);
             } else {
-                $detail = Goods::getGoodsDetail($buyinfo['goods_id']);
+                $detail = Goods::getGoodsDetail($buyinfo['goods_id'],true);
                 // 如果有活动，判断活动是否正在进行中
                 if (isset($detail['activity']) && $detail['activity']) {
                     $activity = $detail['activity'];
@@ -119,13 +120,17 @@ trait OrderOperCreate
                 }
             }
 
-            if (!$detail || ($order_type != 'score' && $detail->status === 'down')) {
-                self::checkAndException('商品不存在或已下架', true);
-            }
 
-            if (!isset($detail->current_sku_price) || !$detail->current_sku_price) {
-                self::checkAndException('商品规格不存在', true);
-            }
+                //寄售商品不用做此判断
+                if (!$detail || (!isset($buyinfo['user_collect_id'])  && $order_type != 'score' && $detail->status === 'down')) {
+                    self::checkAndException('商品不存在或已下架', true);
+                }
+
+                if (!isset($buyinfo['user_collect_id']) && (!isset($detail->current_sku_price) || !$detail->current_sku_price)) {
+                    self::checkAndException('商品规格不存在', true);
+                }
+
+
 
             // 判断商品是否选择了配送方式
             if (!isset($buyinfo['dispatch_type']) || empty($buyinfo['dispatch_type'])) {
@@ -184,7 +189,7 @@ trait OrderOperCreate
             }
 
             // 当前库存，小于要购买的数量 + 开团人数
-            if ($detail->current_sku_price['stock'] < ($buyinfo['goods_num'] + $groupon_num)) {
+            if (!isset($buyinfo['user_collect_id']) && $detail->current_sku_price['stock'] < ($buyinfo['goods_num'] + $groupon_num)) {
                 if ($detail->current_sku_price['stock'] < $buyinfo['goods_num']) {
                     // 不够自己买
                     self::checkAndException('商品库存不足');
@@ -261,11 +266,18 @@ trait OrderOperCreate
             $goods_original_amount = bcadd($goods_original_amount, $current_goods_original_amount, 2);
 
             // 当前商品现在总价
-            $current_goods_amount = bcmul($detail->current_sku_price->price, $buyinfo['goods_num'], 2);
+            if (isset($buyinfo['user_collect_id']) && $buyinfo['user_collect_id']){
+                //寄售藏品价格
+                $collect = UserCollect::get($buyinfo['user_collect_id']);
+                $current_goods_amount = bcmul($collect['price'], $buyinfo['goods_num'], 2);
+            }else{
+                $current_goods_amount = bcmul($detail->current_sku_price->price, $buyinfo['goods_num'], 2);
+
+            }
             $goods_amount = bcadd($goods_amount, $current_goods_amount, 2);
 
             // 获取配送数据
-            if ($buyinfo['dispatch_type']) {
+            if ($buyinfo['dispatch_type'] && !in_array($buyinfo['dispatch_type'],['autosend'])) {
                 try {
                     // 捕获里面的异常，然后使用封装的异常处理
                     $dispatchData = Dispatch::getDispatch($buyinfo['dispatch_type'], $detail, [

@@ -774,6 +774,7 @@
     <span slot="footer" class="dialog-footer">
         <div class="back-btn" v-if="stepActive>1" @click="gonextback">上一步</div>
         <div class="btn-common sub-btn" v-if="stepActive<2" @click="gotoback('goodsDetail')">下一步</div>
-        <div class="btn-common sub-btn" v-if="stepActive==2" @click="submitForm('goodsDetail')">确定</div>
+        <div class="btn-common sub-btn" v-if="stepActive==2" @click="submitForm('goodsDetail',0)">保存</div>
+        <div class="btn-common sub-btn" style="margin-left: 10px;background-color: #F56C6C" v-if="stepActive==2" @click="submitForm('goodsDetail',1)">发行</div>
     </span>
 </div>
