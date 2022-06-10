@@ -12,7 +12,7 @@ class PrizeRecord extends Model
     use SoftDelete;
 
     // 表名
-    protected $name = 'prize_record';
+    protected $name = 'shopro_prize_record';
 
     // 自动写入时间戳字段
     protected $autoWriteTimestamp = 'int';

@@ -11,7 +11,7 @@ use addons\shopro\model\PrizeRecord;
 
 class Box extends Base
 {
-    protected $noNeedLogin = ['recommend','box_detail'];
+    protected $noNeedLogin = ['recommend','boxDetail','getPrizeRecord'];
     protected $noNeedRight = ['*'];
 
     public function recommend()
@@ -30,7 +30,7 @@ class Box extends Base
 
 
         $list = BoxModel::alias('box')->alias('a')
-            ->field('a.id box_id,a.box_name,a.coin_price,b.name cate_name,b.weigh,a.category_id')
+            ->field('a.id box_id,a.box_name,a.coin_price,b.name cate_name,b.weigh,a.category_id,b.color')
             ->join('shopro_box_category b','a.category_id=b.id')
             ->whereNotIn('a.id', $emptyBoxIds)
             ->order('sort', 'asc')
@@ -115,7 +115,7 @@ class Box extends Base
         }
 
         // 查询金币余额
-        $mycoin = $this->auth->isLogin() ? $this->auth->money : 0;
+//        $mycoin = $this->auth->isLogin() ? $this->auth->money : 0;
 
         // 查询是否收藏
 //        $is_star = $this->auth->isLogin() ? Star::check($this->auth->id, $box_id) : 0;
@@ -126,84 +126,17 @@ class Box extends Base
             $this->error('盲盒有误');
         }
 
-        $tagName = [
-            'normal' => '普通',
-            'rare' => '珍贵',
-            'supreme' => '稀有',
-        ];
-
-        // 查询商品id及概率
-        $detail = Detail::where('box_id', $box_id)->order('weigh desc')->column('rate', 'goods_id');
-
-        // // 查询前6个商品
-        // $firstGoods = Goods::field('image,coin_price,goods_name,tag')
-        //     ->where('status', 'online')
-        //     ->whereIn('id', array_slice(array_keys($detail), 0, 1000))
-        //     ->select();
-
-        $firstGoods =  Detail::alias("a")->join("shopro_goods b","b.id = a.goods_id")->where('a.box_id', $box_id)->field("b.image,b.price,b.title,b.tag")->order("a.weigh desc")->select();
+        $firstGoods =  Detail::alias("a")
+            ->join("shopro_goods b","b.id = a.goods_id")
+            ->join('shopro_category c','b.category_ids=c.id')
+            ->where('a.box_id', $box_id)->field("b.image,b.price,b.title,c.name,c.color,a.rate")->order("a.weigh desc")->select();
 
         foreach ($firstGoods as &$first) {
             $first->image = $first->image ? cdnurl($first->image, true) : $first->image;
-            $first->tag = $tagName[$first->tag];
             $first->price = round($first->price, 2);
             $first->hidden(['coin_price']);
         }
 
-        // 查询全部商品
-        $moreGoods = Goods::field('id,image,price,title,tag')
-            ->where('status', 'online')
-            ->whereIn('id', array_keys($detail))
-            ->select();
-
-        // 整理商品信息并记录每个类别的概率总合
-        $rateList = [];
-        foreach ($moreGoods as &$more) {
-            if (isset($rateList[$more->tag])) {
-                $rateList[$more->tag] += $detail[$more->id];
-            } else {
-                $rateList[$more->tag] = $detail[$more->id];
-            }
-            $more->image = $more->image ? cdnurl($more->image, true) : $more->image;
-            $more->tag = $tagName[$more->tag];
-            $more->price = round($more->price, 2);
-            $more->hidden(['id,coin_price']);
-        }
-
-        $tags = [
-            'normal' => 0,
-            'rare' => 0,
-            'supreme' => 0
-        ];
-        // 没有的商品概率设为0
-        foreach ($tags as $tag => &$rate) {
-            if (isset($rateList[$tag])) {
-                $rate = $rateList[$tag];
-            }
-        }
-
-        // 计算全部类别概率总和
-        $rate_sum = array_sum(array_values($tags));
-        // 计算每个类别概率
-        foreach ($tags as $tag => &$rate) {
-            $rate = $rate_sum ? (round($rate / $rate_sum, 4) * 100) : 0 . '%';
-        }
-
-        // 查询该盲盒开箱记录
-        $prize = Prizerecord::alias('prize')
-            ->field('prize.goods_name,prize.goods_image,prize.goods_rmb_price,prize.create_time')
-            ->field('user.nickname,user.avatar')
-            ->join('user user', 'user.id = prize.user_id')
-            ->where('prize.box_id', $box_id)
-            ->order('prize.id', 'desc')
-            ->limit(10)
-            ->select();
-
-        foreach ($prize as $prize_item) {
-            $prize_item->create_time = date('Y-m-d H:i:s', $prize_item->create_time);
-            $prize_item->avatar = $prize_item->avatar ? cdnurl($prize_item->avatar, true) : letter_avatar($prize_item->nickname);
-            $prize_item->goods_image = $prize_item->goods_image ? cdnurl($prize_item->goods_image, true) : '';
-        }
 
         $box_banner_images = [];
         $box_banner = [];
@@ -220,21 +153,49 @@ class Box extends Base
         }
 
         $ret = [
-            'mycoin' => $mycoin,
+            'box' => $box,
             'box_banner_images' => $box_banner_images,
             'box_banner' => $box_banner,
-            'box_name' => $box->box_name,
             'coin_price' => intval($box->coin_price),
             'goodslist' => $firstGoods,
-            'more' => [
-                'goodslist' => $moreGoods,
-                'tags' => $tags
-            ],
-            'record' => $prize
         ];
 
         $this->success('查询成功', $ret);
     }
+
+
+    /**
+     * 获取盲盒的开奖记录
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function getPrizeRecord()
+    {
+        $box_id = input('box_id/d');
+        // 查询该盲盒开箱记录
+        $prize = Prizerecord::alias('prize')
+            ->field('prize.goods_name,prize.goods_image,prize.goods_rmb_price,prize.create_time')
+            ->field('user.nickname,user.avatar')
+            ->join('user user', 'user.id = prize.user_id')
+            ->where('prize.box_id', $box_id)
+            ->order('prize.id', 'desc')
+            ->limit(10)
+            ->select();
+
+        foreach ($prize as $prize_item) {
+            $prize_item->create_time = date('Y-m-d H:i:s', $prize_item->create_time);
+            $prize_item->avatar = $prize_item->avatar ? cdnurl($prize_item->avatar, true) : letter_avatar($prize_item->nickname);
+            $prize_item->goods_image = $prize_item->goods_image ? cdnurl($prize_item->goods_image, true) : '';
+        }
+
+        $this->success('查询成功',$prize);
+
+    }
+
+
+
+
 
     /**
      * 创建盲盒订单
