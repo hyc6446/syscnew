@@ -144,8 +144,8 @@ class UserCollect extends Model
         }else{
             $where = ['a.user_id'=>$uid, 'a.is_consume'=>0, 'a.status'=>['<',2]];
         }
-        if (isset($params['category_id'])&&$params['category_id']){
-            $where['a.category_ids'] = $params['category_id'];
+        if (isset($params['cate_id'])&&$params['cate_id']){
+            $where['sg.category_ids'] = $params['cate_id'];
         }
         if (isset($params['keywords'])&&$params['keywords']){
             $where['sg.title'] = ['like','%'.$params['keywords'].'%'];
@@ -162,7 +162,7 @@ class UserCollect extends Model
             }
         }
         $list = self::alias('a')
-            ->field('a.id,a.goods_id,a.original_price,a.price,a.status,a.status_time,a.type,sg.title,sg.image,sc.name cate_name')
+            ->field('a.id,a.goods_id,a.original_price,a.price,a.status,a.status_time,a.type,sg.title,sg.image,sc.name cate_name,sg.category_ids cate_id')
             ->join('shopro_goods sg','a.goods_id=sg.id')
             ->join('shopro_category sc','sg.category_ids=sc.id')
             ->where($where)
