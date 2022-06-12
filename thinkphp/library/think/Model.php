@@ -2347,4 +2347,38 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         self::event('after_delete', $callback, $override);
     }
 
+
+    /**
+     * 删除附加属性
+     * @author     xchen
+     */
+    public function unsetAppend($name = null){
+        if(is_null($name)){
+            $this->append = [];
+        }
+        else if(array_key_exists($name, $this->append)){
+            unset($this->append[$name]);
+        }
+        else{
+            return;
+        }
+    }
+
+    /**
+     * 删除关联附加属性
+     * @author     xchen
+     */
+    public function unsetRelationAppend($name = null){
+        if(is_null($name)){
+            foreach($this->relation as $k => $v){
+                $this->relation[$k]->append = [];
+            }
+        }
+        else if(array_key_exists($name, $this->relation)){
+            $this->relation[$name]->append = [];
+        }
+        else{
+            return;
+        }
+    }
 }

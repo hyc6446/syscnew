@@ -5,6 +5,7 @@ namespace addons\shopro\controller;
 use addons\shopro\model\Banner;
 use addons\shopro\model\Config;
 use addons\shopro\model\News;
+use addons\xasset\controller\Api;
 use think\Db;
 use think\Config as FaConfig;
 use fast\Random;
@@ -23,15 +24,16 @@ class Index extends Base
 
     public function index()
     {
+        (new Api())->index();
     }
 
     // 初始化商城数据 服务器压力大可以把最后的data数据存入cache缓存中来调用，防止多次查sql
     public function init()
     {
         $platform = $this->request->header('platform'); // 获取平台标识
-        if (!in_array($platform, ['H5', 'App', 'wxMiniProgram', 'wxOfficialAccount'])) {
-            $this->error('请使用正确客户端访问');
-        }
+//        if (!in_array($platform, ['H5', 'App', 'wxMiniProgram', 'wxOfficialAccount'])) {
+//            $this->error('请使用正确客户端访问');
+//        }
         $data = [];     // 设置信息
         $configFields = ['shopro', 'share', 'chat', 'store', 'withdraw', $platform];    // 定义设置字段
         $configModel = new \addons\shopro\model\Config;
@@ -42,56 +44,56 @@ class Index extends Base
         $shoproConfig['logo'] = cdnurl($shoproConfig['logo'], true);
         $data['shop'] = $shoproConfig;
 
-        // 支付设置
-        $payment = $configModel->where('group', 'payment')->select();
-        $paymentConfig = [];
-        foreach ($payment as $key => $v) {
-            $val = json_decode($v->value, true);
-            if ($val && in_array($platform, $val['platform'])) {
-                $paymentConfig[] = $v->name;
-            }
-        }
-        $data['payment'] = $paymentConfig;        // 平台支持的支付方式
-
-        // 平台设置
-        $platformConfig = json_decode($config[$platform], true);
-        if (in_array($platform, ['wxOfficialAccount', 'wxMiniProgram'])) {
-            if (isset($platformConfig['auto_login']) && $platformConfig['auto_login'] == 1) {
-                $autologin = true;
-            } else {
-                $autologin = false;
-            }
-            $data['wechat'] = [
-                'appid' => isset($platformConfig['app_id']) ? $platformConfig['app_id'] : '',
-                'autologin' => $autologin,
-            ];
-        }
-
-        // 分享设置
-        $shareConfig = json_decode($config['share'], true);
-        $data['share'] = [
-            'title' => $shareConfig['title'],
-            'image' => isset($shareConfig['image']) ? cdnurl($shareConfig['image'], true) : '',
-            'goods_poster_bg' => isset($shareConfig['goods_poster_bg']) ? cdnurl($shareConfig['goods_poster_bg'], true) : '',
-            'user_poster_bg' => isset($shareConfig['user_poster_bg']) ? cdnurl($shareConfig['user_poster_bg'], true) : '',
-            'groupon_poster_bg' => isset($shareConfig['groupon_poster_bg']) ? cdnurl($shareConfig['groupon_poster_bg'], true) : '',
-        ];
-
-        $withdrawConfig = json_decode($config['withdraw'], true);
-        $recharge = $withdrawConfig['recharge'] ?? [];
-        $data['recharge'] = [
-            'enable' => $recharge['enable'] ?? 0,
-            'methods' => $recharge['methods'] ?? [],
-            'moneys' => $recharge['moneys'] ?? [],
-        ];
-        
-        // 插件设置
-        $data['addons'] = array_keys(get_addon_list());
-
-        // 客服设置
-        $data['chat'] =  isset($config['chat']) ? json_decode($config['chat'], true) : [];
-        // 门店配置
-        $data['store'] = isset($config['store']) ? json_decode($config['store'], true) : [];
+//        // 支付设置
+//        $payment = $configModel->where('group', 'payment')->select();
+//        $paymentConfig = [];
+//        foreach ($payment as $key => $v) {
+//            $val = json_decode($v->value, true);
+//            if ($val && in_array($platform, $val['platform'])) {
+//                $paymentConfig[] = $v->name;
+//            }
+//        }
+//        $data['payment'] = $paymentConfig;        // 平台支持的支付方式
+//
+//        // 平台设置
+//        $platformConfig = json_decode($config[$platform], true);
+//        if (in_array($platform, ['wxOfficialAccount', 'wxMiniProgram'])) {
+//            if (isset($platformConfig['auto_login']) && $platformConfig['auto_login'] == 1) {
+//                $autologin = true;
+//            } else {
+//                $autologin = false;
+//            }
+//            $data['wechat'] = [
+//                'appid' => isset($platformConfig['app_id']) ? $platformConfig['app_id'] : '',
+//                'autologin' => $autologin,
+//            ];
+//        }
+//
+//        // 分享设置
+//        $shareConfig = json_decode($config['share'], true);
+//        $data['share'] = [
+//            'title' => $shareConfig['title'],
+//            'image' => isset($shareConfig['image']) ? cdnurl($shareConfig['image'], true) : '',
+//            'goods_poster_bg' => isset($shareConfig['goods_poster_bg']) ? cdnurl($shareConfig['goods_poster_bg'], true) : '',
+//            'user_poster_bg' => isset($shareConfig['user_poster_bg']) ? cdnurl($shareConfig['user_poster_bg'], true) : '',
+//            'groupon_poster_bg' => isset($shareConfig['groupon_poster_bg']) ? cdnurl($shareConfig['groupon_poster_bg'], true) : '',
+//        ];
+//
+//        $withdrawConfig = json_decode($config['withdraw'], true);
+//        $recharge = $withdrawConfig['recharge'] ?? [];
+//        $data['recharge'] = [
+//            'enable' => $recharge['enable'] ?? 0,
+//            'methods' => $recharge['methods'] ?? [],
+//            'moneys' => $recharge['moneys'] ?? [],
+//        ];
+//
+//        // 插件设置
+//        $data['addons'] = array_keys(get_addon_list());
+//
+//        // 客服设置
+//        $data['chat'] =  isset($config['chat']) ? json_decode($config['chat'], true) : [];
+//        // 门店配置
+//        $data['store'] = isset($config['store']) ? json_decode($config['store'], true) : [];
         $this->success('初始化数据', $data);
     }
 

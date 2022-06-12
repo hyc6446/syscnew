@@ -150,7 +150,7 @@ class Create
             // 更新订单，将过期时间存入订单，前台展示支付倒计时
             $order_ext['expired_time'] = time() + ($close_minue * 60);
             
-            \think\Queue::later(($close_minue * 60), '\addons\shopro\job\OrderAutoOper@autoClose', ['order' => $order], 'shopro');
+//            \think\Queue::later(($close_minue * 60), '\addons\shopro\job\OrderAutoOper@autoClose', ['order' => $order], 'shopro');
             
             // 更新订单扩展字段
             $order->ext = json_encode($order_ext);

@@ -111,7 +111,7 @@ class Goods extends Backend
             // 恢复 sql mode
             recoverStrict($oldModes);
             foreach ($list  as $row) {
-                $row->visible(['id', 'type', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
+                $row->visible(['id', 'type','issue','issue_num', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
             }
             $list = collection($list)->toArray();
             foreach ($list  as $key => $row){
@@ -159,6 +159,7 @@ class Goods extends Backend
                 $result = false;
                 Db::startTrans();
                 try {
+                    $params['issue_num'] = $params['stock'];
                     $result = $this->model->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.add')->allowField(true)->save($params);
                     if ($result) {
                         $this->editSku($this->model, $sku, 'add');
@@ -222,9 +223,11 @@ class Goods extends Backend
 
             $result['skuList'] = [];
             $result['skuPrice'] = [];
+            if ($row['issue']==1)$row['stock'] = $row['issue_num'];
         }
         $row['sales_time'] *= 1000;
         $row['syn_end_time'] *= 1000;
+
 
         $goods_ids_array = array_filter(explode(',', $row['children']));
         $goodsList = [];
@@ -271,6 +274,11 @@ class Goods extends Backend
                 $result = false;
                 Db::startTrans();
                 try {
+                    if (!$row['issue']){
+                        $params['issue_num'] = $params['stock'];
+                    }else{
+                        $params['issue'] = 1;
+                    }
                     $result = $row->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.edit')->allowField(true)->save($params);
                     if ($result) {
                         $this->editSku($row, $sku, 'edit');

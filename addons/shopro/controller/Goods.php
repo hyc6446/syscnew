@@ -7,7 +7,7 @@ use addons\shopro\exception\Exception;
 class Goods extends Base
 {
 
-    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar'];
+    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar','composeList'];
     protected $noNeedRight = ['*'];
 
     public function index()
@@ -43,6 +43,8 @@ class Goods extends Base
     public function lists()
     {
         $params = $this->request->get();
+        $params['islist'] = 1;
+        $params['tag'] = $params['tag']??'';
         $data = \addons\shopro\model\Goods::getGoodsList($params);
 
         $this->success('商品列表', $data);
@@ -132,10 +134,30 @@ class Goods extends Base
 
 
     //订阅提醒
-    public function ding(){
+    public function ding()
+    {
         $params = $this->request->post();
         $result = \addons\shopro\model\GoodsDing::ding($params);
         $this->success($result ? '订阅成功' : '取消订阅');
     }
 
+    //合成列表
+    public function composeList()
+    {
+        $params = $this->request->get();
+        $data = (new \addons\shopro\model\Goods())->composeList($params,$this->auth->id?:0);
+        $this->success('合成藏品列表', $data);
+    }
+
+    //藏品合成
+    public function compose()
+    {
+        $goodsId = $this->request->post('id',0);
+        $result = (new \addons\shopro\model\Goods())->compose($goodsId,$this->auth->id);
+        if (isset($result['msg']) && $result['msg']) {
+            $this->error($result['msg'], $result);
+        } else {
+            $this->success('合成成功', $result);
+        }
+    }
 }

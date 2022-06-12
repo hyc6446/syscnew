@@ -3,6 +3,7 @@
 namespace addons\shopro\controller;
 
 use addons\epay\library\Service;
+use addons\shopro\model\OrderItem;
 use fast\Random;
 use think\addons\Controller;
 use addons\shopro\exception\Exception;
@@ -76,6 +77,7 @@ class Pay extends Base
         $payment = $this->request->post('payment');
         $openid = $this->request->post('openid', '');
         $platform = request()->header('platform');
+        if (!$platform) $this->error("请确认平台信息");
 
         list($order, $prepay_type) = $this->getOrderInstance($order_sn);
         $order = $order->nopay()->where('order_sn', $order_sn)->find();
@@ -336,6 +338,24 @@ class Pay extends Base
                         'pay_fee' => $pay_fee,
                         'pay_type' => $payment              // 支付方式
                     ];
+                    //销毁
+                    $orderItem = OrderItem::get(['order_id'=>$order['id']]);
+                    if ($orderItem['user_collect_id']){
+                        $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
+                        $collect->is_consume = 1;//链上 资产是否销毁
+                        $collect->status = 2;
+                        $collect->status_time = time();
+                        $collect->save();
+                    }
+                    if ($orderItem['good_id']){
+                        //购买 todo:上链
+                        $res =\addons\shopro\model\UserCollect::edit([
+                            'user_id'=>$order['user_id'],
+                            'goods_id'=>$orderItem['goods_id'],
+                            'type'=>3,
+                            'status'=>0,
+                        ]);
+                    }
                     $order->paymentProcess($order, $notify);
                 });
 
