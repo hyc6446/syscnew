@@ -38,7 +38,7 @@ class Detail extends Model
         // 找出这些商品中下架、缺货或已删除的商品
         $removeGoodsIds = Goods::withTrashed()->whereIn('id', $goodsIds)
             ->where(function ($query) use ($except) {
-                $query->where('status', 'offline')->whereOr('stock', '<', 1)->whereOr('delete_time', 'not null')->whereOr('id', 'in', implode(',', $except));
+                $query->where('status', '=', 'down')->whereOr('deletetime', 'not null')->whereOr('id', 'in', implode(',', $except));
             })->column('id');
 
         // 移除无效的商品，得到有效的商品ID
