@@ -86,7 +86,7 @@ class XassetClient extends BaseClient
                 'secretAccessKey'=>$accessInfo['secret_access_key'],
                 'sessionToken'=>$accessInfo['session_token'],
             ],
-            'endpoint'=>$accessInfo['endPoint']
+            'endpoint'=>$accessInfo['endpoint']
         ];
         $BosClient =  new BaiduBce\Services\Bos\BosClient($BOS_TEST_CONFIG);
         $re = $BosClient->putObjectFromFile($bucketName,$objectKey,$filename);

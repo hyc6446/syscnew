@@ -2,6 +2,8 @@
 
 namespace app\common\library;
 
+use app\admin\model\Admin;
+use app\admin\model\User;
 use app\common\exception\UploadException;
 use app\common\model\Attachment;
 use fast\Random;
@@ -392,6 +394,16 @@ class Upload
         $category = request()->post('category');
         $category = array_key_exists($category, config('site.attachmentcategory') ?? []) ? $category : '';
         $auth = Auth::instance();
+        $admin = Admin::get((int)session('admin.id'));
+
+        $account = array(
+            'address' => $admin['addr'],
+            'public_key' => $admin['public_key'],
+            'private_key' => $admin['private_key'],
+        );
+        $service = new \addons\xasset\library\Service();
+
+        $res = $service->UploadFile($account,ROOT_PATH.'/public'.$uploadDir . $file->getSaveName());
         $params = array(
             'admin_id'    => (int)session('admin.id'),
             'user_id'     => (int)$auth->id,
@@ -408,6 +420,7 @@ class Upload
             'storage'     => 'local',
             'sha1'        => $sha1,
             'extparam'    => '',
+            'baidu_link'=>$res['Link']??''
         );
         $attachment = new Attachment();
         $attachment->data(array_filter($params));
