@@ -449,7 +449,7 @@ trait OrderOper
                 $arr = [];
                     foreach ($item as $k=>$v){
                         $goods = Goods::get($v['goods_id']);
-                        $arr[] = ['id' => $v['id'], 'image' => $v['goods_image'], 'title' => $v['goods_title'],'category'=>$goodsCate[$goods['category_ids']]['name']??''];
+                        $arr[] = ['id' => $v['id'],'goods_num'=>$v['goods_num'], 'image' => $v['goods_image'], 'title' => $v['goods_title'],'category'=>$goodsCate[$goods['category_ids']]['name']??''];
                     }
                 $data[$key]['item'] = $arr;
             }

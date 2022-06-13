@@ -18,7 +18,6 @@ class ActivityGroupon extends Base
      */
     public function index() {
         $params = $this->request->get();
-
         $this->success('团列表', \addons\shopro\model\ActivityGroupon::getActivityGroupon($params));
     }
 

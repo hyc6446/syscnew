@@ -35,6 +35,7 @@ class UserWalletLog extends Model
     public static $typeAll = [
         // money
         'wallet_pay' => ['code' => 'wallet_pay', 'name' => '余额付款'],
+        'box_pay' => ['code' => 'box_pay', 'name' => '购买盲盒'],
         'recharge' => ['code' => 'recharge', 'name' => '用户充值'],
         'cash' => ['code' => 'cash', 'name' => '用户提现'],
         'cash_error' => ['code' => 'cash_error', 'name' => '提现驳回'],

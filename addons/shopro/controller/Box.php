@@ -4,10 +4,14 @@
 namespace addons\shopro\controller;
 
 
+use addons\shopro\model\BoxOrder;
 use addons\shopro\model\Detail;
 use addons\shopro\model\Box as BoxModel;
 use addons\shopro\model\Goods;
+use addons\shopro\model\GoodsSkuPrice;
 use addons\shopro\model\PrizeRecord;
+use think\Db;
+use think\Exception;
 
 class Box extends Base
 {
@@ -200,10 +204,6 @@ class Box extends Base
 
     }
 
-
-
-
-
     /**
      * 创建盲盒订单
      * @author fuyelk <fuyelk@fuyelk.com>
@@ -223,7 +223,7 @@ class Box extends Base
         }
 
         // 检查盲盒
-        $box = Box::field('id,box_name,box_banner_images,coin_price')->where('id', $box_id)->find();
+        $box = BoxModel::field('id,box_name,box_banner_images,coin_price')->where('id', $box_id)->find();
         if (empty($box)) {
             $this->error('选择的盲盒有误');
         }
@@ -236,8 +236,7 @@ class Box extends Base
 
         // 查询前6个商品的图片
         $goodsIds = Detail::where('box_id', $box_id)->order('weigh desc,id asc')->column('goods_id');
-        $goodsImages = Goods::where('status', 'online')
-            ->whereIn('id', $goodsIds)
+        $goodsImages = Goods::whereIn('id', $goodsIds)
             ->column('image');
         foreach ($goodsImages as &$image) {
             $image = cdnurl($image, true);
@@ -246,8 +245,8 @@ class Box extends Base
         Db::startTrans();
         try {
 
-            $rmb_price = round(Setting::getRmbFromCoin($box->coin_price ?: 0), 2);
-            $res = Order::create([
+            $rmb_price = round($box->coin_price, 2);
+            $res = BoxOrder::create([
                 'box_id' => $box_id,
                 'box_name' => $box->box_name,
                 'image' => $goodsImages[0] ?? '',
@@ -267,8 +266,7 @@ class Box extends Base
                 'images' => $goodsImages,
                 'coin_amount' => $res->coin_amount,
                 'rmb_amount' => $res->rmb_amount,
-                'notice' => Text::getText('pay_tipstips'),
-                'coin_not_enough' => !!(intval($this->auth->coin) < intval($res->coin_amount)),
+                'coin_not_enough' => !!(intval($this->auth->money) < intval($res->coin_amount)),
                 'alipay' => $this->request->domain() . '/api/alipay/boxpay/orderid/' . intval($res->id),
                 'wechat' => '/api/wechat/boxpay/orderid/' . intval($res->id),
             ];
@@ -287,26 +285,261 @@ class Box extends Base
      */
     public function payOrder()
     {
+        //
+        $order_id = input('order_id/d');
+        $pay_method = input('pay_method/d','wallet');// wallet=金币,wechat=微信,alipay=支付宝'
 
+        if($pay_method == 'wallet'){
+            $this->coinPay();
+        }
+
+
+        if($pay_method == 'wechat'){
+
+        }
+
+        if($pay_method == 'alipay'){
+
+        }
+    }
+
+
+
+    public function coinPay()
+    {
+        $order_id = input('order_id/d');
+        if (empty($order_id)) {
+            $this->error('请选择支付订单');
+        }
+
+        $order = BoxOrder::field('id,box_id,num,status,coin_amount,out_trade_no,select')->lock(true)
+            ->where('id', $order_id)
+            ->where('user_id', $this->auth->id)
+            ->find();
+
+        if (empty($order)) {
+            $this->error('订单不存在');
+        }
+
+        if ('unpay' != $order->status) {
+            $this->error('该订单已支付，请勿重复支付');
+        }
+
+        // 查询用户余额
+        if (intval($this->auth->money) < $order->coin_amount) {
+            $this->error('您的金币不足');
+        }
+
+        Db::startTrans();
+
+        try {
+            // 更新订单信息
+            $order->pay_method = 'coin';
+            $order->pay_coin = $order->coin_amount;
+            $order->pay_time = time();
+            $order->status = 'unused';// 状态:unpay=待支付,unused=待抽奖,used=已使用
+            $order->backend_read = 0;
+            $order->save();
+
+            $coin_before = $this->auth->money;
+
+            // 减少金币余额
+            $user = $this->auth->getUser();
+            $user->setDec('money', $order->pay_coin);
+
+            // 创建余额支付记录
+            \addons\shopro\model\User::money(-$order->pay_coin, $user->id, 'box_pay', $order->id, '',[
+                'order_id' => $order->id,
+                'box_id' => $order->box_id,
+            ]);
+
+        } catch (\Exception $e) {
+            Db::rollback();
+            $this->error($e->getMessage());
+        }
+
+        Db::commit();
+
+        // 开箱
+        $prize = $this->open($order);
+
+        $this->success('支付成功', ['prize' => $prize]);
+    }
+
+
+    /**
+     * 盲盒开奖
+     * @param Order $order
+     * @return array|bool
+     */
+    private function open(BoxOrder $order)
+    {
+        // 检查订单状态
+        if ('unused' != $order->status) { // 状态:unpay=待支付,unused=待抽奖,used=已使用
+            return false;
+        }
+
+        if (empty($order->box_id)) {
+            $this->error('请选择盲盒');
+        }
+        if (!in_array($order->num, [1, 5, 9])) {
+            $this->error('开箱数量有误');
+        }
+
+        // 检查盲盒是否可以试玩
+        $box = BoxModel::where('id', $order->box_id)->value('id');
+        if (empty($box)) {
+            $this->error('盲盒有误');
+        }
+
+        try {
+            // 抽奖 begin
+            if (1 == $order->num) {
+                $goodsIds = [Detail::getOne($order->box_id)];
+            } else {
+                $goodsIds = Detail::getMore($order->box_id, $order->num);
+            }
+        } catch (\Exception $e) {
+
+            // 退款
+//            if (!$this->refund($order)) {
+//                $logID = "";
+//                try {
+//                    $logID = dta($order->toArray(), '用户退款失败');
+//                } catch (Exception $e) {
+//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
+//                }
+//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
+//            }
+
+            $this->error('抽奖失败，已退款');
+        }
+        // 抽奖 end
+
+        // 查询抽中的奖品信息
+        foreach ($goodsIds as $goodsId) {
+            $goodsInfo[] = Goods::alias('a')
+                ->field('a.*,b.name as cate_name,b.color')
+                ->join('shopro_category b','b.id=a.category_ids')
+                ->where('a.id', $goodsId)->find();
+        }
+
+
+        // 抽奖失败
+        if (empty($goodsInfo)) {
+            // 退款
+//            if (!$this->refund($order)) {
+//                $logID = "";
+//                try {
+//                    $logID = dta($order->toArray(), '用户退款失败');
+//                } catch (Exception $e) {
+//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
+//                }
+//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
+//            }
+
+            $this->error('抽奖失败，已退款');
+        }
+
+        $prizeInfo = [];
+
+        Db::startTrans();
+        try {
+            foreach ($goodsInfo as &$goods) {
+
+                // 创建开箱记录
+                $prize = Prizerecord::create([
+                    'box_id' => $order->box_id,
+                    'order_id' => $order->id,
+                    'out_trade_no' => $order->out_trade_no,
+                    'user_id' => $this->auth->id,
+                    'goods_id' => $goods->id,
+                    'goods_name' => $goods->title,
+                    'goods_image' => $goods->image,
+                    'goods_coin_price' => $goods->price,
+                    'goods_rmb_price' => round($goods->price, 2),
+                    'status' => 'bag', // 奖品状态:bag=盒柜,exchange=已回收,delivery=申请发货,received=已收货
+                ]);
+
+                //添加到我的藏品中
+                \addons\shopro\model\UserCollect::create([
+                    'goods_id' => $goods->id,
+                    'user_id' => $this->auth->id,
+                    'original_price' => $goods->original_price,
+                    'price' => $goods->price,
+                    'type' => 4,
+                    'token' => md5($this->auth->id.'token-'.$this->auth->referral_code.time()),
+                    'up_brand' => "-",
+                    'auth_brand' => "-",
+                    'card_id' => md5($this->auth->id.'card_id-'.$this->auth->referral_code.time()),
+                    'trans_hash' => md5($this->auth->id.'trans_hash-'.$this->auth->referral_code.time()),
+                    'card_time' => time(),
+                    'add' => $this->auth->referral_code.time(),
+                    'up_num' => 1,
+                ]);
+                // 减少商品库存
+                GoodsSkuPrice::where('goods_id', $goods->id)->setDec('stock');
+
+                $prizeInfo[] = [
+                    'prize_id' => intval($prize->id),
+                    'image' => $prize->goods_image ? cdnurl($prize->goods_image, true) : '',
+                    'goods_name' => $prize->goods_name,
+                    'cate_name' =>$goods->cate_name,
+                    'color' =>$goods->color,
+                ];
+            }
+
+            // 增加盲盒销量
+            BoxModel::where('id', $order->box_id)->setInc('sales', $order->num);
+
+        } catch (\Exception $e) {
+
+            Db::rollback();
+            // 退款
+//            if (!$this->refund($order)) {
+//                $logID = "";
+//                try {
+//                    $logID = dta($order->toArray(), '用户退款到金币失败');
+//                } catch (Exception $e) {
+//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
+//                }
+//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
+//            }
+            $this->error($e->getMessage());
+            $this->error('抽奖失败，已退款');
+        }
+
+        Db::commit();
+
+        // 订单状态改为已使用
+        $order->save(['status' => 'used', 'backend_read' => 0]);
+
+        $ret = [
+            'select' => $order->select,
+            'prizeInfo' => $prizeInfo
+        ];
+
+        return $ret;
     }
 
 
 
 
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 }
