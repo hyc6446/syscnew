@@ -5,6 +5,7 @@ namespace addons\shopro\controller;
 use addons\shopro\model\Banner;
 use addons\shopro\model\Config;
 use addons\shopro\model\News;
+use addons\xasset\controller\Api;
 use think\Db;
 use think\Config as FaConfig;
 use fast\Random;
@@ -23,6 +24,7 @@ class Index extends Base
 
     public function index()
     {
+        (new Api())->index();
     }
 
     // 初始化商城数据 服务器压力大可以把最后的data数据存入cache缓存中来调用，防止多次查sql
