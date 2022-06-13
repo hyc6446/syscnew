@@ -155,7 +155,7 @@ class PayService
 
                 break;
             case 'alipay':
-                if (in_array($this->platform, ['wxOfficialAccount', 'wxMiniProgram', 'H5'])) {
+                if (in_array($this->platform, ['wxOfficialAccount', 'wxMiniProgram', 'H5','App'])) {
                     // 返回支付宝支付链接
                     $pay = request()->domain() . '/addons/shopro/pay/alipay?order_sn=' . $order['out_trade_no'];
                 } else {
