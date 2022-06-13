@@ -2,6 +2,7 @@
 
 namespace app\admin\library;
 
+use addons\xasset\library\Service;
 use app\admin\model\Admin;
 use fast\Random;
 use fast\Tree;
@@ -61,9 +62,21 @@ class Auth extends \fast\Auth
         $admin->logintime = time();
         $admin->loginip = request()->ip();
         $admin->token = Random::uuid();
+        if (!$admin->public_key){
+            //创建资产账户
+            $res = (new Service())->createAccount();
+            if (isset($res['public_key'])&&$res['public_key']) {
+                $admin->addr = $res['address'];
+                $admin->public_key = $res['public_key'];
+                $admin->private_key = $res['private_key'];
+            }else{
+                $this->setError('数字藏品账户登记失败:'.$res['errno']??'');
+            }
+        }
         $admin->save();
         Session::set("admin", $admin->toArray());
         $this->keeplogin($keeptime);
+
         return true;
     }
 
