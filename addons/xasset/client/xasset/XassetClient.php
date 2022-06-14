@@ -67,14 +67,56 @@ class XassetClient extends BaseClient
         return $this->doRequestRetry(self::XassetApiGetStoken, array(), $body);
     }
 
+//    /**
+//     * @content 使用sts临时授权 上传文件到bos
+//     * @param array $account
+//     * @param string $filename
+//     * @param string  $property 图片属性 格式为 weight_height 不传将通过函数获取图片实际宽高
+//     * @return array|bool
+//     */
+//    public function UploadFile($account, $filename, $property = false) {
+//        $stoken = $this->getStoken($account);
+//        $accessInfo = $stoken['response']['accessInfo'];
+//        $bucketName = $accessInfo['bucket'];
+//        $objectPath = $accessInfo['object_path'];
+//        $objectKey = $objectPath.$filename;
+//        $BOS_TEST_CONFIG = [
+//            'credentials'=>[
+//                'accessKeyId'=>$accessInfo['access_key_id'],
+//                'secretAccessKey'=>$accessInfo['secret_access_key'],
+//                'sessionToken'=>$accessInfo['session_token'],
+//            ],
+//            'endpoint'=>$accessInfo['endpoint']
+//        ];
+//        $BosClient =  new BaiduBce\Services\Bos\BosClient($BOS_TEST_CONFIG);
+//        $re = $BosClient->putObjectFromFile($bucketName,$objectKey,$filename);
+//        if(!$property){
+//            $FileInfo = getimagesize($filename);
+//            $property = $FileInfo[0]."_".$FileInfo[1];
+//        }
+//        $link = "bos_v1://". $bucketName."/".$objectKey."/".$property;
+//        //通过判断是否返回etag 判定是否上传成功
+//        if(isset($re->metadata['etag']) && !empty($re->metadata['etag'])){
+//            return [
+//                'Link'=>$link,
+//                'AccessInfo'=>$accessInfo
+//            ];
+//        }else{
+//            return "upload file err";
+//        }
+//    }
+
+
+
     /**
      * @content 使用sts临时授权 上传文件到bos
      * @param array $account
-     * @param string $filename
+     * @param string $filename 文件名称
+     * @param string $filepath 文件路径
      * @param string  $property 图片属性 格式为 weight_height 不传将通过函数获取图片实际宽高
      * @return array|bool
      */
-    public function UploadFile($account, $filename, $property = false) {
+    public function uploadFile($account, $filename, $filepath, $property = false) {
         $stoken = $this->getStoken($account);
         $accessInfo = $stoken['response']['accessInfo'];
         $bucketName = $accessInfo['bucket'];
@@ -89,9 +131,14 @@ class XassetClient extends BaseClient
             'endpoint'=>$accessInfo['endpoint']
         ];
         $BosClient =  new BaiduBce\Services\Bos\BosClient($BOS_TEST_CONFIG);
-        $re = $BosClient->putObjectFromFile($bucketName,$objectKey,$filename);
+        if(file_exists($filepath)){
+            $re = $BosClient->putObjectFromFile($bucketName,$objectKey,$filepath);
+        } else {
+            return "upload file does not exist ";
+        }
+
         if(!$property){
-            $FileInfo = getimagesize($filename);
+            $FileInfo = getimagesize($filepath);
             $property = $FileInfo[0]."_".$FileInfo[1];
         }
         $link = "bos_v1://". $bucketName."/".$objectKey."/".$property;

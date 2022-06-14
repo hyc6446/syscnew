@@ -403,7 +403,7 @@ class Upload
         );
         $service = new \addons\xasset\library\Service();
 
-        $res = $service->UploadFile($account,ROOT_PATH.'/public'.$uploadDir . $file->getSaveName());
+        $res = $service->uploadFile($account,$file->getSaveName(),ROOT_PATH.'/public'.$uploadDir . $file->getSaveName());
         $params = array(
             'admin_id'    => (int)session('admin.id'),
             'user_id'     => (int)$auth->id,

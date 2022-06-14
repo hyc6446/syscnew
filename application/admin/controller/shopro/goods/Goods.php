@@ -720,15 +720,15 @@ class Goods extends Backend
         $arrAssetInfo = array(
             'title' => '121',
             'asset_cate' => 2,
-            'thumb' => array('bos_v1://xasset-offline/110005/047bd9857637a2c374d0195fdd3933a4.png/351_100'),
-            'short_desc' => '收藏21222222222222222222222222222222222222222222222222222222品11号短描述',
-            'img_desc' => array('bos_v1://xasset-offline/110005/047bd9857637a2c374d0195fdd3933a4.png/351_100'),
-            'asset_url' => array('bos_v1://xasset-offline/110005/047bd9857637a2c374d0195fdd3933a4.png/351_100'),
+            'thumb' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
+            'short_desc' => '测试',
+            'img_desc' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
+            'asset_url' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
         );
         $strAssetInfo = json_encode($arrAssetInfo);
 
-        $assetId = gen_asset_id(100001);
-        $userId = 1231314;
+        $assetId = gen_asset_id(110005);
+        $userId = 1;
         $price = 100;
         $res = $service->createAsset($account, $assetId, 10000, $strAssetInfo, $price, $userId);
         var_dump($res);
