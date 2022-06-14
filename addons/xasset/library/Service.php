@@ -43,7 +43,7 @@ class Service
 //            'private_key' => $privtKey,
 //        );*/
 //        //文件相关接口
-//        $stoken = self::$xHandle->getStoken($account);
+//        $stoken =$this->xHandle->getStoken($account);
 //        var_dump($stoken);
 
     }
