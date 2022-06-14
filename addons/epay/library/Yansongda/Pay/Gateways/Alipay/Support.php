@@ -314,7 +314,6 @@ class Support
      */
     public static function getCertSN($certPath): string
     {
-        var_dump($certPath);die;
         if (!is_file($certPath)) {
             throw new Exception('unknown certPath -- [getCertSN]');
         }
