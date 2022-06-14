@@ -349,6 +349,7 @@ class Support
      */
     public static function getRootCertSN($certPath)
     {
+        var_dump($certPath);die;
         if (!is_file($certPath)) {
             throw new Exception('unknown certPath -- [getRootCertSN]');
         }
