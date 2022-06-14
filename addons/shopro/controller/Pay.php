@@ -187,7 +187,7 @@ class Pay extends Base
             ];
             $notify['payment_json'] = json_encode($notify);
             //销毁
-            $orderItem = OrderItem::get(['order_id'=>$order['id']]);
+            $orderItem = OrderItem::get(['order_id'=>$order->id]);
             if ($orderItem['user_collect_id']){
                 $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
                 $collect->is_consume = 1;//链上 资产是否销毁
@@ -195,7 +195,7 @@ class Pay extends Base
                 $collect->status_time = time();
                 $collect->save();
             }
-            if ($orderItem['good_id']){
+            if ($orderItem['goods_id']){
                 //购买 todo:上链
                 $res =\addons\shopro\model\UserCollect::edit([
                     'user_id'=>$order['user_id'],
@@ -365,7 +365,7 @@ class Pay extends Base
                         $collect->status_time = time();
                         $collect->save();
                     }
-                    if ($orderItem['good_id']){
+                    if ($orderItem['goods_id']){
                         //购买 todo:上链
                         $res =\addons\shopro\model\UserCollect::edit([
                             'user_id'=>$order['user_id'],

@@ -760,7 +760,7 @@ class Goods extends Backend
         );
         $strAssetInfo = json_encode($arrAssetInfo);
         $price = $params['price']*100;
-        if ($add = 'add'){
+        if ($add == 'add'){
             $assetId = gen_asset_id($service->appId);
             $userId = $this->auth->id;
             // 创造数字资产
@@ -776,7 +776,7 @@ class Goods extends Backend
                 return true;
             }
         }
-        return false;
+        throw Exception($add?'创建数字资产失败':'编辑数字资产失败');
     }
 
 
@@ -795,6 +795,6 @@ class Goods extends Backend
         if (isset($res['response']['errno']) &&$res['response']['errno']==0){
             return true;
         }
-        return false;
+        throw Exception('发行数字资产失败');
     }
 }
