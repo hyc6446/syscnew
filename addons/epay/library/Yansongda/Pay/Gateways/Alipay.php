@@ -97,8 +97,6 @@ class Alipay implements GatewayApplicationInterface
             'app_auth_token' => $config->get('app_auth_token'),
         ];
 
-        var_dump($config->get('app_cert_public_key'));
-        var_dump($config->get('alipay_root_cert'));die;
         if ($config->get('app_cert_public_key') && $config->get('alipay_root_cert')) {
             $this->payload['app_cert_sn'] = Support::getCertSN($config->get('app_cert_public_key'));
             $this->payload['alipay_root_cert_sn'] = Support::getRootCertSN($config->get('alipay_root_cert'));
