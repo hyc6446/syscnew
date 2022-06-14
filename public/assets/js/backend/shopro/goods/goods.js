@@ -678,6 +678,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             syn_end_time:'',
                             goods_list:[],
                             children:'',
+                            issue:0,
                         },
                         timeData: {
                             images_arr: [],

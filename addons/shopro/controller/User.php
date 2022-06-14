@@ -2,6 +2,7 @@
 
 namespace addons\shopro\controller;
 
+use addons\xasset\library\Service;
 use think\Db;
 use app\common\library\Sms;
 use fast\Random;
@@ -138,6 +139,19 @@ class User extends Base
             $userInfo = $this->auth->getUserinfo();
             $userInfo['token'] = $this->auth->getToken();
             $userInfo['avatar'] = $userInfo['avatar'] ? cdnurl($userInfo['avatar'], true) : '';
+            $user = $this->auth->getUser();
+            if (!$userInfo['addr']){
+                //创建资产账户
+                $res = (new Service())->createAccount();
+                if (isset($res['public_key'])&&$res['public_key']) {
+                    $user->addr =  $userInfo['addr'] = $res['address'];
+                    $user->public_key = $res['public_key'];
+                    $user->private_key = $res['private_key'];
+                    $user->save();
+                }else{
+                    $this->error('数字藏品账户登记失败:'.$res['errno']??'');
+                }
+            }
             $data = ['userinfo' => $userInfo];
             $this->success(__('Logged in successful'), $data);
         } else {

@@ -712,7 +712,7 @@ class Goods extends Model
             new Exception('请先收集完所需藏品');
         }
 
-        //todo::上链
+        //合成 todo::上链
         $res = UserCollect::edit([
             'user_id'=>$uid,
             'goods_id'=>$goodsId,

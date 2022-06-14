@@ -194,6 +194,9 @@ class Pay extends Base
                 $collect->status = 2;
                 $collect->status_time = time();
                 $collect->save();
+                //链上销毁
+                $goods = \addons\shopro\model\Goods::withTrashed()->where('id',$orderItem['goods_id'])->find();
+                \addons\shopro\model\UserCollect::consume($goods['admin_id'],$collect['user_id'],$collect['asset_id'],$collect['shard_id']);
             }
             if ($orderItem['goods_id']){
                 //购买 todo:上链

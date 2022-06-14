@@ -529,7 +529,7 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column label="藏品" min-width="200">
+                <el-table-column label="藏品" min-width="300">
                     <template slot-scope="scope">
                         <div class="goods-name">
                             <div class="goods-img">
@@ -541,7 +541,10 @@
                             </div>
                             <div>
                                 <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;">
-                                    {{scope.row.title}}
+                                    <p>{{scope.row.title}}</p>
+                                </div>
+                                <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;color:#7438D5 ">
+                                    <p>资产ID:{{scope.row.asset_id}}</p>
                                 </div>
                             </div>
                         </div>
@@ -565,6 +568,14 @@
                                             </div>
                                             <div>{{ite.title}}</div>
                                         </div>
+                                        <div class="display-flex" style="align-items: flex-start;">
+                                            <div class="display-flex">
+                                                <div class="popover-tip">资产ID</div>：
+                                            </div>
+                                            <div v-if="ite.issue && ite.asset_id">{{ite.asset_id}}</div>
+                                            <div v-else>未发行</div>
+                                        </div>
+
                                     </div>
                                     <div class="activity-table-goods-image" slot="reference"
                                          :style="{marginRight:gindex!=scope.row.children_list?.length-1?'6px':''}">
@@ -633,20 +644,29 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column label="是否发行" min-width="150">
+                <el-table-column label="发行信息" min-width="150">
                     <template  slot-scope="scope">
-                        <div v-if="scope.row.issue">
-                            <span style="color:#67C23A">已发行到百度超级链</span>
+                        <div>
+                            <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;">
+                                <p>创建者:{{scope.row.admin_name}}</p>
+                            </div>
+                            <div v-if="scope.row.issue">
+                                <span style="color:#67C23A">已发行上链</span>
+                            </div>
+                            <div v-else>
+                                <span style="color:#E6A23C">暂未发行</span>
+                            </div>
                         </div>
-                        <div v-else>
-                            <span style="color:#E6A23C">暂未发行</span>
-                        </div>
+
                     </template>
                 </el-table-column>
                 <el-table-column label="预售时间" min-width="148">
                     <template slot-scope="scope">
                         <div v-if="scope.row.sales_time_text">
                             {{scope.row.sales_time_text}}
+                        </div>
+                        <div v-else>
+                            <span style="color:#E6A23C">正在发售</span>
                         </div>
                     </template>
                 </el-table-column>

@@ -2,6 +2,7 @@
 
 namespace app\admin\controller\shopro\goods;
 
+use app\admin\model\Admin;
 use app\admin\model\shopro\activity\Activity;
 use app\common\controller\Backend;
 use app\common\model\Attachment;
@@ -86,10 +87,12 @@ class Goods extends Backend
             $scoreSubSql = \app\admin\model\shopro\app\ScoreSkuPrice::field("'score' as app_type, goods_id as score_goods_id")->group('score_goods_id')->buildSql();
             $list = $list->join([$scoreSubSql => 'score'], $goodsTableName . '.id = score.score_goods_id', 'left');
 
+            $adminSubSql = Admin::field("username as admin_name,id")->buildSql();
+            $list = $list->join([$adminSubSql => 'admin'], $goodsTableName . '.admin_id = admin.id', 'left');
             // 关闭 sql mode 的 ONLY_FULL_GROUP_BY
             $oldModes = closeStrict(['ONLY_FULL_GROUP_BY']);
 
-            $list = $list->field("$goodsTableName.*, w.*,score.*,group_concat(act.type) as activity_type, act.goods_ids")
+            $list = $list->field("$goodsTableName.*, w.*,score.*,group_concat(act.type) as activity_type, act.goods_ids,admin.admin_name")
                 ->group('id')
                 ->orderRaw($sort . ' ' . $order)
                 ->limit($offset, $limit)
@@ -105,14 +108,14 @@ class Goods extends Backend
             $goodsIdsArr = array_values(array_filter(array_unique($goodsIdsArr)));
             if ($goodsIdsArr) {
                 // 查询商品
-                $goods = $this->model->where('id', 'in', $goodsIdsArr)->field('id,image,title')->select();
+                $goods = $this->model->where('id', 'in', $goodsIdsArr)->field('id,image,title,asset_id,issue')->select();
                 $goods = array_column($goods, null, 'id');
             }
 
             // 恢复 sql mode
             recoverStrict($oldModes);
             foreach ($list  as $row) {
-                $row->visible(['id', 'type','issue','issue_num', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
+                $row->visible(['id','admin_id','asset_id','admin_name', 'type','issue','issue_num', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
             }
             $list = collection($list)->toArray();
             foreach ($list  as $key => $row){
@@ -161,9 +164,9 @@ class Goods extends Backend
                 Db::startTrans();
                 try {
                     $params['issue_num'] = $params['stock'];
-
+                    $params['admin_id'] = $this->auth->id;
                     $assetId =  $this->createAsset($params,'add');
-                    if (!$assetId) $this->error('创建数字资产失败');
+                    if (!$assetId) throw Exception('创建数字资产失败');
                     $params['asset_id'] = $assetId;
                     if ($params['issue']){
                         //发行
@@ -269,6 +272,9 @@ class Goods extends Backend
         if (!$row) {
             $this->error(__('No Results were found'));
         }
+        if ($row['admin_id']!=$this->auth->id){
+            throw Exception('请勿操作他人创建的数字资产');
+        }
         $row->updatetime = time();
 
         $adminIds = $this->getDataLimitAdminIds();
@@ -292,13 +298,14 @@ class Goods extends Backend
                         //未发行  发行数量
                         $params['issue_num'] = $params['stock'];
                     }else{
-                        //发行  不能修改发行数量
+                        //发行  不能修改发行数量和发行状态
                         $params['issue_num'] = $row['issue_num'];
+                        $params['issue'] = 1;
                     }
                     if (!$assetId){
                         $assetId =  $this->createAsset($params,'add');
 
-                        if (!$assetId) $this->error('创建数字资产失败');
+                        if (!$assetId)throw Exception('创建数字资产失败');
                         $params['asset_id'] = $assetId;
                     }
 
@@ -308,12 +315,12 @@ class Goods extends Backend
                         if ($assetId){
                             $params['asset_id'] = $assetId;
                             $res =  $this->createAsset($params,'edit');
-                            if (!$res) $this->error('编辑数字资产失败');
+                            if (!$res)throw Exception('编辑数字资产失败');
                         }
                         if ($params['issue']){
                             //发行
-                            $res = $this->publishAsset($row['asset_id']);
-                            if (!$res) $this->error('数字资产发行失败,刷新重试');
+                            $res = $this->publishAsset($assetId);
+                            if (!$res) throw Exception('数字资产发行失败,刷新重试');
                         }
                     }
 
@@ -742,7 +749,7 @@ class Goods extends Backend
     {
         $admin = $this->auth->getUserInfo();
         $link = Attachment::where('url',$params['image'])->value('baidu_link');
-        if (!$link)return false;
+        if (!$link) throw Exception('请重新上传图片');
         $account = array(
             'address' => $admin['addr'],
             'public_key' => $admin['public_key'],
@@ -771,7 +778,7 @@ class Goods extends Backend
             }
         }else{
             //修改未发行的数字资产
-            $res = $service->alterAsset($account, $params['asset_id'],  10000, $strAssetInfo, $price);
+            $res = $service->alterAsset($account, $params['asset_id'],  $params['issue_num'], $strAssetInfo, $price);
             if (isset($res['response']['errno']) &&$res['response']['errno']==0){
                 return true;
             }
@@ -791,8 +798,8 @@ class Goods extends Backend
             'public_key' => $admin['public_key'],
             'private_key' => $admin['private_key'],
         );
-        $res = $service->publishAsset($account, $assetId);
-        if (isset($res['response']['errno']) &&$res['response']['errno']==0){
+        $res = $service->publishAsset($account, (int)$assetId);
+        if (isset($res['response']['errno']) && $res['response']['errno']==0){
             return true;
         }
         throw Exception('发行数字资产失败');

@@ -3,6 +3,8 @@
 namespace addons\shopro\model;
 
 use addons\shopro\exception\Exception;
+use addons\xasset\library\Service;
+use app\admin\model\Admin;
 use think\Db;
 use think\Model;
 
@@ -81,10 +83,26 @@ class UserCollect extends Model
             } else {
                 $user = User::get($user_id);
                 $goods = Goods::withTrashed()->where('id',$goods_id)->find();
-                $brand = GoodsBrand::where( 'id','in',explode(',',$goods['brand_ids']))->select();
+                $brand = GoodsBrand::where( 'id','in',explode(',',$goods['brand_ids']))->column('name');
                 $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$goods_id,'status'=>'up'])->field('stock,sales')->find();
                 $sku = $sku['stock'] + $sku['sales'];//总库存
                 $collect = new self();
+                $service = new Service();
+                //上链
+                $admin = Admin::withTrashed()->where('id',$goods['admin_id'])->find();
+                if ($admin && $goods['asset_id'] && $user['addr']){
+                    $asset_id = $goods['asset_id'];
+
+                    $shard_id = gen_asset_id($service->appId);
+                    $userId = $user_id;
+                    $account = array(
+                        'address' => $admin['addr'],
+                        'public_key' => $admin['public_key'],
+                        'private_key' => $admin['private_key'],
+                    );
+                    $price = ($original_price??0)*100;
+                    $service->grantShard($account, $goods['asset_id'], $shard_id, $user['addr'], $price, $userId);
+                }
                 $collect->user_id = $user_id;//藏品所有者
                 $collect->goods_id = $goods_id;//藏品id
                 $collect->original_price = $original_price??0;//藏品原价格
@@ -92,17 +110,17 @@ class UserCollect extends Model
                 $collect->shard_id = $shard_id??0;//链上 碎片id
                 $collect->give_user_id = $give_user_id??0;//赠予人
                 $collect->is_consume = 0;//链上 资产是否销毁
-                $collect->owner_addr = $owner_addr??'';//资产账户地址
+                $collect->owner_addr = $user['addr']??'';//资产账户地址
                 $collect->querysds = $querysds??'';//资产信息json
                 $collect->status = 0;//状态:0=正常,1=正在寄售,2=已售出,3=已合成,4=已赠予
                 $collect->type = $type;
                 $collect->token = md5($user_id.'token-'.$user['referral_code'].time());
                 $collect->up_brand = $brand?implode('&',$brand):'-';
-                $collect->auth_brand = $brand?implode('&',$brand):'-';
+                $collect->auth_brand = $service->appId;//授权方
                 $collect->card_id = md5($user_id.'card_id-'.$user['referral_code'].time());;
                 $collect->trans_hash = md5($user_id.'trans_hash-'.$user['referral_code'].time());;
                 $collect->card_time = time();
-                $collect->add = $user['referral_code'].time();
+                $collect->add = $user['addr'];//保存位置
                 $collect->up_num = $sku;
                 $collect->save();
             }
@@ -170,5 +188,24 @@ class UserCollect extends Model
             ->paginate($params['limit']??20,false,['page'=>$params['page']??1]);
 
         return $list;
+    }
+
+    public static function consume($adminId, $uid, $assetId, $shardId)
+    {
+        $service = new Service();
+        //上链
+        $admin = Admin::withTrashed()->where('id',$adminId)->find();
+        $caccount = array(
+            'address' => $admin['addr'],
+            'public_key' => $admin['public_key'],
+            'private_key' => $admin['private_key'],
+        );
+        $user = User::get($uid);
+        $uaccount = array(
+            'address' => $user['addr'],
+            'public_key' => $user['public_key'],
+            'private_key' => $user['private_key'],
+        );
+        return $service->consumeShard($caccount, $uaccount, $assetId, $shardId);
     }
 }
