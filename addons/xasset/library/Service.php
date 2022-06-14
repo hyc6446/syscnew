@@ -8,6 +8,7 @@ class Service
 
     private $xHandle;
     private $binPath;
+    public $appId = 110005;
 
     public function __construct()
     {

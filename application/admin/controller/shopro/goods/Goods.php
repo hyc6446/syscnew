@@ -4,6 +4,7 @@ namespace app\admin\controller\shopro\goods;
 
 use app\admin\model\shopro\activity\Activity;
 use app\common\controller\Backend;
+use app\common\model\Attachment;
 use think\Db;
 use think\exception\PDOException;
 use think\exception\ValidateException;
@@ -160,6 +161,16 @@ class Goods extends Backend
                 Db::startTrans();
                 try {
                     $params['issue_num'] = $params['stock'];
+
+                    $assetId =  $this->createAsset($params,'add');
+                    if (!$assetId) $this->error('创建数字资产失败');
+                    $params['asset_id'] = $assetId;
+                    if ($params['issue']){
+                        //发行
+                        if (!$this->publishAsset($assetId)){
+                            $params['issue'] = 0;
+                        }
+                    }
                     $result = $this->model->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.add')->allowField(true)->save($params);
                     if ($result) {
                         $this->editSku($this->model, $sku, 'add');
@@ -193,8 +204,6 @@ class Goods extends Backend
      * 查看详情
      */
     public function detail($ids = null) {
-        $this->createAsset();
-        die();
         $row = $this->model->get($ids);
         if (!$row) {
             $this->error(__('No Results were found'));
@@ -278,13 +287,29 @@ class Goods extends Backend
                 $result = false;
                 Db::startTrans();
                 try {
+                    $assetId = $row['asset_id'];
+                    if (!$assetId){
+                        $assetId =  $this->createAsset($params,'add');
+                        if (!$assetId) $this->error('创建数字资产失败');
+                        $params['asset_id'] = $assetId;
+                    }
+
                     if (!$row['issue']){
                         $params['issue_num'] = $params['stock'];
+                        //保存
+                        if ($assetId){
+                            $params['asset_id'] = $assetId;
+                            $res =  $this->createAsset($params,'edit');
+                            if (!$res) $this->error('编辑数字资产失败');
+                        }
                         if ($params['issue']){
-                            $this->createAsset();
+                            //发行
+                            $res = $this->publishAsset($row['asset_id']);
+                            if (!$res) $this->error('数字资产发行失败,刷新重试');
                         }
                     }else{
-                        $params['issue'] = 1;
+
+
                     }
                     $result = $row->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.edit')->allowField(true)->save($params);
                     if ($result) {
@@ -706,10 +731,12 @@ class Goods extends Backend
         return $goods;
     }
 
-    public function createAsset()
+
+    public function createAsset($params,$add='add')
     {
         $admin = $this->auth->getUserInfo();
-
+        $link = Attachment::where('url',$params['image'])->value('baidu_link');
+        if (!$link)return false;
         $account = array(
             'address' => $admin['addr'],
             'public_key' => $admin['public_key'],
@@ -718,19 +745,49 @@ class Goods extends Backend
 
         $service = new \addons\xasset\library\Service();
         $arrAssetInfo = array(
-            'title' => '121',
+            'title' => $params['title'],
             'asset_cate' => 2,
-            'thumb' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
-            'short_desc' => '测试',
-            'img_desc' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
-            'asset_url' => array('bos_v1://xasset-offline/110005/195c9e6b56dceb7c2c85a396c34d48ff.jpg/1920_1080'),
+            'thumb' => array($link),
+            'short_desc' => $params['title'],
+            'img_desc' => array($link),
+            'asset_url' => array($link),
         );
         $strAssetInfo = json_encode($arrAssetInfo);
+        $price = $params['price']*100;
+        if ($add = 'add'){
+            $assetId = gen_asset_id($service->appId);
+            $userId = $this->auth->id;
+            // 创造数字资产
+            $res = $service->createAsset($account, $assetId, $params['issue_num'], $strAssetInfo, $price, $userId);
+            if (isset($res['errno']) &&$res['errno']==0){
+                return $res['asset_id']??0;
+            }
+        }else{
+            //修改未发行的数字资产
+            $res = $service->alterAsset($account, $params['asset_id'],  10000, $strAssetInfo, $price);
+            if (isset($res['errno']) &&$res['errno']==0){
+                return true;
+            }
+        }
+        return false;
+    }
 
-        $assetId = gen_asset_id(110005);
-        $userId = 1;
-        $price = 100;
-        $res = $service->createAsset($account, $assetId, 10000, $strAssetInfo, $price, $userId);
-        var_dump($res);
+
+    //链上发行数字资产
+    public function publishAsset($assetId)
+    {
+        $admin = $this->auth->getUserInfo();
+
+        $service = new \addons\xasset\library\Service();
+        $account = array(
+            'address' => $admin['addr'],
+            'public_key' => $admin['public_key'],
+            'private_key' => $admin['private_key'],
+        );
+        $res = $service->publishAsset($account, $assetId);
+        if (isset($res['errno']) &&$res['errno']==0){
+            return true;
+        }
+        return false;
     }
 }
