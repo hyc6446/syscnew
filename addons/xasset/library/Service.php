@@ -12,9 +12,9 @@ class Service
     public function __construct()
     {
         //linux mac
-        //$binPath = XASSET_PATH . 'tools/xasset-cli/xasset-cli';
+        $this->binPath = XASSET_PATH . 'tools/xasset-cli/xasset-cli';
         //windows
-        $this->binPath = XASSET_PATH . 'tools/xasset-cli/xasset-cli.exe';
+//        $this->binPath = XASSET_PATH . 'tools/xasset-cli/xasset-cli.exe';
         $crypto = new \EcdsaCrypto($this->binPath);
         $config = new \XassetConfig($crypto);
 
@@ -54,6 +54,11 @@ class Service
         //生成新的account
         $ac = new \Account($this->binPath);
         return $ac->createAccount();
+    }
+
+    public function __call($name,$params)
+    {
+        return $this->xHandle->$name(...$params);
     }
 
 }

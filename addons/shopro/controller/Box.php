@@ -176,21 +176,28 @@ class Box extends Base
      */
     public function getPrizeRecord()
     {
-        $box_id = input('box_id/d');
+        $box_id = input('box_id/d','');
+        $where = [];
+        if($box_id){
+            $where['prize.box_id'] = $box_id;
+        }
         // 查询该盲盒开箱记录
         $prize = Prizerecord::alias('prize')
             ->field('prize.goods_name,prize.goods_image,prize.goods_rmb_price,prize.create_time')
             ->field('user.nickname,user.avatar')
+            ->field('gc.name cate_name,gc.color')
             ->join('user user', 'user.id = prize.user_id')
-            ->where('prize.box_id', $box_id)
+            ->join('shopro_goods g','g.id=prize.goods_id')
+            ->join('shopro_category gc','gc.id=g.category_ids')
+            ->where($where)
             ->order('prize.id', 'desc')
             ->limit(10)
             ->select();
 
         foreach ($prize as $prize_item) {
             $prize_item->create_time = date('Y-m-d H:i:s', $prize_item->create_time);
-            $prize_item->avatar = $prize_item->avatar ? cdnurl($prize_item->avatar, true) : letter_avatar($prize_item->nickname);
-            $prize_item->goods_image = $prize_item->goods_image ? cdnurl($prize_item->goods_image, true) : '';
+            $prize_item->avatar = $prize_item->avatar ? $prize_item->avatar : letter_avatar($prize_item->nickname);
+            $prize_item->goods_image = $prize_item->goods_image ? $prize_item->goods_image : '';
         }
 
         $this->success('查询成功',$prize);
