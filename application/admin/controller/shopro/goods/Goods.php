@@ -153,7 +153,7 @@ class Goods extends Backend
                         $this->error("请填写正确的价格");
                     }
                 }
-                
+
                 if ($this->dataLimit && $this->dataLimitFieldAutoFill) {
                     $params[$this->dataLimitField] = $this->auth->id;
                 }
@@ -220,7 +220,7 @@ class Goods extends Backend
                 }
             }
             $result['skuList'] = $skuList;
-    
+
             $skuPrice = \app\admin\model\shopro\goods\SkuPrice::all(['goods_id' => $ids]);
             $result['skuPrice'] = $skuPrice;
         } else {
@@ -255,7 +255,7 @@ class Goods extends Backend
         return $this->success('获取成功', null, $result);
     }
 
-    
+
 
     /**
      * 编辑
@@ -288,8 +288,16 @@ class Goods extends Backend
                 Db::startTrans();
                 try {
                     $assetId = $row['asset_id'];
+                    if (!$row['issue']){
+                        //未发行  发行数量
+                        $params['issue_num'] = $params['stock'];
+                    }else{
+                        //发行  不能修改发行数量
+                        $params['issue_num'] = $row['issue_num'];
+                    }
                     if (!$assetId){
                         $assetId =  $this->createAsset($params,'add');
+
                         if (!$assetId) $this->error('创建数字资产失败');
                         $params['asset_id'] = $assetId;
                     }
@@ -307,10 +315,8 @@ class Goods extends Backend
                             $res = $this->publishAsset($row['asset_id']);
                             if (!$res) $this->error('数字资产发行失败,刷新重试');
                         }
-                    }else{
-
-
                     }
+
                     $result = $row->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.edit')->allowField(true)->save($params);
                     if ($result) {
                         $this->editSku($row, $sku, 'edit');
@@ -426,7 +432,7 @@ class Goods extends Backend
             "goods_id" => $goods['id'],
             "stock" => $params['stock'] ?? 0,
             "stock_warning" => isset($params['stock_warning']) && is_numeric($params['stock_warning'])
-                                     ? $params['stock_warning'] : null,
+                ? $params['stock_warning'] : null,
             "sn" => $params['sn'] ?? "",
             "weight" => $params['weight'] ? intval($params['weight']) : 0,
             "price" => $params['price'] ?? 0,
@@ -463,7 +469,7 @@ class Goods extends Backend
             if (count($sku['children']) <= 0) {
                 throw Exception('主规格至少要有一个子规格');
             }
-            
+
             // 验证子规格不能为空
             foreach ($sku['children'] as $k => $child) {
                 if (!isset($child['name']) || empty(trim($child['name']))) {
@@ -515,7 +521,7 @@ class Goods extends Backend
             $oldSkuPriceIds = array_column($skuPrice, 'id');
             // 删除当前商品老的除了在基础上修改的skuPrice
             \app\admin\model\shopro\goods\SkuPrice::where('goods_id', $goods->id)
-                            ->where('id', 'not in', $oldSkuPriceIds)->delete();
+                ->where('id', 'not in', $oldSkuPriceIds)->delete();
 
             // 删除失效的库存预警记录
             $this->delNotStockWarning($oldSkuPriceIds, $goods->id);
@@ -624,7 +630,7 @@ class Goods extends Backend
                         'goods_id' => $goods->id
                     ]);
                 }
-                
+
                 $allChildrenSku[$k2['temp_id']] = $skuChildrenId[$s1][$s2];
                 $k2['id'] = $skuChildrenId[$s1][$s2];
                 $k2['pid'] = $k1['id'];
@@ -716,10 +722,10 @@ class Goods extends Backend
         }
         if(isset($category_id) && $category_id != 0) {
             $category_ids = [];
-                // 查询分类所有子分类,包括自己
-                $category_ids = \addons\shopro\model\Category::getCategoryIds($category_id);
+            // 查询分类所有子分类,包括自己
+            $category_ids = \addons\shopro\model\Category::getCategoryIds($category_id);
 
-    
+
             $goods = $goods->where(function ($query) use ($category_ids) {
                 // 所有子分类使用 find_in_set or 匹配，亲测速度并不慢
                 foreach($category_ids as $key => $category_id) {
@@ -758,14 +764,15 @@ class Goods extends Backend
             $assetId = gen_asset_id($service->appId);
             $userId = $this->auth->id;
             // 创造数字资产
+
             $res = $service->createAsset($account, $assetId, $params['issue_num'], $strAssetInfo, $price, $userId);
-            if (isset($res['errno']) &&$res['errno']==0){
-                return $res['asset_id']??0;
+            if (isset($res['response']['errno']) &&$res['response']['errno']==0){
+                return $res['response']['asset_id']??0;
             }
         }else{
             //修改未发行的数字资产
             $res = $service->alterAsset($account, $params['asset_id'],  10000, $strAssetInfo, $price);
-            if (isset($res['errno']) &&$res['errno']==0){
+            if (isset($res['response']['errno']) &&$res['response']['errno']==0){
                 return true;
             }
         }
@@ -785,7 +792,7 @@ class Goods extends Backend
             'private_key' => $admin['private_key'],
         );
         $res = $service->publishAsset($account, $assetId);
-        if (isset($res['errno']) &&$res['errno']==0){
+        if (isset($res['response']['errno']) &&$res['response']['errno']==0){
             return true;
         }
         return false;
