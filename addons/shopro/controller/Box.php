@@ -44,10 +44,16 @@ class Box extends Base
                 // 查询前6个商品图片
                 // $firstGoods = Detail::where('box_id', $item->box_id)->order('weigh', 'desc')->limit(6)->column('goods_id');
                 // $goods_images = Goods::whereIn('id', $firstGoods)->column('image');
-                $goods_images = Detail::alias('a')->join("shopro_goods b","b.id = a.goods_id")->where('a.box_id', $item->box_id)->order('a.weigh', 'desc')->limit(6)->column('b.image');
+                $goods_images = Detail::alias('a')
+                    ->field('b.id,b.price,b.image,c.name as cate_name,c.color,a.rate')
+                    ->join("shopro_goods b","b.id = a.goods_id")
+                    ->join('shopro_category c','c.id=b.category_ids')
+                    ->where('a.box_id', $item->box_id)
+                    ->order('a.weigh', 'desc')
+                    ->select();
 
                 foreach ($goods_images as &$image) {
-                    $image = cdnurl($image, true);
+                    $image['image'] = cdnurl($image['image'], true);
                 }
 
                 // 查询最低价
@@ -69,40 +75,36 @@ class Box extends Base
 
     public function myBox()
     {
-        $status = input('status/d');
+//        $status = input('status/d');
         $pagesize = input('pagesize/d', 10);
         $page = input('page/d', 1);
-        $statusList = [1 => 'bag', 2 => 'exchange'];
+//        $statusList = [1 => 'bag', 2 => 'exchange'];
 
-        if (!isset($statusList[$status])) {
-            $this->error('状态有误');
-        }
-        $status = $statusList[$status];
+//        if (!isset($statusList[$status])) {
+//            $this->error('状态有误');
+//        }
+//        $status = $statusList[$status];
 
         $order = 'prize.id desc';
-        if ('exchange' == $status) {
-            $order = 'exchange_time desc';
-        }
+//        if ('exchange' == $status) {
+//            $order = 'exchange_time desc';
+//        }
 
         $list = PrizeRecord::alias('prize')
             ->field('prize.id record_id,prize.goods_name,prize.goods_image,prize.create_time,prize.exchange_time')
             ->field('order.coin_price box_coin_price,order.rmb_price box_rmb_price,order.pay_method')
             ->join('shopro_box_order order', 'order.id = prize.order_id')
             ->where('prize.user_id', $this->auth->id)
-            ->where('prize.status', $status) // 奖品状态:bag=盒柜,exchange=已回收,delivery=申请发货,received=已收货
             ->order($order)
             ->paginate($pagesize, false, ['page' => $page])
-            ->each(function ($item) use ($status) {
+            ->each(function ($item){
                 $item->goods_image = $item->goods_image ? cdnurl($item->goods_image, true) : '';
 
                 $item->box_coin_price = intval($item->box_coin_price);
                 $item->box_rmb_price = floatval($item->box_rmb_price);
 
-                if ('exchange' == $status) {
-                    $item->time = date('Y-m-d H:i:s', $item->exchange_time);
-                } else {
-                    $item->time = date('Y-m-d H:i:s', $item->create_time);
-                }
+                $item->time = date('Y-m-d H:i:s', $item->create_time);
+
                 $item->hidden(['create_time', 'exchange_time']);
             });
 
@@ -267,8 +269,8 @@ class Box extends Base
                 'coin_amount' => $res->coin_amount,
                 'rmb_amount' => $res->rmb_amount,
                 'coin_not_enough' => !!(intval($this->auth->money) < intval($res->coin_amount)),
-                'alipay' => $this->request->domain() . '/api/alipay/boxpay/orderid/' . intval($res->id),
-                'wechat' => '/api/wechat/boxpay/orderid/' . intval($res->id),
+//                'alipay' => $this->request->domain() . '/api/alipay/boxpay/orderid/' . intval($res->id),
+//                'wechat' => '/api/wechat/boxpay/orderid/' . intval($res->id),
             ];
         } catch (Exception $e) {
             Db::rollback();

@@ -35,6 +35,7 @@ class PayService
         }
 
         $this->config = $paymentConfig;
+//        var_dump($this->config);die;
         $this->config['notify_url'] = $this->notify_url;
 
         if ($this->payment === 'wechat') {
@@ -155,7 +156,7 @@ class PayService
 
                 break;
             case 'alipay':
-                if (in_array($this->platform, ['wxOfficialAccount', 'wxMiniProgram', 'H5','App'])) {
+                if (in_array($this->platform, ['wxOfficialAccount', 'wxMiniProgram', 'H5'])) {
                     // 返回支付宝支付链接
                     $pay = request()->domain() . '/addons/shopro/pay/alipay?order_sn=' . $order['out_trade_no'];
                 } else {
