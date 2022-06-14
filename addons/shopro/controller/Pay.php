@@ -186,6 +186,24 @@ class Pay extends Base
                 'pay_type' => 'wallet'             // 支付方式
             ];
             $notify['payment_json'] = json_encode($notify);
+            //销毁
+            $orderItem = OrderItem::get(['order_id'=>$order['id']]);
+            if ($orderItem['user_collect_id']){
+                $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
+                $collect->is_consume = 1;//链上 资产是否销毁
+                $collect->status = 2;
+                $collect->status_time = time();
+                $collect->save();
+            }
+            if ($orderItem['good_id']){
+                //购买 todo:上链
+                $res =\addons\shopro\model\UserCollect::edit([
+                    'user_id'=>$order['user_id'],
+                    'goods_id'=>$orderItem['goods_id'],
+                    'type'=>3,
+                    'status'=>0,
+                ]);
+            }
             $order->paymentProcess($order, $notify);
 
             return $order;
