@@ -4,6 +4,7 @@ namespace addons\shopro\model;
 
 use app\common\library\Auth;
 use think\Db;
+use think\Log;
 use think\Model;
 use addons\shopro\exception\Exception;
 use addons\shopro\library\traits\model\goods\GoodsActivity;
@@ -707,12 +708,20 @@ class Goods extends Model
             new Exception('该藏品无需子藏品合成');
         }
 
-        $goodsChildren = UserCollect::where(['status'=>['<',2],'user_id'=>$uid])->whereIn('goods_id',$children)->column('id');
+        $goodsChildren = UserCollect::where(['status'=>['<',2],'user_id'=>$uid])->whereIn('goods_id',$children)->select();
         if (count($goodsChildren)!=count($children)){
             new Exception('请先收集完所需藏品');
         }
 
         //合成 todo::上链
+        //销毁链上子集产品
+        $resArr = [];
+        foreach ($goodsChildren as $v){
+            if (!$v['asset_id']||!$v['shard_id'])continue;
+            $res = UserCollect::consume($v,$uid,$v['asset_id'],$v['shard_id']);
+            $resArr[] =['msg'=>json_encode($res)];
+        }
+        Log::info('销毁合成藏品:::::'.json_encode($resArr));
         $res = UserCollect::edit([
             'user_id'=>$uid,
             'goods_id'=>$goodsId,
@@ -720,7 +729,8 @@ class Goods extends Model
             'type'=>2,
         ]);
         if (!$res) new Exception('合成失败');
-        UserCollect::whereIn('id',$goodsChildren)->update(['status'=>3,'status_time'=>time()]);
+        $collectIds = array_column($goodsChildren,'id');
+        UserCollect::whereIn('id',$collectIds)->update(['status'=>3,'status_time'=>time()]);
         return true;
 
     }
