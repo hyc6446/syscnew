@@ -4,6 +4,7 @@
 namespace addons\shopro\controller;
 
 
+use addons\shopro\controller\commission\Log;
 use addons\shopro\exception\Exception;
 use fast\Auth;
 
@@ -59,9 +60,16 @@ class UserCollect extends Base
         $user = \addons\shopro\model\User::get(['referral_code'=>$code]);
         if (!$user)$this->error('转赠的好友不存在,请确认后再输入');
         if ($user['id']== $uid)$this->error('转赠的好友不能为自己');
+        if (!$user['addr'])$this->error('好友未重新登录注册数字资产账户');
         $collect = explode(',',$ids);
         foreach ($collect as $value){
             $collect = (new \addons\shopro\model\UserCollect())->getOne($value,$uid);
+            //链上转移资产
+            $res = \addons\shopro\model\UserCollect::transferShard($collect['goods_id'],$collect['user_id'],$user['id'],$collect['asset_id'],$collect['shard_id']);
+            \think\Log::info('链上转移资产:::::'.json_encode($res));
+            if (!isset($res['response']['errno']) || $res['response']['errno']!= 0){
+                $this->error('链上转移资产失败');
+            }
             //转赠 todo:上链
             $res =\addons\shopro\model\UserCollect::edit([
                 'user_id'=>$user['id'],
@@ -69,14 +77,17 @@ class UserCollect extends Base
                 'give_user_id'=>$uid,
                 'type'=>3,
                 'status'=>0,
+                'notShard'=>1,
+                'asset_id'=>$collect['asset_id'],
+                'shard_id'=>$collect['shard_id'],
             ]);
             if (!$res){
-                new Exception('转赠失败');
+                $this->error('转赠失败');
             }
             //销毁
             $res =\addons\shopro\model\UserCollect::edit(['id'=>$value,'user_id'=>$uid,'status'=>4,'status_time'=>time(),'is_consume'=>1]);
             if (!$res){
-                new Exception('转赠失败');
+                $this->error('转赠失败');
             }
         }
         $this->success('转赠成功');

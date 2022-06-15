@@ -6,6 +6,7 @@ use addons\shopro\exception\Exception;
 use addons\xasset\library\Service;
 use app\admin\model\Admin;
 use think\Db;
+use think\Log;
 use think\Model;
 
 /**
@@ -84,15 +85,12 @@ class UserCollect extends Model
                 $user = User::get($user_id);
                 $goods = Goods::withTrashed()->where('id',$goods_id)->find();
                 $brand = GoodsBrand::where( 'id','in',explode(',',$goods['brand_ids']))->column('name');
-                $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$goods_id,'status'=>'up'])->field('stock,sales')->find();
-                $sku = $sku['stock'] + $sku['sales'];//总库存
                 $collect = new self();
                 $service = new Service();
                 //上链
-                $admin = Admin::withTrashed()->where('id',$goods['admin_id'])->find();
-                if ($admin && $goods['asset_id'] && $user['addr']){
+                $admin = Db::name('admin')->where('id',$goods['admin_id'])->find();
+                if (!isset($notShard) && $admin && $goods['asset_id'] && $user['addr'] ){
                     $asset_id = $goods['asset_id'];
-
                     $shard_id = gen_asset_id($service->appId);
                     $userId = $user_id;
                     $account = array(
@@ -101,7 +99,8 @@ class UserCollect extends Model
                         'private_key' => $admin['private_key'],
                     );
                     $price = ($original_price??0)*100;
-                    $service->grantShard($account, $goods['asset_id'], $shard_id, $user['addr'], $price, $userId);
+                    $res = $service->grantShard($account, $goods['asset_id'], $shard_id, $user['addr'], $price, $userId);
+                    Log::info('授予资产碎片:::::'.json_encode($res));
                 }
                 $collect->user_id = $user_id;//藏品所有者
                 $collect->goods_id = $goods_id;//藏品id
@@ -121,7 +120,7 @@ class UserCollect extends Model
                 $collect->trans_hash = md5($user_id.'trans_hash-'.$user['referral_code'].time());;
                 $collect->card_time = time();
                 $collect->add = $user['addr'];//保存位置
-                $collect->up_num = $sku;
+                $collect->up_num = $goods['issue_num']??1;
                 $collect->save();
             }
             Db::commit();
@@ -190,11 +189,23 @@ class UserCollect extends Model
         return $list;
     }
 
-    public static function consume($adminId, $uid, $assetId, $shardId)
+    /**
+     * 销毁
+     * @param $adminId
+     * @param $uid
+     * @param $assetId
+     * @param $shardId
+     * @return mixed
+     * @throws \think\exception\DbException
+     */
+    public static function consume($goodsId, $uid, $assetId, $shardId)
     {
+        $goods = Goods::withTrashed()->where('id',$goodsId)->find();
+        $adminId = $goods['admin_id']??0;
+        if (!$assetId)return false;
         $service = new Service();
         //上链
-        $admin = Admin::withTrashed()->where('id',$adminId)->find();
+        $admin = Db::name('admin')->where('id',$adminId)->find();
         $caccount = array(
             'address' => $admin['addr'],
             'public_key' => $admin['public_key'],
@@ -207,5 +218,27 @@ class UserCollect extends Model
             'private_key' => $user['private_key'],
         );
         return $service->consumeShard($caccount, $uaccount, $assetId, $shardId);
+    }
+
+
+    //资产转移
+    public static function transferShard($goodsId, $ownId,$uid, $assetId, $shardId,$price=0)
+    {
+        $goods = Goods::withTrashed()->where('id',$goodsId)->find();
+        if ($goods && $price==0){
+            $price =  $goods['price'];
+        }
+        $service = new Service();
+        //上链
+        $own = User::get($ownId);
+        $caccount = array(
+            'address' => $own['addr'],
+            'public_key' => $own['public_key'],
+            'private_key' => $own['private_key'],
+        );
+        $user = User::get($uid);
+
+//        $res = $service->queryShard($assetId, $shardId);
+        return $service->transferShard($caccount, $assetId, $shardId, $user['addr'],$price*100, $uid);
     }
 }

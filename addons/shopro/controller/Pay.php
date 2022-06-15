@@ -188,24 +188,29 @@ class Pay extends Base
             $notify['payment_json'] = json_encode($notify);
             //销毁
             $orderItem = OrderItem::get(['order_id'=>$order->id]);
+            $data = [
+                'user_id'=>$order['user_id'],
+                'goods_id'=>$orderItem['goods_id'],
+                'type'=>3,
+                'status'=>0,
+            ];
             if ($orderItem['user_collect_id']){
+
                 $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
                 $collect->is_consume = 1;//链上 资产是否销毁
                 $collect->status = 2;
                 $collect->status_time = time();
                 $collect->save();
-                //链上销毁
-                $goods = \addons\shopro\model\Goods::withTrashed()->where('id',$orderItem['goods_id'])->find();
-                \addons\shopro\model\UserCollect::consume($goods['admin_id'],$collect['user_id'],$collect['asset_id'],$collect['shard_id']);
+                //链上资产转移
+               $res = \addons\shopro\model\UserCollect::transferShard($orderItem['goods_id'],$collect['user_id'],$order['user_id'],$collect['asset_id'],$collect['shard_id'],$total_fee);
+               Log::info('购买寄售大厅链上资产转移:::'.json_encode($res));
+               $data['notShard'] = 1;
+                $data['asset_id'] = $collect['asset_id'];
+                $data['shard_id'] = $collect['shard_id'];
             }
             if ($orderItem['goods_id']){
                 //购买 todo:上链
-                $res =\addons\shopro\model\UserCollect::edit([
-                    'user_id'=>$order['user_id'],
-                    'goods_id'=>$orderItem['goods_id'],
-                    'type'=>3,
-                    'status'=>0,
-                ]);
+                $res =\addons\shopro\model\UserCollect::edit($data);
             }
             $order->paymentProcess($order, $notify);
 
@@ -361,21 +366,28 @@ class Pay extends Base
                     ];
                     //销毁
                     $orderItem = OrderItem::get(['order_id'=>$order['id']]);
+                    $data = [
+                        'user_id'=>$order['user_id'],
+                        'goods_id'=>$orderItem['goods_id'],
+                        'type'=>3,
+                        'status'=>0,
+                    ];
                     if ($orderItem['user_collect_id']){
                         $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
                         $collect->is_consume = 1;//链上 资产是否销毁
                         $collect->status = 2;
                         $collect->status_time = time();
                         $collect->save();
+                        //链上资产转移
+                        $res = \addons\shopro\model\UserCollect::transferShard($orderItem['goods_id'],$collect['user_id'],$order['user_id'],$collect['asset_id'],$collect['shard_id'],$total_fee);
+                        Log::info('购买寄售大厅链上资产转移:::'.json_encode($res));
+                        $data['notShard'] = 1;
+                        $data['asset_id'] = $collect['asset_id'];
+                        $data['shard_id'] = $collect['shard_id'];
                     }
                     if ($orderItem['goods_id']){
                         //购买 todo:上链
-                        $res =\addons\shopro\model\UserCollect::edit([
-                            'user_id'=>$order['user_id'],
-                            'goods_id'=>$orderItem['goods_id'],
-                            'type'=>3,
-                            'status'=>0,
-                        ]);
+                        $res =\addons\shopro\model\UserCollect::edit($data);
                     }
                     $order->paymentProcess($order, $notify);
                 });
