@@ -119,7 +119,7 @@ trait StockSale
             Goods::where('id', $orderItem->goods_id)->setInc('sales', $orderItem->goods_num);
 
             $goodsSkuPrice = GoodsSkuPrice::where('id', $orderItem->goods_sku_price_id)->find();
-            if ($goodsSkuPrice) {
+            if ($goodsSkuPrice && !$orderItem->user_collect_id) {
                 $goodsSkuPrice->setDec('stock', $orderItem->goods_num);         // 减少库存
                 $goodsSkuPrice->setInc('sales', $orderItem->goods_num);         // 增加销量
 

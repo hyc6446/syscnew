@@ -508,6 +508,8 @@
                                 @click="operation('enable',scope.row.id)">启用</span>
                             <span v-if="scope.row.status!='hidden'" class="disable-text"
                                 @click="operation('disable',scope.row.id)">禁用</span> -->
+                            <span v-if="scope.row.addr" class="enable-text"
+                                  @click="operation('tou',scope.row.id)">空投</span>
                         </div>
                     </template>
                 </el-table-column>
