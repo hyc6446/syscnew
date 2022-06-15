@@ -13,7 +13,7 @@ class UserBank extends Base
     // 获取提现账户信息
     public function info()
     {
-        $type = $this->request->get('type');
+        $type = $this->request->post('type');
         try {
             $bankInfo = \addons\shopro\model\UserBank::info($type);
         } catch (\Exception $e) {
