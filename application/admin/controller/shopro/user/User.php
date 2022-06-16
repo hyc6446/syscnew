@@ -465,4 +465,33 @@ class User extends Backend
 
         return false;
     }
+
+    public function tou()
+    {
+        if ($this->request->isAjax()) {
+            $params = $this->request->post();
+            $user = $this->model->get($params['user_id']);
+            $params['score'] = intval($params['score']);
+            if ($params['score'] > 0) {
+                $type = 'admin_recharge';
+            } elseif ($params['score'] < 0) {
+                $type = 'admin_deduct';
+            } else {
+                $this->error('请输入正确的数量');
+            }
+            $result = Db::transaction(function () use ($params, $user, $type) {
+                try {
+                    return \addons\shopro\model\User::score($params['score'], $user->id, $type, 0, $params['remarks']);
+                } catch (\Exception $e) {
+                    $this->error($e->getMessage());
+                }
+            });
+            if ($result) {
+                $this->success('操作成功');
+            } else {
+                $this->error('操作失败');
+            }
+        }
+        return $this->view->fetch();
+    }
 }

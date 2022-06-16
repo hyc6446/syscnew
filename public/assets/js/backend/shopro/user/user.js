@@ -84,6 +84,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     }
                                 })
                                 break;
+                            case 'tou':
+                                Fast.api.open('shopro/user/user/tou?id=' + id, '空投', {
+                                    callback() {
+                                        that.getData();
+                                    }
+                                })
+                                break;
                             case 'del':
                                 that.$confirm('此操作将永久直接删除用户, 是否继续?', '提示', {
                                     confirmButtonText: '确定',
