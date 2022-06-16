@@ -3,6 +3,7 @@
 namespace app\admin\controller\shopro\user;
 
 use addons\shopro\model\Goods;
+use addons\shopro\model\GoodsSkuPrice;
 use app\common\controller\Backend;
 use think\Db;
 use think\exception\PDOException;
@@ -170,6 +171,11 @@ class Collect extends Backend
             ]);
             if (!$res){
                 $this->error('空投失败');
+            }
+            $goodsSkuPrice = GoodsSkuPrice::where('goods_id',$value)->find();
+            if ($goodsSkuPrice) {
+                $goodsSkuPrice->setDec('stock', 1);         // 减少库存
+                $goodsSkuPrice->setInc('sales', 1);         // 增加销量
             }
         }
         $this->success('空投成功');

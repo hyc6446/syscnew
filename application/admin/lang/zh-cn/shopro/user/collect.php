@@ -13,6 +13,7 @@ return [
     'Type 2'   => '合成',
     'Type 3'   => '赠送',
     'Type 4'   => '盲盒',
+    'Type 5'   => '空投',
     'Status_time'     => '状态时间',
     'Is_consume'=>'是否销毁',
     'Is_consume 1'=>'已销毁',
