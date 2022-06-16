@@ -655,19 +655,19 @@
                                 　　　　<span>{{scope.$index+1}}</span>
                                 　　</template>
                         </el-table-column>
-                        <el-table-column label="商品图" width="80">
+                        <el-table-column label="藏品图" width="80">
                             　　<template slot-scope="scope">
                                 　　　　<img :src="Fast.api.cdnurl(scope.row.image)" width="34" height="34" />
                                 　　</template>
                         </el-table-column>
-                        <el-table-column prop="title" label="商品名称" width="380">
+                        <el-table-column prop="title" label="藏品名称" width="380">
                             <template slot-scope="scope">
                                 <div class="ellipsis-item">
                                     {{scope.row.title}}
                                 </div>
                             </template>
                         </el-table-column>
-                        <el-table-column prop="sales" label="商品销量" width="100">
+                        <el-table-column prop="sales" label="藏品销量" width="100">
                         </el-table-column>
                         <el-table-column prop="sale_total_money" label="销售额(元)" min-width="120">
                         </el-table-column>
