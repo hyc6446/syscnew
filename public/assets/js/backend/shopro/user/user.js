@@ -58,6 +58,37 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             return false;
                         })
                     },
+                    goodsSelect(id) {
+                        console.log(id);
+                        let that  = this;
+                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&issue=1", "选择商品", {
+                            callback: function (data) {
+                                let goodsIds = [];
+                                console.log(data);
+                                if (data.data.length==0){
+                                    that.$message({
+                                        type: 'info',
+                                        message: '请至少选择一项商品'
+                                    });
+                                    return false;
+                                }
+                                data.data.forEach(item=>{
+                                   goodsIds.push(item.id);
+                                });
+                                console.log(goodsIds.join());
+                                Fast.api.ajax({
+                                    url: 'shopro/user/collect/grantShard',
+                                    loading: true,
+                                    type: 'POST',
+                                    data:{ids:goodsIds.join(),uid:id}
+                                }, function (ret, res) {
+                                    that.getData();
+                                })
+                                return false;
+                            }
+                        });
+                    },
+
                     operation(type, id) {
                         let that = this;
                         switch (type) {
@@ -919,8 +950,96 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
         money_recharge: function () {
             Controller.rechangeInit('money')
         },
+        tou: function () {
+            Controller.touInit()
+        },
         score_recharge: function () {
             Controller.rechangeInit('score')
+        },
+        touInit:function (){
+            function urlParmas(par) {
+                let value = ""
+                window.location.search.replace("?", '').split("&").forEach(i => {
+                    if (i.split('=')[0] == par) {
+                        value = JSON.parse(decodeURI(i.split('=')[1]))
+                    }
+                })
+                return value
+            }
+            var tou = new Vue({
+                el: "#tou",
+                data() {
+                    return {
+                        rechargeType: type,
+                        rechargeForm: {
+                            user_id: urlParmas('id'),
+                            money: '',
+                            score: '',
+                            remarks: '',
+                        },
+                        rechargeFormInit: {
+                            user_id: urlParmas('id'),
+                            money: '',
+                            score: '',
+                            remarks: '',
+                        },
+                        rules: {
+                            money: [{
+                                required: true,
+                                message: '请输入充值余额',
+                                trigger: 'blur'
+                            },],
+                            score: [{
+                                required: true,
+                                message: '请输入充值积分',
+                                trigger: 'blur'
+                            },],
+                        }
+                    }
+                },
+                mounted() { },
+                methods: {
+                    submitForm(type, check) {
+                        let that = this;
+                        if (type == 'yes') {
+                            that.$refs[check].validate((valid) => {
+                                if (valid) {
+                                    let subData = JSON.parse(JSON.stringify(that.rechargeForm));
+                                    if (that.rechargeType != 'money') {
+                                        delete subData.money
+                                        Fast.api.ajax({
+                                            url: 'shopro/user/user/score_recharge',
+                                            loading: true,
+                                            data: subData
+                                        }, function (ret, res) {
+                                            that.rechargeType = null;
+                                            that.rechargeForm = JSON.parse(JSON.stringify(that.rechargeFormInit))
+                                            Fast.api.close();
+                                        })
+                                    } else {
+                                        delete subData.score
+                                        Fast.api.ajax({
+                                            url: 'shopro/user/user/money_recharge',
+                                            loading: true,
+                                            type: "POST",
+                                            data: subData
+                                        }, function (ret, res) {
+                                            that.rechargeType = null;
+                                            that.rechargeForm = JSON.parse(JSON.stringify(that.rechargeFormInit));
+                                            Fast.api.close();
+                                        })
+                                    }
+                                } else {
+                                    return false;
+                                }
+                            });
+                        } else {
+                            that.rechargeForm = JSON.parse(JSON.stringify(that.rechargeFormInit))
+                            that.rechargeType = null;
+                        }
+                    },
+                }
+            })
         },
         rechangeInit: function (type) {
             function urlParmas(par) {

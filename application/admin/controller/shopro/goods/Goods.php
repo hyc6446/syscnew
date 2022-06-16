@@ -661,6 +661,7 @@ class Goods extends Backend
         $category_id = $this->request->get('category_id', 0);
         $type = $this->request->get('type', '');
         $self = $this->request->get('self', '');
+        $issue = $this->request->get('issue', '');
 
         $name = $this->model->getQuery()->getTable();
         $tableName = $name . '.';
@@ -727,11 +728,13 @@ class Goods extends Backend
         if ($type=='hecheng'){
             $goods = $goods->where('is_syn', 0);
         }
+        if ($issue){
+            $goods = $goods->where('issue', $issue);
+        }
         if(isset($category_id) && $category_id != 0) {
             $category_ids = [];
             // 查询分类所有子分类,包括自己
             $category_ids = \addons\shopro\model\Category::getCategoryIds($category_id);
-
 
             $goods = $goods->where(function ($query) use ($category_ids) {
                 // 所有子分类使用 find_in_set or 匹配，亲测速度并不慢
