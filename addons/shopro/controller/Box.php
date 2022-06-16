@@ -20,7 +20,7 @@ class Box extends Base
 
     public function recommend()
     {
-        $pagesize = input('pagesize/d', 10);
+        $pagesize = input('pagesize/d', 1);
         $page = input('page/d', 1);
         $category_id = input('category_id/d', '');
 
@@ -50,6 +50,7 @@ class Box extends Base
                     ->join('shopro_category c','c.id=b.category_ids')
                     ->where('a.box_id', $item->box_id)
                     ->order('a.weigh', 'desc')
+                    ->limit(0,2)
                     ->select();
 
                 foreach ($goods_images as &$image) {
@@ -67,7 +68,14 @@ class Box extends Base
                 $item->price_max = round($max_coin_price, 2);
 
                 $item->goods_images = $goods_images;
+
             });
+
+
+        // 获取商品的分类
+//        $where = ['status'=>'normal','type'=>['neq',1]];
+//        $cates = \addons\shopro\model\Category::where($where)->field('id,name,color')->select();
+//        $list['category'] = $cates;
 
          $this->success('查询成功', $list);
         
@@ -116,6 +124,9 @@ class Box extends Base
     public function boxDetail()
     {
         $box_id = input('box_id/d');
+        $cate_id = input('category/d');
+        $pagesize = input('pagesize/d', 10);
+        $page = input('page/d', 1);
         if (empty($box_id)) {
             $this->error('请选择盲盒');
         }
@@ -132,41 +143,45 @@ class Box extends Base
             $this->error('盲盒有误');
         }
 
-        $firstGoods =  Detail::alias("a")
+        $where = ['a.box_id'=>$box_id];
+        if(!empty($cate_id)){
+            $where['b.category_ids']=$cate_id;
+        }
+
+        $Goods =  Detail::alias("a")
             ->join("shopro_goods b","b.id = a.goods_id")
             ->join('shopro_category c','b.category_ids=c.id')
-            ->where('a.box_id', $box_id)->field("b.image,b.price,b.title,c.name,c.color,a.rate")->order("a.weigh desc")->select();
+            ->field("b.image,b.price,b.title,c.name,c.color,a.rate")
+            ->where($where)
+            ->order("a.weigh desc")
+            ->paginate($pagesize, false, ['page' => $page]);
 
-        foreach ($firstGoods as &$first) {
+        foreach ($Goods as &$first) {
             $first->image = $first->image ? cdnurl($first->image, true) : $first->image;
             $first->price = round($first->price, 2);
             $first->hidden(['coin_price']);
         }
 
 
-        $box_banner_images = [];
-        $box_banner = [];
-        $box->box_banner_images = explode(',', $box->box_banner_images);
-        $banner_desc = $box->box_banner_images_desc;
-        $banner_desc = $banner_desc ? json_decode($banner_desc, true) : [];
-        foreach ($box->box_banner_images as $index => $image) {
-            $image = $image ? cdnurl($image, true) : '';
-            $box_banner_images[] = $image;
-            $box_banner[] = [
-                'desc' => $banner_desc[$index] ?? '',
-                'image' => $image
-            ];
-        }
+//        $box_banner_images = [];
+//        $box_banner = [];
+//        $box->box_banner_images = explode(',', $box->box_banner_images);
+//        $banner_desc = $box->box_banner_images_desc;
+//        $banner_desc = $banner_desc ? json_decode($banner_desc, true) : [];
+//        foreach ($box->box_banner_images as $index => $image) {
+//            $image = $image ? cdnurl($image, true) : '';
+//            $box_banner_images[] = $image;
+//            $box_banner[] = [
+//                'desc' => $banner_desc[$index] ?? '',
+//                'image' => $image
+//            ];
+//        }
 
-        $ret = [
-            'box' => $box,
-            'box_banner_images' => $box_banner_images,
-            'box_banner' => $box_banner,
-            'coin_price' => intval($box->coin_price),
-            'goodslist' => $firstGoods,
-        ];
+//        $ret = [
+//            'goodslist' => $Goods,
+//        ];
 
-        $this->success('查询成功', $ret);
+        $this->success('查询成功', $Goods);
     }
 
 
