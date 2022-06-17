@@ -6,6 +6,7 @@ use think\Model;
 use addons\shopro\exception\Exception;
 use think\Db;
 use traits\model\SoftDelete;
+use Yansongda\Pay\Gateways\Alipay;
 
 /**
  * 钱包
@@ -29,23 +30,34 @@ class UserBank extends Model
 
 
     // 提现账户详情
-    public static function info($type, $encryptCardNo = true)
+    public static function info($type,$code, $encryptCardNo = true)
     {
         $user = User::info();
         $bank = null;
         if ($type == 'wechat') {
             $platform = request()->header('platform');
-            $userOauth = \addons\shopro\model\UserOauth::get([
-                'user_id' => $user->id,
-                'platform' => $platform
-            ]);
-            if ($userOauth) {
-                $bank = [
-                    'real_name' => $userOauth->nickname,
+//            $userOauth = \addons\shopro\model\UserOauth::get([
+//                'user_id' => $user->id,
+//                'platform' => $platform
+//            ]);
+//            if ($userOauth) {
+//                $bank = [
+//                    'real_name' => $userOauth->nickname,
+//                    'bank_name' => '微信用户',
+//                    'card_no' => $userOauth->openid
+//                ];
+//            }
+
+            //获取用户授权
+           $user =  self::getUserInfo($code,$platform);
+           if($user){
+               $bank = [
+                    'real_name' => $user->nickname,
                     'bank_name' => '微信用户',
-                    'card_no' => $userOauth->openid
+                    'card_no' => $user->openid
                 ];
-            }
+           }
+
         } else {
             $bank = self::where(['user_id' => $user->id, 'type' => $type])->find();
         }
@@ -58,6 +70,49 @@ class UserBank extends Model
         }
         return $bank;
     }
+
+
+    /**
+     * 微信 授权获取用户信息
+     * @param $code
+     * @param $platform
+     * @return bool|mixed
+     * @throws \think\exception\DbException
+     */
+    private static function getUserInfo($code,$platform)
+    {
+        $platformConfig = json_decode(\addons\shopro\model\Config::get(['name' => $platform])->value, true);
+        $appid = $platformConfig['app_id'];
+        $appsecret = $platformConfig['secret'];
+
+        // 通过code获取access_token
+        $get_token_url ="https://api.weixin.qq.com/sns/oauth2/access_token?appid=". $appid ."&secret=". $appsecret ."&code={$code}&grant_type=authorization_code";
+        $token_info = \fast\Http::get($get_token_url);
+        $token_info = json_decode($token_info,true);
+        if(isset($token_info['errcode'])){
+            throw \Exception($token_info['errmsg'],$token_info['errcode']);
+            return false;
+        }
+        // 通过access_token和openid获取用户信息
+        $get_userinfo_url ='https://api.weixin.qq.com/sns/userinfo?access_token='. $token_info['access_token'].'&openid='. $token_info['openid'].'&lang=zh_CN';
+        $userinfo = \fast\Http::get($get_userinfo_url);
+        $userinfo = json_decode($userinfo,true);
+        if(isset($userinfo['errcode'])){
+            throw \Exception($userinfo['errmsg'],$userinfo['errcode']);
+            return false;
+        }
+        return $userinfo;
+    }
+
+    /**
+     * 获取支付宝的用户信息
+     */
+    private static function getAliPayInfo(){
+
+
+
+    }
+
 
     private static function encryptCardNo($bank, $platform)
     {

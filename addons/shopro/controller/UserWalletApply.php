@@ -19,6 +19,9 @@ class UserWalletApply extends Base
     // 申请提现
     public function apply()
     {
+        //获取微信支付宝 授权信息code
+
+
         $type = $this->request->post('type');
         $money = $this->request->post('money');
         $apply = \think\Db::transaction(function () use ($type, $money) {

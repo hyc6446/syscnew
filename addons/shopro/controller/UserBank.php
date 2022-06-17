@@ -14,8 +14,9 @@ class UserBank extends Base
     public function info()
     {
         $type = $this->request->post('type');
+        $code = $this->request->post('code');
         try {
-            $bankInfo = \addons\shopro\model\UserBank::info($type);
+            $bankInfo = \addons\shopro\model\UserBank::info($type,$code);
         } catch (\Exception $e) {
             $this->error($e->getMessage());
         }
