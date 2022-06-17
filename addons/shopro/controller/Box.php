@@ -304,32 +304,21 @@ class Box extends Base
     {
         //
         $order_id = input('order_id/d');
-        $pay_method = input('pay_method/d','wallet');// wallet=金币,wechat=微信,alipay=支付宝'
+        $pay_method = input('pay_method/row','wallet');// wallet=金币,wechat=微信,alipay=支付宝'
 
-        if($pay_method == 'wallet'){
-            $this->coinPay();
+        $platform = request()->header('platform');
+        if (!$platform) $this->error("请确认平台信息");
+
+        if (!$pay_method || !in_array($pay_method, ['wechat', 'alipay', 'wallet'])) {
+            $this->error("支付类型不能为空");
         }
 
-
-        if($pay_method == 'wechat'){
-
-        }
-
-        if($pay_method == 'alipay'){
-
-        }
-    }
-
-
-
-    public function coinPay()
-    {
         $order_id = input('order_id/d');
         if (empty($order_id)) {
             $this->error('请选择支付订单');
         }
 
-        $order = BoxOrder::field('id,box_id,num,status,coin_amount,out_trade_no,select')->lock(true)
+        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
             ->where('id', $order_id)
             ->where('user_id', $this->auth->id)
             ->find();
@@ -347,8 +336,79 @@ class Box extends Base
             $this->error('您的金币不足');
         }
 
-        Db::startTrans();
+        if($pay_method == 'wallet'){
+            $this->coinPay($order_id);
+        }
 
+        $order_data = [
+            'order_id' => $order->id,
+            'out_trade_no' => $order->out_trade_no,
+            'total_fee' => $order->rmb_amount,
+        ];
+
+        if($pay_method == 'wechat'){
+            if (in_array($platform, ['wxOfficialAccount', 'wxMiniProgram'])) {
+                if (isset($openid) && $openid) {
+                    // 如果传的有 openid
+                    $order_data['openid'] = $openid;
+                } else {
+                    // 没有 openid 默认拿下单人的 openid
+                    $oauth = \addons\shopro\model\UserOauth::where([
+                        'user_id' => $order->user_id,
+                        'provider' => 'Wechat',
+                        'platform' => $platform
+                    ])->find();
+
+                    $order_data['openid'] = $oauth ? $oauth->openid : '';
+                }
+
+                if (empty($order_data['openid'])) {
+                    // 缺少 openid
+                    return $this->error('缺少 openid', 'no_openid');
+                }
+            }
+            $order_data['body'] = '商城订单支付';
+        }
+
+        if($pay_method == 'alipay'){
+            $order_data['subject'] = '商城订单支付';
+        }
+
+        $notify_url = $this->request->root(true) . '/addons/shopro/pay/notifyx/payment/' . $pay_method . '/platform/' . $platform. '/order_type/box_order';
+        $pay = new \addons\shopro\library\PayService($pay_method, $platform, $notify_url);
+
+        try {
+            $result = $pay->create($order_data);
+        } catch (\Yansongda\Pay\Exceptions\Exception $e) {
+            $this->error("支付配置错误：" . $e->getMessage());
+        }
+
+        if ($platform == 'App') {
+            $result = $result->getContent();
+        }
+        if ($platform == 'H5' && $pay_method == 'wechat') {
+            $result = $result->getContent();
+        }
+
+         $this->success('获取预付款成功', [
+            'pay_data' => $result,
+            'pay_action' => $pay->method,
+        ]);
+
+    }
+
+
+
+
+    public function coinPay($order_id)
+    {
+        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
+            ->where('id', $order_id)
+            ->where('user_id', $this->auth->id)
+            ->find();
+
+
+        Db::startTrans();
         try {
             // 更新订单信息
             $order->pay_method = 'coin';
@@ -484,7 +544,7 @@ class Box extends Base
                     'user_id' => $this->auth->id,
                     'original_price' => $goods->original_price,
                     'price' => $goods->price,
-                    'type' => 4,
+                    'from_type' => 4,
                     'token' => md5($this->auth->id.'token-'.$this->auth->referral_code.time()),
                     'up_brand' => "-",
                     'auth_brand' => "-",
@@ -522,6 +582,7 @@ class Box extends Base
 //                }
 //                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
 //            }
+            var_dump($e->getMessage());die;
             $this->error($e->getMessage());
             $this->error('抽奖失败，已退款');
         }
