@@ -250,7 +250,7 @@
                         </el-table-column>
                         <el-table-column type="selection" width="40" v-if="multiple=='false'">
                             <template slot-scope="scope">
-                                <el-checkbox v-model="scope.row.checked" @change="singleSelectionChange(scope.row)">
+                                <el-checkbox v-model="scope.row.checked" :disabled="scope.row.stock==0?true:false" @change="singleSelectionChange(scope.row)">
                                 </el-checkbox>
                             </template>
                         </el-table-column>
@@ -291,7 +291,7 @@
 <!--                                <div class="display-flex" v-else>-</div>-->
 <!--                            </template>-->
                         </el-table-column>
-                        <el-table-column prop="stock" label="发行数量" width="80">
+                        <el-table-column prop="stock" label="剩余库存" width="80">
                         </el-table-column>
                     </el-table>
                 </div>

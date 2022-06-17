@@ -2,6 +2,8 @@
 
 namespace app\admin\controller\shopro\user;
 
+use addons\shopro\model\Goods;
+use addons\shopro\model\GoodsSkuPrice;
 use app\common\controller\Backend;
 use think\Db;
 use think\exception\PDOException;
@@ -147,6 +149,36 @@ class Collect extends Backend
             return json($result);
         }
         return $this->view->fetch();
+    }
+
+    public function grantShard()
+    {
+        $ids = $this->request->post('ids','');
+        $uid = $this->request->post('uid','');
+        if (!$ids)$this->error('请选择藏品');
+        if (!$uid)$this->error('请选择空投的用户');
+        $user = \app\admin\model\User::get($uid);
+        if (!$user)$this->error('用户不存在,请确认后再输入');
+        if (!$user['addr'])$this->error('该用户未登录小程序注册数字资产账户');
+        $ids = explode(',',$ids);
+        foreach ($ids as $value){
+            //空投 todo:上链
+            $res =\addons\shopro\model\UserCollect::edit([
+                'user_id'=>$user['id'],
+                'goods_id'=>$value,
+                'type'=>5,
+                'status'=>0,
+            ]);
+            if (!$res){
+                $this->error('空投失败');
+            }
+            $goodsSkuPrice = GoodsSkuPrice::where('goods_id',$value)->find();
+            if ($goodsSkuPrice) {
+                $goodsSkuPrice->setDec('stock', 1);         // 减少库存
+                $goodsSkuPrice->setInc('sales', 1);         // 增加销量
+            }
+        }
+        $this->success('空投成功');
     }
 
 }

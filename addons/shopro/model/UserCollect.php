@@ -51,7 +51,7 @@ class UserCollect extends Model
     }
     public function getTypeTextAttr($value, $data)
     {
-        return ['1'=>'购买','2'=>'合成','3'=>'赠送','4'=>'盲盒'][$data['type']];
+        return ['1'=>'购买','2'=>'合成','3'=>'赠送','4'=>'盲盒','5'=>'空投'][$data['from_type']];
     }
 
     public function getStatusTimeTextAttr($value,$data)
@@ -112,7 +112,7 @@ class UserCollect extends Model
                 $collect->owner_addr = $user['addr']??'';//资产账户地址
                 $collect->querysds = $querysds??'';//资产信息json
                 $collect->status = 0;//状态:0=正常,1=正在寄售,2=已售出,3=已合成,4=已赠予
-                $collect->type = $type;
+                $collect->from_type = $type;
                 $collect->token = md5($user_id.'token-'.$user['referral_code'].time());
                 $collect->up_brand = $brand?implode('&',$brand):'-';
                 $collect->auth_brand = $service->appId;//授权方
@@ -179,7 +179,7 @@ class UserCollect extends Model
             }
         }
         $list = self::alias('a')
-            ->field('a.id,a.goods_id,a.original_price,a.price,a.status,a.status_time,a.type,sg.title,sg.image,sc.name cate_name,sg.category_ids cate_id')
+            ->field('a.id,a.goods_id,a.original_price,a.price,a.status,a.status_time,a.from_type,sg.title,sg.image,sc.name cate_name,sg.category_ids cate_id')
             ->join('shopro_goods sg','a.goods_id=sg.id')
             ->join('shopro_category sc','sg.category_ids=sc.id')
             ->where($where)

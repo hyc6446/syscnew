@@ -486,7 +486,9 @@
                 </el-table-column>
                 <el-table-column label="余额" prop="money" min-width="120">
                 </el-table-column>
-                <el-table-column label="积分" prop="score" min-width="120">
+<!--                <el-table-column label="积分" prop="score" min-width="120">-->
+<!--                </el-table-column>-->
+                <el-table-column label="数字资产地址" prop="addr" min-width="200">
                 </el-table-column>
                 <el-table-column label="加入时间" min-width="160">
                     <template slot-scope="scope">
@@ -509,7 +511,7 @@
                             <span v-if="scope.row.status!='hidden'" class="disable-text"
                                 @click="operation('disable',scope.row.id)">禁用</span> -->
                             <span v-if="scope.row.addr" class="enable-text"
-                                  @click="operation('tou',scope.row.id)">空投</span>
+                                  @click="goodsSelect(scope.row.id)">空投</span>
                         </div>
                     </template>
                 </el-table-column>

@@ -34,7 +34,7 @@ class Collect extends Model
     }
     public function getTypeList()
     {
-        return ['1' => __('Type 1'), '2' => __('Type 2'), '3' => __('Type 3'), '4' => __('Type 4')];
+        return ['1' => __('Type 1'), '2' => __('Type 2'), '3' => __('Type 3'), '4' => __('Type 4'), '5' => __('Type 5')];
     }
     public function getIsConsumeList()
     {
@@ -48,7 +48,7 @@ class Collect extends Model
     }
     public function getTypeTextAttr($value, $data)
     {
-        $value = $value ? $value : (isset($data['type']) ? $data['type'] : '');
+        $value = $value ? $value : (isset($data['from_type']) ? $data['from_type'] : '');
         $list = $this->getTypeList();
         return isset($list[$value]) ? $list[$value] : '';
     }

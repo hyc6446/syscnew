@@ -26,7 +26,7 @@ class Goods extends Model
     protected $updateTime = 'updatetime';
     protected $deleteTime = 'deletetime';
 
-    protected $hidden = ['createtime', 'updatetime', 'status','type','sales','show_sales', 'params', 'images','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
+    protected $hidden = ['createtime', 'updatetime', 'status','type','show_sales', 'params', 'images','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
     //列表动态隐藏字段
     public static $list_hidden = ['weigh','note'];
 

@@ -53,11 +53,11 @@ class UserCollect extends Base
     public function give()
     {
         $ids = $this->request->post('ids','');
-        $code = $this->request->post('referral_code','');
+        $mobile = $this->request->post('mobile','');
         $uid = $this->auth->id;
         if (!$ids)$this->error('请选择转赠的藏品');
-        if (!$code)$this->error('请选择转赠的好友');
-        $user = \addons\shopro\model\User::get(['referral_code'=>$code]);
+        if (!$mobile)$this->error('请选择转赠的好友');
+        $user = \addons\shopro\model\User::get(['mobile'=>$mobile]);
         if (!$user)$this->error('转赠的好友不存在,请确认后再输入');
         if ($user['id']== $uid)$this->error('转赠的好友不能为自己');
         if (!$user['addr'])$this->error('好友未重新登录注册数字资产账户');

@@ -486,7 +486,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         }
                         let ids = this.multiple == 'true' ? this.selectedIds.join(',') : this.selectedIds[this.selectedIds.length - 1]
                         Fast.api.ajax({
-                            url: domain + '/addons/shopro/goods/lists?goods_ids=' + ids + "&per_page=999999999&type=all",
+                            url: domain + '/addons/shopro/goods/lists?islist=0&goods_ids=' + ids + "&per_page=999999999&type=all",
                             loading: false,
                         }, function (ret, res) {
                             Fast.api.close({
@@ -778,7 +778,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         selectedGoodsList.forEach(i => {
                             idsArr.push(i.id)
                         })
-                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&type=hecheng&ids=" + idsArr.join(',')+'&id='+that.editId, "选择商品", {
+                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&type=hecheng&ids=" + idsArr.join(',')+'&id='+that.editId, "选择藏品", {
                             callback: function (data) {
                                 let resData = []
                                 let goodsList = []

@@ -43,7 +43,7 @@ class Goods extends Base
     public function lists()
     {
         $params = $this->request->get();
-        $params['islist'] = 1;
+        $params['islist'] = $params['islist']??1;
         $params['tag'] = $params['tag']??'';
         $data = \addons\shopro\model\Goods::getGoodsList($params);
 
