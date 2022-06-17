@@ -472,4 +472,15 @@ class Pay extends Base
 
         return [$order, $prepay_type];
     }
+
+    public function checkPwd()
+    {
+        $pwd = $this->request->param('pwd');
+        $ret = $this->auth->checkpwd($pwd);
+        if ($ret) {
+            $this->success('校验成功');
+        } else {
+            $this->error($this->auth->getError());
+        }
+    }
 }

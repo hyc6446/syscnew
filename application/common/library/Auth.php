@@ -299,6 +299,21 @@ class Auth
         }
     }
 
+    public function checkpwd($pwd)
+    {
+        if (!$this->_logined) {
+            $this->setError('You are not logged in');
+            return false;
+        }
+        //判断旧密码是否正确
+        if ($this->_user->password == $this->getEncryptPassword($pwd, $this->_user->salt)) {
+            return true;
+        } else {
+            $this->setError('Password is incorrect');
+            return false;
+        }
+    }
+
     /**
      * 直接登录账号
      * @param int $user_id
