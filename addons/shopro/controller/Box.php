@@ -438,15 +438,63 @@ class Box extends Base
         Db::commit();
 
         // 开箱
-        $prize = $this->open($order);
+//        $prize = $this->open($order);
 
-        $this->success('支付成功', ['prize' => $prize]);
+        $this->success('支付成功', ['order' => $order]);
     }
+
+    public function getSuccessData()
+    {
+        $order_id = input('out_trade_no/row');
+
+        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
+            ->where('out_trade_no', $order_id)
+            ->where('user_id', $this->auth->id)
+            ->find();
+
+        if($order->status=='unused'){
+            $prize = $this->open($order);
+            $this->success('开盲盒成功',['prize'=>$prize]);
+        }else if($order->status=='used'){
+            //查看盲盒是否已经开了
+            $prizeRecord = Prizerecord::where('order_id','=',$order->id)->select();
+            //根据中奖记录查询商品分类
+            $goodsIds = array_column($prizeRecord,'goods_id');
+            $goodsInfo = [];
+            foreach ($goodsIds as $goodsId) {
+                $goodsInfo[] = Goods::alias('a')
+                    ->field('a.*,b.name as cate_name,b.color')
+                    ->join('shopro_category b','b.id=a.category_ids')
+                    ->where('a.id', $goodsId)->find();
+            }
+
+            foreach ($goodsInfo as $key=> $goods){
+                $prizeInfo[] = [
+                    'prize_id' => intval($prizeRecord[$key]->id),
+                    'image' => $prizeRecord[$key]->goods_image ? cdnurl($prizeRecord[$key]->goods_image, true) : '',
+                    'goods_name' => $prizeRecord[$key]->goods_name,
+                    'cate_name' =>$goods->cate_name,
+                    'color' =>$goods->color,
+                ];
+            }
+
+            $ret = [
+                'select' => $order->select,
+                'prizeInfo' => $prizeInfo
+            ];
+            $this->success('盲盒内容',['prize'=>$ret]);
+        }else {
+            $this->success('订单尚未支付');
+        }
+
+    }
+
+
 
 
     /**
      * 盲盒开奖
-     * @param Order $order
+     * @param BoxOrder $order
      * @return array|bool
      */
     private function open(BoxOrder $order)
@@ -557,6 +605,19 @@ class Box extends Base
                 // 减少商品库存
                 GoodsSkuPrice::where('goods_id', $goods->id)->setDec('stock');
 
+
+                //写入百度上链
+
+                //购买 todo:上链
+                $data = [
+                    'user_id'=>$this->auth->id,
+                    'goods_id'=>$goods->id,
+                    'type'=>4,
+                    'status'=>0,
+                ];
+                $res =\addons\shopro\model\UserCollect::edit($data);
+
+
                 $prizeInfo[] = [
                     'prize_id' => intval($prize->id),
                     'image' => $prize->goods_image ? cdnurl($prize->goods_image, true) : '',
@@ -582,7 +643,6 @@ class Box extends Base
 //                }
 //                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
 //            }
-            var_dump($e->getMessage());die;
             $this->error($e->getMessage());
             $this->error('抽奖失败，已退款');
         }

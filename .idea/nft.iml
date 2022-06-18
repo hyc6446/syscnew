@@ -47,6 +47,16 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/topthink/think-installer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/topthink/think-queue" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/txthinking/mailer" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/songshenzong/support" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/deprecation-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/danielstjules/stringy" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/alibabacloud/tea" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/alibabacloud/tea-fileform" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/xin/container" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/xin/helper" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/alipaysdk/easysdk" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/mtdowling/jmespath.php" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/adbario/php-dot-notation" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

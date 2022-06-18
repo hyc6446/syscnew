@@ -254,7 +254,7 @@ class UserWalletApply extends Model
                     'remark' => '用户提现',
                     'payee_info' => [
                         'identity' => $apply->apply_info['支付宝账户'],
-                        'identity_type' => 'ALIPAY_LOGON_ID',
+                        'identity_type' => 'ALIPAY_USER_ID',
                         'name' => $apply->apply_info['真实姓名'],
                     ]
                 ];

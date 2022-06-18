@@ -3,6 +3,7 @@
 namespace addons\shopro\controller;
 
 use addons\epay\library\Service;
+use addons\shopro\model\BoxOrder;
 use addons\shopro\model\OrderItem;
 use fast\Random;
 use think\addons\Controller;
@@ -129,7 +130,7 @@ class Pay extends Base
             $order_data['subject'] = '商城订单支付';
         }
 
-        $notify_url = $this->request->root(true) . '/addons/shopro/pay/notifyx/payment/' . $payment . '/platform/' . $platform;
+        $notify_url = $this->request->root(true) . '/addons/shopro/pay/notifyx/payment/' . $payment . '/platform/' . $platform ;
         $pay = new \addons\shopro\library\PayService($payment, $platform, $notify_url);
 
         try {
@@ -230,10 +231,11 @@ class Pay extends Base
 
         $payment = $this->request->param('payment');
         $platform = $this->request->param('platform');
+        $order_type = isset($this->request->param('order_type'))?$this->request->param('order_type'):'';
 
         $pay = new \addons\shopro\library\PayService($payment, $platform);
 
-        $result = $pay->notify(function ($data, $pay) use ($payment, $platform) {
+        $result = $pay->notify(function ($data, $pay) use ($payment, $platform,$order_type) {
             Log::write('notifyx-result:'. json_encode($data));
             // {    // 微信回调参数
             //     "appid":"wx39cd0799d4567dd0",
@@ -313,86 +315,132 @@ class Pay extends Base
                 $out_trade_no = $data['out_trade_no'];
                 $out_refund_no = $data['out_biz_no'] ?? '';
 
-                list($order, $prepay_type) = $this->getOrderInstance($out_trade_no);
-                
-                // 判断是否是支付宝退款（支付宝退款成功会通知该接口）
-                if ($payment == 'alipay'    // 支付宝支付
-                    && $data['notify_type'] == 'trade_status_sync'      // 同步交易状态
-                    && $data['trade_status'] == 'TRADE_CLOSED'          // 交易关闭
-                    && $out_refund_no                                   // 退款单号
-                ) {
-                    // 退款回调
-                    if ($prepay_type == 'order') {
-                        // 退款回调
-                        $this->refundFinish($out_trade_no, $out_refund_no);
-                    } else {
-                        // 其他订单如果支持退款，逻辑这里补充
+                if($order_type){
+
+                    // 判断支付宝微信是否是支付成功状态，如果不是，直接返回响应
+                    if ($payment == 'alipay' && $data['trade_status'] != 'TRADE_SUCCESS') {
+                        // 不是交易成功的通知，直接返回成功
+                        return $pay->success()->send();
+                    }
+                    if ($payment == 'wechat' && ($data['result_code'] != 'SUCCESS' || $data['return_code'] != 'SUCCESS')) {
+                        // 微信交易未成功，返回 false，让微信再次通知
+                        return false;
                     }
 
-                    return $pay->success()->send();
-                }
+                    // 支付成功流程
+                    $pay_fee = $payment == 'alipay' ? $data['total_amount'] : $data['total_fee'] / 100;
 
+                    $box_order = new BoxOrder();
 
-                // 判断支付宝微信是否是支付成功状态，如果不是，直接返回响应
-                if ($payment == 'alipay' && $data['trade_status'] != 'TRADE_SUCCESS') {
-                    // 不是交易成功的通知，直接返回成功
-                    return $pay->success()->send();
-                }
-                if ($payment == 'wechat' && ($data['result_code'] != 'SUCCESS' || $data['return_code'] != 'SUCCESS')) {
-                    // 微信交易未成功，返回 false，让微信再次通知
-                    return false;
-                }
+                    $order = $box_order->where('out_trade_no', $out_trade_no)->find();
 
-                // 支付成功流程
-                $pay_fee = $payment == 'alipay' ? $data['total_amount'] : $data['total_fee'] / 100;
+                    if (!$order || $order->status !='unpay') {
+                        // 订单不存在，或者订单已支付
+                        return $pay->success()->send();
+                    }
 
-                //你可以在此编写订单逻辑
-                $order = $order->where('order_sn', $out_trade_no)->find();
-
-                if (!$order || $order->status > 0) {
-                    // 订单不存在，或者订单已支付
-                    return $pay->success()->send();
-                }
-
-                Db::transaction(function () use ($order, $data, $payment, $platform, $pay_fee, $prepay_type) {
+                    //执行订单更新操作
                     $notify = [
-                        'order_sn' => $data['out_trade_no'],
-                        'transaction_id' => $payment == 'alipay' ? $data['trade_no'] : $data['transaction_id'],
-                        'notify_time' => date('Y-m-d H:i:s', strtotime($data['time_end'])),
-                        'buyer_email' => $payment == 'alipay' ? $data['buyer_logon_id'] : $data['openid'],
-                        'payment_json' => json_encode($data->all()),
-                        'pay_fee' => $pay_fee,
-                        'pay_type' => $payment              // 支付方式
+                        'out_trade_no' => $data['out_trade_no'],
+                        'transaction_id' => $payment == 'wechat' ? $data['transaction_id'] :'',
+                        'alipay_trade_no' => $payment == 'alipay' ? $data['trade_no'] : '',
+                        'pay_time' => date('Y-m-d H:i:s', strtotime($data['time_end'])),
+//                        'buyer_email' => $payment == 'alipay' ? $data['buyer_logon_id'] : $data['openid'],
+//                        'payment_json' => json_encode($data->all()),
+                        'pay_rmb' => $pay_fee,
+                        'pay_coin' => $pay_fee,
+                        'status' => 'unused',
+                        'backend_read' => 0,
+                        'pay_method' => $payment              // 支付方式
                     ];
-                    //销毁
-                    $orderItem = OrderItem::get(['order_id'=>$order['id']]);
-                    $data = [
-                        'user_id'=>$order['user_id'],
-                        'goods_id'=>$orderItem['goods_id'],
-                        'type'=>3,
-                        'status'=>0,
-                    ];
-                    if ($orderItem['user_collect_id']){
-                        $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
-                        $collect->is_consume = 1;//链上 资产是否销毁
-                        $collect->status = 2;
-                        $collect->status_time = time();
-                        $collect->save();
-                        //链上资产转移
-                        $res = \addons\shopro\model\UserCollect::transferShard($orderItem['goods_id'],$collect['user_id'],$order['user_id'],$collect['asset_id'],$collect['shard_id'],$total_fee);
-                        Log::info('购买寄售大厅链上资产转移:::'.json_encode($res));
-                        $data['notShard'] = 1;
-                        $data['asset_id'] = $collect['asset_id'];
-                        $data['shard_id'] = $collect['shard_id'];
-                    }
-                    if ($orderItem['goods_id']){
-                        //购买 todo:上链
-                        $res =\addons\shopro\model\UserCollect::edit($data);
-                    }
-                    $order->paymentProcess($order, $notify);
-                });
+                    $order->save($notify);
+                    return $pay->success()->send();
+                }else{
 
-                return $pay->success()->send();
+
+                    list($order, $prepay_type) = $this->getOrderInstance($out_trade_no);
+
+                    // 判断是否是支付宝退款（支付宝退款成功会通知该接口）
+                    if ($payment == 'alipay'    // 支付宝支付
+                        && $data['notify_type'] == 'trade_status_sync'      // 同步交易状态
+                        && $data['trade_status'] == 'TRADE_CLOSED'          // 交易关闭
+                        && $out_refund_no                                   // 退款单号
+                    ) {
+                        // 退款回调
+                        if ($prepay_type == 'order') {
+                            // 退款回调
+                            $this->refundFinish($out_trade_no, $out_refund_no);
+                        } else {
+                            // 其他订单如果支持退款，逻辑这里补充
+                        }
+
+                        return $pay->success()->send();
+                    }
+
+
+                    // 判断支付宝微信是否是支付成功状态，如果不是，直接返回响应
+                    if ($payment == 'alipay' && $data['trade_status'] != 'TRADE_SUCCESS') {
+                        // 不是交易成功的通知，直接返回成功
+                        return $pay->success()->send();
+                    }
+                    if ($payment == 'wechat' && ($data['result_code'] != 'SUCCESS' || $data['return_code'] != 'SUCCESS')) {
+                        // 微信交易未成功，返回 false，让微信再次通知
+                        return false;
+                    }
+
+                    // 支付成功流程
+                    $pay_fee = $payment == 'alipay' ? $data['total_amount'] : $data['total_fee'] / 100;
+
+                    //你可以在此编写订单逻辑
+                    $order = $order->where('order_sn', $out_trade_no)->find();
+
+                    if (!$order || $order->status > 0) {
+                        // 订单不存在，或者订单已支付
+                        return $pay->success()->send();
+                    }
+
+                    Db::transaction(function () use ($order, $data, $payment, $platform, $pay_fee, $prepay_type) {
+                        $notify = [
+                            'order_sn' => $data['out_trade_no'],
+                            'transaction_id' => $payment == 'alipay' ? $data['trade_no'] : $data['transaction_id'],
+                            'notify_time' => date('Y-m-d H:i:s', strtotime($data['time_end'])),
+                            'buyer_email' => $payment == 'alipay' ? $data['buyer_logon_id'] : $data['openid'],
+                            'payment_json' => json_encode($data->all()),
+                            'pay_fee' => $pay_fee,
+                            'pay_type' => $payment              // 支付方式
+                        ];
+                        //销毁
+                        $orderItem = OrderItem::get(['order_id'=>$order['id']]);
+                        $data = [
+                            'user_id'=>$order['user_id'],
+                            'goods_id'=>$orderItem['goods_id'],
+                            'type'=>3,
+                            'status'=>0,
+                        ];
+                        if ($orderItem['user_collect_id']){
+                            $collect = \addons\shopro\model\UserCollect::where('id',$orderItem['user_collect_id'])->find();
+                            $collect->is_consume = 1;//链上 资产是否销毁
+                            $collect->status = 2;
+                            $collect->status_time = time();
+                            $collect->save();
+                            //链上资产转移
+                            $res = \addons\shopro\model\UserCollect::transferShard($orderItem['goods_id'],$collect['user_id'],$order['user_id'],$collect['asset_id'],$collect['shard_id'],$total_fee);
+                            Log::info('购买寄售大厅链上资产转移:::'.json_encode($res));
+                            $data['notShard'] = 1;
+                            $data['asset_id'] = $collect['asset_id'];
+                            $data['shard_id'] = $collect['shard_id'];
+                        }
+                        if ($orderItem['goods_id']){
+                            //购买 todo:上链
+                            $res =\addons\shopro\model\UserCollect::edit($data);
+                        }
+                        $order->paymentProcess($order, $notify);
+                    });
+
+                    return $pay->success()->send();
+                }
+
+
             } catch (\Exception $e) {
                 Log::write('notifyx-error:' . json_encode($e->getMessage()));
             }

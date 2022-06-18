@@ -34,33 +34,8 @@ class UserBank extends Model
     {
         $user = User::info();
         $bank = null;
-        if ($type == 'wechat') {
-            $platform = request()->header('platform');
-//            $userOauth = \addons\shopro\model\UserOauth::get([
-//                'user_id' => $user->id,
-//                'platform' => $platform
-//            ]);
-//            if ($userOauth) {
-//                $bank = [
-//                    'real_name' => $userOauth->nickname,
-//                    'bank_name' => '微信用户',
-//                    'card_no' => $userOauth->openid
-//                ];
-//            }
 
-            //获取用户授权
-           $user =  self::getUserInfo($code,$platform);
-           if($user){
-               $bank = [
-                    'real_name' => $user->nickname,
-                    'bank_name' => '微信用户',
-                    'card_no' => $user->openid
-                ];
-           }
-
-        } else {
-            $bank = self::where(['user_id' => $user->id, 'type' => $type])->find();
-        }
+        $bank = self::where(['user_id' => $user->id, 'type' => $type])->find();
         
         if(!$bank) {
             throw \Exception('请完善您的账户信息');
@@ -72,46 +47,8 @@ class UserBank extends Model
     }
 
 
-    /**
-     * 微信 授权获取用户信息
-     * @param $code
-     * @param $platform
-     * @return bool|mixed
-     * @throws \think\exception\DbException
-     */
-    private static function getUserInfo($code,$platform)
-    {
-        $platformConfig = json_decode(\addons\shopro\model\Config::get(['name' => $platform])->value, true);
-        $appid = $platformConfig['app_id'];
-        $appsecret = $platformConfig['secret'];
-
-        // 通过code获取access_token
-        $get_token_url ="https://api.weixin.qq.com/sns/oauth2/access_token?appid=". $appid ."&secret=". $appsecret ."&code={$code}&grant_type=authorization_code";
-        $token_info = \fast\Http::get($get_token_url);
-        $token_info = json_decode($token_info,true);
-        if(isset($token_info['errcode'])){
-            throw \Exception($token_info['errmsg'],$token_info['errcode']);
-            return false;
-        }
-        // 通过access_token和openid获取用户信息
-        $get_userinfo_url ='https://api.weixin.qq.com/sns/userinfo?access_token='. $token_info['access_token'].'&openid='. $token_info['openid'].'&lang=zh_CN';
-        $userinfo = \fast\Http::get($get_userinfo_url);
-        $userinfo = json_decode($userinfo,true);
-        if(isset($userinfo['errcode'])){
-            throw \Exception($userinfo['errmsg'],$userinfo['errcode']);
-            return false;
-        }
-        return $userinfo;
-    }
-
-    /**
-     * 获取支付宝的用户信息
-     */
-    private static function getAliPayInfo(){
 
 
-
-    }
 
 
     private static function encryptCardNo($bank, $platform)
@@ -133,13 +70,26 @@ class UserBank extends Model
         return $bank;
     }
     // 编辑提现账户
-    public static function edit($params)
+    public static function edit($userInfo,$type)
     {
         $user = User::info();
 
-        extract($params);
-
         $bank = self::where(['user_id' => $user->id, 'type' => $type])->find();
+
+        // 整理数据
+        $real_name = '';
+        $bank_name ='';
+        $card_no = '';
+        if($type=='wechat'){
+            $real_name = $userInfo['nickname'];
+            $bank_name = $userInfo['bank_name'];
+            $card_no = $userInfo['open_id'];
+        }else{
+            $real_name = $userInfo['nickname'];
+            $bank_name = $userInfo['bank_name'];
+            $card_no = $userInfo['user_id'];
+        }
+
 
         if ($bank) {
             $bank->real_name = $real_name;

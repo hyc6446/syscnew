@@ -1,0 +1,176 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>元宇星辰</title>
+    <style>
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100vh;
+            font-size: .9375rem;
+        }
+        content{
+            display: flex;
+            flex-direction: column;
+            justify-content: center ;
+            align-items: center;
+        }
+
+        .logo_img {
+            width: 6.875rem;
+            height: 6.875rem;
+            margin-bottom: .625rem;
+        }
+
+        #box {
+            display: inline;
+			padding: 6px 14px;
+            text-align: center;
+            line-height: 1;
+            border-radius: 20px;
+            background-color: rgb(23, 120, 194);
+            color: white;
+            margin: .9375rem auto 10px;
+			font-size: 14px;
+        }
+
+        .desc {
+            font-size: .3125rem;
+            color: gray;
+        }
+		.mask {
+			position: fixed;
+			width: 100vw;
+			height: 100vh;
+			z-index: 9999;
+			display: none;
+		}
+    </style>
+	
+	<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+</head>
+
+<body>
+    <content>
+         <img src="./logo.png" class="logo_img">
+        <div id="box" onclick="func()">打开元宇星辰APP</div>
+        <div class="desc">点击按钮打开APP查看详情</div>
+    </content>
+	
+	<img src="http://app.jmfg0707.com/static/wx_mark.jpeg" class="mask" />
+</body>
+
+<script>
+	
+	let url = 'yystar://pages/home/index'
+	/**
+	 *  @params { Function } init 初始化
+	 */
+	init()
+	function init () {
+		// 判断是否为微信浏览器
+		if (isWeiXin()) {
+			document.querySelector('.mask').style.display = 'block'
+			return
+		}
+		
+		let uri = getParam('share_url') || ''
+		
+		if (!uri) return
+		
+		url = uri
+		
+	}
+	
+	//截取url数据方法
+	function getParam(name) { 
+		let search = document.location.search;
+		let pattern = new RegExp("[?&]" + name + "\=([^&]+)", "g");
+		let matcher = pattern.exec(search);
+		let items = null;
+		
+		if (null != matcher) {
+			try {
+				items = decodeURIComponent(decodeURIComponent(matcher[1]));
+			} catch (e) {
+				try {
+					items = decodeURIComponent(matcher[1]);
+				} catch (e) {
+					items = matcher[1];
+				}
+			}
+		}
+		return items;
+	};
+	
+	function func() {
+	  // 判断是那种设备
+	  let u = navigator.userAgent;
+	  
+	  var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Linux') > -1;   // Android系统或者uc浏览器
+	  var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);   // iOS系统
+		
+	  // 如果为Android系统
+	  if (isAndroid) {
+		  try {
+			  window.location.href = url;
+			  setTimeout(function () {
+			    // window.location.href = "https://www.jmfg0707.com/base.apk";   
+				// 3s后如果不能跳转到 App，则跳转到 App 的下载地址，一般是应用宝的对应的下载地址
+			  }, 2000);
+		  } catch (e) {
+				// window.location.href = "https://www.jmfg0707.com/base.apk";  
+				// 3s后如果不能跳转到 App，则跳转到 App 的下载地址，一般是应用宝的对应的下载地址
+		  }
+		return;
+	  }
+
+	  // ios设备：原理：判断是否认识这个协议，认识则直接跳转，不认识就在这里下载appios();
+	  if (isiOS) {
+		let startIndex = u.indexOf('iPhone OS') + 9;
+		let endIndex = u.indexOf('like Mac OS') - 1;
+		let num = +u.slice(startIndex, endIndex).split('_')[0]  // 计算版本号的前面数值
+		try {
+			if (num < 9) {
+			  window.location.href = url;   
+			} else {
+			  window.location.href = url;
+			}
+		} catch (e) {
+			// window.location.href = "https://apps.apple.com/cn/app/%E4%B9%9D%E8%A7%85%E9%89%B4%E9%85%92/id1606918156"; 
+		}
+		
+		setTimeout(function () {
+		  // window.location.href = "https://apps.apple.com/cn/app/%E4%B9%9D%E8%A7%85%E9%89%B4%E9%85%92/id1606918156";   // 3s后如果不能跳转到 App，则跳转到 AppStore 的下载地址
+		}, 5000);
+		return;
+	  };
+	}
+
+	
+	function isWeiXin() {
+		var ua = window.navigator.userAgent.toLowerCase();
+		if (ua.match(/MicroMessenger/i) == 'micromessenger') {
+			return true; // 是微信端
+		} else {
+			return false;
+		}
+	}
+
+</script>
+
+</html>
+
+
