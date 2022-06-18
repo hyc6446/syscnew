@@ -28,7 +28,11 @@ class GoodsDing extends Model
              self::where($data)->delete();
             return false;
         }
-         self::create($data);
+        $res = self::create($data);
+        $time = $params['ding_time']-time();
+        if ($time>3600){
+            \think\Queue::later(($params['ding_time']-time()-3600), '\addons\shopro\job\GoodsDing@ding', ['id'=>$res->id], 'shopro');
+        }
         return true;
     }
 }

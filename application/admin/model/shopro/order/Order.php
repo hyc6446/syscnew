@@ -184,10 +184,12 @@ class Order extends Model
                 $dispatchType = array_unique(array_filter($dispatchType));
                 if (in_array('express', $dispatchType)) {
                     $status_name = '买家已付款';
-                    $status_desc = '买家已付款，请尽快发货';
+                    $status_desc = '买家已付款';
                 } else {
                     $status_name = '买家已付款';
-                    $status_desc = '买家已付款，请通知相关门店发货';
+//                    $status_desc = '买家已付款，请通知相关门店发货';
+                    $status_desc = '买家已付款';
+
                 }
 
                 if ($is_send_btn) {

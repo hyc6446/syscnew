@@ -189,14 +189,14 @@
             <el-form-item label="商城名称：">
                 <el-input v-model="detailForm.name" placeholder="请输入商城名称" size="small"></el-input>
             </el-form-item>
-            <el-form-item label="商城域名：">
-                <el-input v-model="detailForm.domain" placeholder="请输入商城域名必须填写http(s)://" size="small"></el-input>
-                <div class="form-item-tip">
-                    <p>1.此地址用于您的店铺装修预览、H5分享链接等场景</p>
-                    <p>2.请完整输入您的H5商城入口链接，如 http://m.shopro.top/</p>
-                    <p>3.开启SSL并使用hash部署方式，则填写如 https://m.shopro.top/#/</p>
-                </div>
-            </el-form-item>
+<!--            <el-form-item label="商城域名：">-->
+<!--                <el-input v-model="detailForm.domain" placeholder="请输入商城域名必须填写http(s)://" size="small"></el-input>-->
+<!--                <div class="form-item-tip">-->
+<!--                    <p>1.此地址用于您的店铺装修预览、H5分享链接等场景</p>-->
+<!--                    <p>2.请完整输入您的H5商城入口链接，如 http://m.shopro.top/</p>-->
+<!--                    <p>3.开启SSL并使用hash部署方式，则填写如 https://m.shopro.top/#/</p>-->
+<!--                </div>-->
+<!--            </el-form-item>-->
             <el-form-item label="版本号：">
                 <el-input v-model="detailForm.version" placeholder="请输入版本号" size="small"></el-input>
             </el-form-item>
@@ -884,8 +884,8 @@
         <div v-if="type=='wechat'">
             <el-form-item label="应用平台：" v-if="detailForm.platform">
                 <el-checkbox-group v-model="detailForm.platform">
-                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>
-                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>
+<!--                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>-->
+<!--                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>-->
                     <el-checkbox label="H5">H5</el-checkbox>
                     <el-checkbox label="App">App</el-checkbox>
                 </el-checkbox-group>
@@ -968,8 +968,8 @@
         <div v-if="type=='alipay'">
             <el-form-item label="应用平台：" v-if="detailForm.platform">
                 <el-checkbox-group v-model="detailForm.platform">
-                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>
-                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>
+<!--                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>-->
+<!--                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>-->
                     <el-checkbox label="H5">H5</el-checkbox>
                     <el-checkbox label="App">App</el-checkbox>
                 </el-checkbox-group>
@@ -1028,8 +1028,8 @@
         <div v-if="type=='wallet'">
             <el-form-item label="应用平台：">
                 <el-checkbox-group v-model="detailForm.platform" v-if="detailForm.platform">
-                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>
-                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>
+<!--                    <el-checkbox label="wxOfficialAccount">微信公众号</el-checkbox>-->
+<!--                    <el-checkbox label="wxMiniProgram">小程序</el-checkbox>-->
                     <el-checkbox label="H5">H5</el-checkbox>
                     <el-checkbox label="App">App</el-checkbox>
                 </el-checkbox-group>

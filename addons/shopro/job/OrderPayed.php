@@ -10,6 +10,7 @@ use addons\shopro\model\GoodsComment;
 use addons\shopro\model\Order;
 use addons\shopro\model\OrderAction;
 use addons\shopro\model\OrderItem;
+use think\Log;
 use think\queue\Job;
 
 /**
@@ -25,6 +26,7 @@ class OrderPayed extends BaseJob
     public function payed(Job $job, $data)
     {
         try {
+            Log::info('订单支付完成::::queue::::'.json_encode($data));
             $order = $data['order'];
             $user = $data['user'];
 

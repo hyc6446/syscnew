@@ -863,60 +863,60 @@
                 <el-col class="hidden-md-and-up" :xs="12" :sm="12">
                     <div class="order-msg-right display-flex">
                         <div class="order-msg-right-item">
-                            <span class="title-span-width">商品总价:</span>
+                            <span class="title-span-width">藏品总价:</span>
                             <span>￥{{orderDetail.goods_amount}}</span>
                         </div>
-                        <div class="order-msg-right-item">
-                            <span class="title-span-width">配送费:</span>
-                            <span>￥{{(orderDetail.dispatch_amount-orderDetail.dispatch_discount_money).toFixed(2)}}</span>
-                            <template v-if="orderDetail.dispatch_discount_money>0">
-                                <s style="margin:0 6px">{{orderDetail.dispatch_amount}}</s>
-                                <el-popover placement="bottom" trigger="hover">
-                                    <div>
-                                        包邮活动减免￥{{orderDetail.dispatch_discount_money}}运费
-                                    </div>
-                                    <i class="el-icon-question activity-discount-question" slot="reference"></i>
-                                </el-popover>
-                            </template>
-                        </div>
-                        <div v-if="orderDetail.coupon_fee>0" class="order-msg-right-item">
-                            <span class="title-span-width">优惠券折扣:</span><span>-￥{{orderDetail.coupon_fee}}</span>
-                        </div>
-                        <div v-if="orderDetail.ext && orderDetail.ext_arr.activity_discount_infos"
-                            class="order-msg-right-item">
-                            <span class="title-span-width">优惠活动:</span>
-                            <span>-￥{{orderDetail.activity_discount_money}}</span>
-                            <el-popover placement="bottom" trigger="hover">
-                                <div>
-                                    <template v-for="(ea,eindex) in orderDetail.ext_arr.activity_discount_infos">
-                                        <div v-if="ea.activity_type!='free_shipping'" class="activity-discount-item">
-                                            <div class="activity-discount-item-title">优惠{{eindex+1}}：</div>
-                                            <div>
-                                                <span class="activity-discount-item-label">活动名称:</span>
-                                                <span>{{ea.activity_title}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">活动类型:</span>
-                                                <span>{{ea.activity_type_text}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">优惠金额:</span>
-                                                <span>￥{{ea.activity_discount_money}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">满足条件:</span>
-                                                <span>{{ea.format_text}}</span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                                <i class="el-icon-question activity-discount-question" slot="reference"></i>
-                            </el-popover>
-                        </div>
-                        <div v-if="orderDetail.type=='score'" class="order-msg-right-item">
-                            <span class="title-span-width">积分:</span><span
-                                style="padding-left: 4px;">+{{orderDetail.score_amount}}</span>
-                        </div>
+<!--                        <div class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">配送费:</span>-->
+<!--                            <span>￥{{(orderDetail.dispatch_amount-orderDetail.dispatch_discount_money).toFixed(2)}}</span>-->
+<!--                            <template v-if="orderDetail.dispatch_discount_money>0">-->
+<!--                                <s style="margin:0 6px">{{orderDetail.dispatch_amount}}</s>-->
+<!--                                <el-popover placement="bottom" trigger="hover">-->
+<!--                                    <div>-->
+<!--                                        包邮活动减免￥{{orderDetail.dispatch_discount_money}}运费-->
+<!--                                    </div>-->
+<!--                                    <i class="el-icon-question activity-discount-question" slot="reference"></i>-->
+<!--                                </el-popover>-->
+<!--                            </template>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.coupon_fee>0" class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">优惠券折扣:</span><span>-￥{{orderDetail.coupon_fee}}</span>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.ext && orderDetail.ext_arr.activity_discount_infos"-->
+<!--                            class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">优惠活动:</span>-->
+<!--                            <span>-￥{{orderDetail.activity_discount_money}}</span>-->
+<!--                            <el-popover placement="bottom" trigger="hover">-->
+<!--                                <div>-->
+<!--                                    <template v-for="(ea,eindex) in orderDetail.ext_arr.activity_discount_infos">-->
+<!--                                        <div v-if="ea.activity_type!='free_shipping'" class="activity-discount-item">-->
+<!--                                            <div class="activity-discount-item-title">优惠{{eindex+1}}：</div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">活动名称:</span>-->
+<!--                                                <span>{{ea.activity_title}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">活动类型:</span>-->
+<!--                                                <span>{{ea.activity_type_text}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">优惠金额:</span>-->
+<!--                                                <span>￥{{ea.activity_discount_money}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">满足条件:</span>-->
+<!--                                                <span>{{ea.format_text}}</span>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </template>-->
+<!--                                </div>-->
+<!--                                <i class="el-icon-question activity-discount-question" slot="reference"></i>-->
+<!--                            </el-popover>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.type=='score'" class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">积分:</span><span-->
+<!--                                style="padding-left: 4px;">+{{orderDetail.score_amount}}</span>-->
+<!--                        </div>-->
                         <div class="order-msg-right-item">
                             <span class="order-msg-right-title color-444 title-span-width">订单总金额:</span>
                             <span class="order-msg-right-money">￥{{orderDetail.total_fee}}</span>
@@ -948,64 +948,64 @@
                 <el-col class="hidden-sm-and-down" :md="6" :lg="6" :xl="4">
                     <div class="order-msg-right display-flex">
                         <div class="order-msg-right-item">
-                            <span class="title-span-width">商品总价:</span><span>￥{{orderDetail.goods_amount}}</span>
+                            <span class="title-span-width">藏品总价:</span><span>￥{{orderDetail.goods_amount}}</span>
                         </div>
-                        <div class="order-msg-right-item">
-                            <span class="title-span-width">配送费:</span>
-                            <span>￥{{(orderDetail.dispatch_amount-orderDetail.dispatch_discount_money).toFixed(2)}}</span>
-                            <template v-if="orderDetail.dispatch_discount_money>0">
-                                <s style="margin:0 6px">{{orderDetail.dispatch_amount}}</s>
-                                <el-popover placement="bottom" trigger="hover">
-                                    <div>
-                                        包邮活动减免￥{{orderDetail.dispatch_discount_money}}运费
-                                    </div>
-                                    <i class="el-icon-question activity-discount-question" slot="reference"></i>
-                                </el-popover>
-                            </template>
-                        </div>
-                        <div v-if="orderDetail.coupon_fee>0" class="order-msg-right-item">
-                            <span class="title-span-width">优惠券折扣:</span><span>-￥{{orderDetail.coupon_fee}}</span>
-                        </div>
-                        <div v-if="orderDetail.ext && orderDetail.ext_arr.activity_discount_infos"
-                            class="order-msg-right-item">
-                            <span class="title-span-width">优惠活动:</span>
-                            <span>-￥{{orderDetail.activity_discount_money}}</span>
-                            <el-popover placement="bottom" trigger="hover">
-                                <div>
-                                    <template v-for="(ea,eindex) in orderDetail.ext_arr.activity_discount_infos">
-                                        <div v-if="ea.activity_type!='free_shipping'" class="activity-discount-item">
-                                            <div class="activity-discount-item-title">优惠{{eindex+1}}：</div>
-                                            <div>
-                                                <span class="activity-discount-item-label">活动名称:</span>
-                                                <span>{{ea.activity_title}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">活动类型:</span>
-                                                <span>{{ea.activity_type_text}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">优惠金额:</span>
-                                                <span>￥{{ea.activity_discount_money}}</span>
-                                            </div>
-                                            <div>
-                                                <span class="activity-discount-item-label">满足条件:</span>
-                                                <span>{{ea.format_text}}</span>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                                <i class="el-icon-question activity-discount-question" slot="reference"></i>
-                            </el-popover>
-                        </div>
-                        <div v-if="orderDetail.type=='score'" class="order-msg-right-item">
-                            <span class="title-span-width">积分:</span><span>+{{orderDetail.score_amount}}</span>
-                        </div>
+<!--                        <div class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">配送费:</span>-->
+<!--                            <span>￥{{(orderDetail.dispatch_amount-orderDetail.dispatch_discount_money).toFixed(2)}}</span>-->
+<!--                            <template v-if="orderDetail.dispatch_discount_money>0">-->
+<!--                                <s style="margin:0 6px">{{orderDetail.dispatch_amount}}</s>-->
+<!--                                <el-popover placement="bottom" trigger="hover">-->
+<!--                                    <div>-->
+<!--                                        包邮活动减免￥{{orderDetail.dispatch_discount_money}}运费-->
+<!--                                    </div>-->
+<!--                                    <i class="el-icon-question activity-discount-question" slot="reference"></i>-->
+<!--                                </el-popover>-->
+<!--                            </template>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.coupon_fee>0" class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">优惠券折扣:</span><span>-￥{{orderDetail.coupon_fee}}</span>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.ext && orderDetail.ext_arr.activity_discount_infos"-->
+<!--                            class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">优惠活动:</span>-->
+<!--                            <span>-￥{{orderDetail.activity_discount_money}}</span>-->
+<!--                            <el-popover placement="bottom" trigger="hover">-->
+<!--                                <div>-->
+<!--                                    <template v-for="(ea,eindex) in orderDetail.ext_arr.activity_discount_infos">-->
+<!--                                        <div v-if="ea.activity_type!='free_shipping'" class="activity-discount-item">-->
+<!--                                            <div class="activity-discount-item-title">优惠{{eindex+1}}：</div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">活动名称:</span>-->
+<!--                                                <span>{{ea.activity_title}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">活动类型:</span>-->
+<!--                                                <span>{{ea.activity_type_text}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">优惠金额:</span>-->
+<!--                                                <span>￥{{ea.activity_discount_money}}</span>-->
+<!--                                            </div>-->
+<!--                                            <div>-->
+<!--                                                <span class="activity-discount-item-label">满足条件:</span>-->
+<!--                                                <span>{{ea.format_text}}</span>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </template>-->
+<!--                                </div>-->
+<!--                                <i class="el-icon-question activity-discount-question" slot="reference"></i>-->
+<!--                            </el-popover>-->
+<!--                        </div>-->
+<!--                        <div v-if="orderDetail.type=='score'" class="order-msg-right-item">-->
+<!--                            <span class="title-span-width">积分:</span><span>+{{orderDetail.score_amount}}</span>-->
+<!--                        </div>-->
                         <div class="order-msg-right-item">
                             <span class="order-msg-right-title color-444 title-span-width">订单总金额:</span>
                             <span class="order-msg-right-money">￥{{orderDetail.total_fee}}</span>
-                            <span v-if="orderDetail.status_code=='nopay'"
-                                style="font-size: 12px;margin-left: 4px;color: #6E3DC8;cursor: pointer;"
-                                @click="openChangeMsgDialog">改价</span>
+<!--                            <span v-if="orderDetail.status_code=='nopay'"-->
+<!--                                style="font-size: 12px;margin-left: 4px;color: #6E3DC8;cursor: pointer;"-->
+<!--                                @click="openChangeMsgDialog">改价</span>-->
                             <s v-if="Number(orderDetail.last_total_fee)"
                                 style="font-size: 12px;margin-left: 4px;color: #999999;">原价{{orderDetail.last_total_fee}}</s>
                         </div>
@@ -1013,26 +1013,26 @@
                 </el-col>
             </el-row>
         </div>
-        <div class="order-detail-tip">
-            <el-row :gutter="60">
-                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="tip-container">
-                    <div class="order-detail-tip-title">温馨提示：</div>
-                    <div class="flex-1"><span v-if="orderDetail.status==0"
-                            class="color-999">请务必等待订单状态变更为“买家已付款，等待卖家发货”后再进行发货</span>
-                        <span v-if="orderDetail.status==1"
-                            class="color-999">1、如果无法发货，请及时与买家联系并说明情况后进行退款；2、买家申请退款后，须征得买家同意后发货，否则买家有权拒收货物</span>
-                        <span v-if="orderDetail.status==2" class="color-999">交易完成，若买家提出售后要求，请积极与买家协商。</span>
-                        <span v-if="orderDetail.status==-1" class="color-999">买家已取消</span>
-                        <span v-if="orderDetail.status==-2" class="color-999">买家未在规定时间内付款，交易自动关闭</span>
-                    </div>
-                </el-col>
-                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="tip-container">
-                    <div class="order-detail-remark">买家留言：</div>
-                    <div class="color-999 flex-1" v-if="orderDetail.remark">{{orderDetail.remark}}</div>
-                    <div class="color-999 flex-1" v-if="!orderDetail.remark">无</div>
-                </el-col>
-            </el-row>
-        </div>
+<!--        <div class="order-detail-tip">-->
+<!--            <el-row :gutter="60">-->
+<!--                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="tip-container">-->
+<!--                    <div class="order-detail-tip-title">温馨提示：</div>-->
+<!--                    <div class="flex-1"><span v-if="orderDetail.status==0"-->
+<!--                            class="color-999">请务必等待订单状态变更为“买家已付款，等待卖家发货”后再进行发货</span>-->
+<!--                        <span v-if="orderDetail.status==1"-->
+<!--                            class="color-999">1、如果无法发货，请及时与买家联系并说明情况后进行退款；2、买家申请退款后，须征得买家同意后发货，否则买家有权拒收货物</span>-->
+<!--                        <span v-if="orderDetail.status==2" class="color-999">交易完成，若买家提出售后要求，请积极与买家协商。</span>-->
+<!--                        <span v-if="orderDetail.status==-1" class="color-999">买家已取消</span>-->
+<!--                        <span v-if="orderDetail.status==-2" class="color-999">买家未在规定时间内付款，交易自动关闭</span>-->
+<!--                    </div>-->
+<!--                </el-col>-->
+<!--                <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12" class="tip-container">-->
+<!--                    <div class="order-detail-remark">买家留言：</div>-->
+<!--                    <div class="color-999 flex-1" v-if="orderDetail.remark">{{orderDetail.remark}}</div>-->
+<!--                    <div class="color-999 flex-1" v-if="!orderDetail.remark">无</div>-->
+<!--                </el-col>-->
+<!--            </el-row>-->
+<!--        </div>-->
     </div>
     <div class="package-con" v-if="packageList.length>0">
         <div class="package-log">
@@ -1147,94 +1147,94 @@
                     </div>
                 </div>
             </el-col>
-            <el-col :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
-                <div class="delivery-msg-item">
-                    <div class="display-flex delivery-msg-item-title">
-                        <div class="color-333">收货信息</div>
-                        <div class="delivery-margin-left theme-color cursor-pointer" style="color: #ED5B56;"
-                            v-if='!isEditAddress' @click="getAreaList">修改</div>
-                        <div class="delivery-margin-left theme-color cursor-pointer" v-if='isEditAddress'
-                            @click="reqEditConsignee">
-                            确定</div>
-                        <div class="delivery-margin-left theme-color cursor-pointer" v-if='isEditAddress'
-                            @click.stop="cancelEditConsignee">
-                            取消</div>
-                        <div class="delivery-margin-left theme-color cursor-pointer copy-msg" v-if='!isEditAddress'
-                            :data-clipboard-text="'收货人:'+orderDetail.consignee+';联系电话:'+orderDetail.phone+';收货地址:'+ orderDetail.province_name+orderDetail.city_name+orderDetail.area_name+orderDetail.address"
-                            @click="copyMsg">复制</div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">收货人:</div>
-                        <div class="delivery-margin-left" v-if='!isEditAddress'>{{orderDetail.consignee}}</div>
-                        <div class="delivery-margin-left" v-if='isEditAddress'>
-                            <el-input size="mini" v-model="orderDetail.consignee">
-                            </el-input>
-                        </div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">联系电话:</div>
-                        <div class="delivery-margin-left" v-if='!isEditAddress'>{{orderDetail.phone}}</div>
-                        <div class="delivery-margin-left" v-if='isEditAddress'>
-                            <el-input size="mini" v-model="orderDetail.phone">
-                            </el-input>
-                        </div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">省市区:</div>
-                        <div class="delivery-margin-left" v-if="!isEditAddress">
-                            {{orderDetail.province_name}}{{orderDetail.city_name}}{{orderDetail.area_name}}
-                        </div>
-                        <div class="delivery-margin-left display-flex" v-if='isEditAddress'>
-                            <el-cascader size="mini" v-model="receivingAddress" :options="areaList"
-                                :props="{value: 'id'}" @change="changeAddress"></el-cascader>
-                        </div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">收货地址:</div>
-                        <div class="delivery-margin-left" v-if="!isEditAddress">
-                            {{orderDetail.address}}
-                        </div>
-                        <div class="delivery-margin-left display-flex" style="width: 300px;" v-if='isEditAddress'>
-                            <el-input size="mini" v-model="orderDetail.address">
-                            </el-input>
-                        </div>
-                    </div>
-                </div>
-            </el-col>
-            <el-col v-if="invoice.length>0" :xs="12" :sm="12" :md="6" :lg="6" :xl="6">
-                <div class="delivery-msg-item">
-                    <div class="display-flex delivery-msg-item-title">
-                        <div class="color-333">发票信息</div>
-                        <el-button v-if="invoice[0].status==0" @click="confirmInvoice" size="mini" type="text"
-                            class="delivery-margin-left">确认开具</el-button>
-                        <div v-if="invoice[0].status==1"
-                            class="delivery-margin-left theme-color cursor-pointer copy-msg">已开具</div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">发票类型:</div>
-                        <div class="delivery-margin-left">
-                            {{invoice[0].type_text}}
-                        </div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">抬头名称:</div>
-                        <div class="delivery-margin-left">{{invoice[0].header_name}}</div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">税号:</div>
-                        <div class="delivery-margin-left">{{invoice[0].tax_no}}</div>
-                    </div>
-                    <div class="display-flex delivery-msg-item-msg">
-                        <div class="title-span-width">手机号:</div>
-                        <div class="delivery-margin-left">{{invoice[0].mobile}}</div>
-                    </div>
-                </div>
-            </el-col>
+<!--            <el-col :xs="12" :sm="12" :md="6" :lg="6" :xl="6">-->
+<!--                <div class="delivery-msg-item">-->
+<!--                    <div class="display-flex delivery-msg-item-title">-->
+<!--                        <div class="color-333">收货信息</div>-->
+<!--                        <div class="delivery-margin-left theme-color cursor-pointer" style="color: #ED5B56;"-->
+<!--                            v-if='!isEditAddress' @click="getAreaList">修改</div>-->
+<!--                        <div class="delivery-margin-left theme-color cursor-pointer" v-if='isEditAddress'-->
+<!--                            @click="reqEditConsignee">-->
+<!--                            确定</div>-->
+<!--                        <div class="delivery-margin-left theme-color cursor-pointer" v-if='isEditAddress'-->
+<!--                            @click.stop="cancelEditConsignee">-->
+<!--                            取消</div>-->
+<!--                        <div class="delivery-margin-left theme-color cursor-pointer copy-msg" v-if='!isEditAddress'-->
+<!--                            :data-clipboard-text="'收货人:'+orderDetail.consignee+';联系电话:'+orderDetail.phone+';收货地址:'+ orderDetail.province_name+orderDetail.city_name+orderDetail.area_name+orderDetail.address"-->
+<!--                            @click="copyMsg">复制</div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">收货人:</div>-->
+<!--                        <div class="delivery-margin-left" v-if='!isEditAddress'>{{orderDetail.consignee}}</div>-->
+<!--                        <div class="delivery-margin-left" v-if='isEditAddress'>-->
+<!--                            <el-input size="mini" v-model="orderDetail.consignee">-->
+<!--                            </el-input>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">联系电话:</div>-->
+<!--                        <div class="delivery-margin-left" v-if='!isEditAddress'>{{orderDetail.phone}}</div>-->
+<!--                        <div class="delivery-margin-left" v-if='isEditAddress'>-->
+<!--                            <el-input size="mini" v-model="orderDetail.phone">-->
+<!--                            </el-input>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">省市区:</div>-->
+<!--                        <div class="delivery-margin-left" v-if="!isEditAddress">-->
+<!--                            {{orderDetail.province_name}}{{orderDetail.city_name}}{{orderDetail.area_name}}-->
+<!--                        </div>-->
+<!--                        <div class="delivery-margin-left display-flex" v-if='isEditAddress'>-->
+<!--                            <el-cascader size="mini" v-model="receivingAddress" :options="areaList"-->
+<!--                                :props="{value: 'id'}" @change="changeAddress"></el-cascader>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">收货地址:</div>-->
+<!--                        <div class="delivery-margin-left" v-if="!isEditAddress">-->
+<!--                            {{orderDetail.address}}-->
+<!--                        </div>-->
+<!--                        <div class="delivery-margin-left display-flex" style="width: 300px;" v-if='isEditAddress'>-->
+<!--                            <el-input size="mini" v-model="orderDetail.address">-->
+<!--                            </el-input>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </el-col>-->
+<!--            <el-col v-if="invoice.length>0" :xs="12" :sm="12" :md="6" :lg="6" :xl="6">-->
+<!--                <div class="delivery-msg-item">-->
+<!--                    <div class="display-flex delivery-msg-item-title">-->
+<!--                        <div class="color-333">发票信息</div>-->
+<!--                        <el-button v-if="invoice[0].status==0" @click="confirmInvoice" size="mini" type="text"-->
+<!--                            class="delivery-margin-left">确认开具</el-button>-->
+<!--                        <div v-if="invoice[0].status==1"-->
+<!--                            class="delivery-margin-left theme-color cursor-pointer copy-msg">已开具</div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">发票类型:</div>-->
+<!--                        <div class="delivery-margin-left">-->
+<!--                            {{invoice[0].type_text}}-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">抬头名称:</div>-->
+<!--                        <div class="delivery-margin-left">{{invoice[0].header_name}}</div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">税号:</div>-->
+<!--                        <div class="delivery-margin-left">{{invoice[0].tax_no}}</div>-->
+<!--                    </div>-->
+<!--                    <div class="display-flex delivery-msg-item-msg">-->
+<!--                        <div class="title-span-width">手机号:</div>-->
+<!--                        <div class="delivery-margin-left">{{invoice[0].mobile}}</div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </el-col>-->
         </el-row>
     </div>
     <div class="good-list">
         <el-table :data="goodsList" style="width: 100%">
-            <el-table-column min-width="370" label="商品">
+            <el-table-column min-width="370" label="藏品">
                 <template slot-scope="scope">
                     <div class="display-flex">
                         <img class="table-img" :src="Fast.api.cdnurl(scope.row.goods_image)">
@@ -1257,11 +1257,11 @@
                     <span class="color-666">{{scope.row.goods_num}}</span>
                 </template>
             </el-table-column>
-            <el-table-column width="120" label="优惠(元)">
-                <template slot-scope="scope">
-                    <span class="color-666">￥{{scope.row.discount_fee}}</span>
-                </template>
-            </el-table-column>
+<!--            <el-table-column width="120" label="优惠(元)">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <span class="color-666">￥{{scope.row.discount_fee}}</span>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
             <el-table-column width="110" label="小计(元)">
                 <template slot-scope="scope">
                     <div v-if="orderDetail.type=='score'">
@@ -1286,11 +1286,11 @@
                     <span class="color-666">{{orderDetail.type_text}}</span>
                 </template>
             </el-table-column>
-            <el-table-column label="配送方式" width="100">
-                <template slot-scope="scope">
-                    <span class="color-666">{{scope.row.dispatch_type_text}}</span>
-                </template>
-            </el-table-column>
+<!--            <el-table-column label="配送方式" width="100">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <span class="color-666">{{scope.row.dispatch_type_text}}</span>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
             <el-table-column label="发货状态" width="100">
                 <template slot-scope="scope">
                     <span class="color-666" v-if="orderDetail.status>0">
@@ -1300,15 +1300,15 @@
                     <span class="color-666" v-else>-</span>
                 </template>
             </el-table-column>
-            <el-table-column label="核销详情" width="100">
-                <template slot-scope="scope">
-                    <span v-if="scope.row.verifies && scope.row.verifies.length>0" class="theme-color cursor-pointer"
-                        @click="openVerifiesDialog(scope.row)">
-                        查看
-                    </span>
-                    <span v-else class="color-666">-</span>
-                </template>
-            </el-table-column>
+<!--            <el-table-column label="核销详情" width="100">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <span v-if="scope.row.verifies && scope.row.verifies.length>0" class="theme-color cursor-pointer"-->
+<!--                        @click="openVerifiesDialog(scope.row)">-->
+<!--                        查看-->
+<!--                    </span>-->
+<!--                    <span v-else class="color-666">-</span>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
             <el-table-column width="100" label="退款状态">
                 <template slot-scope="scope">
                     <div class="color-666 common-btn-box" v-if="orderDetail.status>0">
@@ -1320,81 +1320,81 @@
                     <div class="color-666" v-else>-</div>
                 </template>
             </el-table-column>
-            <el-table-column width="100" label="售后状态">
-                <template slot-scope="scope">
-                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">
-                        <span class="theme-color cursor-pointer"
-                            v-if="scope.row.btns && scope.row.btns.indexOf('aftersale_info')!=-1"
-                            @click="goAftersale(scope.row.ext_arr.aftersale_id)">售后详情</span>
-                        <span v-else>{{scope.row.aftersale_status_text}}</span>
-                    </div>
-                    <div class="color-666" v-else>-</div>
-                </template>
-            </el-table-column>
-            <el-table-column width="100" label="所属门店">
-                <template slot-scope="scope">
-                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">
-                        <span
-                            v-if="scope.row.dispatch_type=='store' || scope.row.dispatch_type=='selfetch'">{{scope.row.store.name}}</span>
-                        <span v-else>-</span>
-                    </div>
-                    <div class="color-666" v-else>-</div>
-                </template>
-            </el-table-column>
-            <el-table-column width="100" label="配送信息">
-                <template slot-scope="scope">
-                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">
-                        <el-popover placement="bottom" trigger="click" width="220">
-                            <div class="popover-container"
-                                v-if="scope.row.dispatch_type=='store' || scope.row.dispatch_type=='selfetch'">
-                                <div class="display-flex">
-                                    <div class="popover-tip">手机号：</div>
-                                    <div v-if="scope.row.ext_arr.dispatch_phone">{{scope.row.ext_arr.dispatch_phone}}
-                                    </div>
-                                    <div v-if="!scope.row.ext_arr.dispatch_phone">-</div>
-                                </div>
-                                <div class="display-flex">
-                                    <div class="popover-tip">日期：</div>
-                                    <div v-if="scope.row.ext_arr.dispatch_date">{{scope.row.ext_arr.dispatch_date}}
-                                    </div>
-                                    <div v-if="!scope.row.ext_arr.dispatch_date">-</div>
-                                </div>
-                            </div>
-                            <div class="popover-container" v-if="scope.row.dispatch_type=='autosend'">
-                                <div>
-                                    <span class="popover-tip">发货内容：</span>
-                                    <span v-if="scope.row.ext_arr.autosend_content">
-                                        <template v-if="scope.row.ext_arr.autosend_type=='text'">
-                                            {{scope.row.ext_arr.autosend_content}}
-                                        </template>
-                                        <template v-if="scope.row.ext_arr.autosend_type=='params'"
-                                            v-for="it in scope.row.ext_arr.autosend_content">
-                                            {{it.name}}-{{it.value}}
-                                        </template>
-                                    </span>
-                                    <div v-if="!scope.row.ext_arr.autosend_content">-</div>
-                                </div>
-                            </div>
-                            <div class="ellipsis-item cursor-pointer theme-color" slot="reference"
-                                v-if="scope.row.dispatch_type!='express'">
-                                查看详情
-                            </div>
-                        </el-popover>
-                        <div v-if="scope.row.dispatch_type=='express'">-</div>
-                    </div>
-                    <div class="color-666" v-else>-</div>
-                </template>
-            </el-table-column>
-            <el-table-column width="100" label="评价状态">
-                <template slot-scope="scope">
-                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">
-                        <span v-if="scope.row.comment_status==0">{{scope.row.comment_status_text}}</span>
-                        <div class="theme-color cursor-pointer" v-if="scope.row.comment_status>=1"
-                            @click="goComment(scope.row.id)">查看评价</div>
-                    </div>
-                    <div class="color-666" v-else>-</div>
-                </template>
-            </el-table-column>
+<!--            <el-table-column width="100" label="售后状态">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">-->
+<!--                        <span class="theme-color cursor-pointer"-->
+<!--                            v-if="scope.row.btns && scope.row.btns.indexOf('aftersale_info')!=-1"-->
+<!--                            @click="goAftersale(scope.row.ext_arr.aftersale_id)">售后详情</span>-->
+<!--                        <span v-else>{{scope.row.aftersale_status_text}}</span>-->
+<!--                    </div>-->
+<!--                    <div class="color-666" v-else>-</div>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
+<!--            <el-table-column width="100" label="所属门店">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">-->
+<!--                        <span-->
+<!--                            v-if="scope.row.dispatch_type=='store' || scope.row.dispatch_type=='selfetch'">{{scope.row.store.name}}</span>-->
+<!--                        <span v-else>-</span>-->
+<!--                    </div>-->
+<!--                    <div class="color-666" v-else>-</div>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
+<!--            <el-table-column width="100" label="配送信息">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">-->
+<!--                        <el-popover placement="bottom" trigger="click" width="220">-->
+<!--                            <div class="popover-container"-->
+<!--                                v-if="scope.row.dispatch_type=='store' || scope.row.dispatch_type=='selfetch'">-->
+<!--                                <div class="display-flex">-->
+<!--                                    <div class="popover-tip">手机号：</div>-->
+<!--                                    <div v-if="scope.row.ext_arr.dispatch_phone">{{scope.row.ext_arr.dispatch_phone}}-->
+<!--                                    </div>-->
+<!--                                    <div v-if="!scope.row.ext_arr.dispatch_phone">-</div>-->
+<!--                                </div>-->
+<!--                                <div class="display-flex">-->
+<!--                                    <div class="popover-tip">日期：</div>-->
+<!--                                    <div v-if="scope.row.ext_arr.dispatch_date">{{scope.row.ext_arr.dispatch_date}}-->
+<!--                                    </div>-->
+<!--                                    <div v-if="!scope.row.ext_arr.dispatch_date">-</div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="popover-container" v-if="scope.row.dispatch_type=='autosend'">-->
+<!--                                <div>-->
+<!--                                    <span class="popover-tip">发货内容：</span>-->
+<!--                                    <span v-if="scope.row.ext_arr.autosend_content">-->
+<!--                                        <template v-if="scope.row.ext_arr.autosend_type=='text'">-->
+<!--                                            {{scope.row.ext_arr.autosend_content}}-->
+<!--                                        </template>-->
+<!--                                        <template v-if="scope.row.ext_arr.autosend_type=='params'"-->
+<!--                                            v-for="it in scope.row.ext_arr.autosend_content">-->
+<!--                                            {{it.name}}-{{it.value}}-->
+<!--                                        </template>-->
+<!--                                    </span>-->
+<!--                                    <div v-if="!scope.row.ext_arr.autosend_content">-</div>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                            <div class="ellipsis-item cursor-pointer theme-color" slot="reference"-->
+<!--                                v-if="scope.row.dispatch_type!='express'">-->
+<!--                                查看详情-->
+<!--                            </div>-->
+<!--                        </el-popover>-->
+<!--                        <div v-if="scope.row.dispatch_type=='express'">-</div>-->
+<!--                    </div>-->
+<!--                    <div class="color-666" v-else>-</div>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
+<!--            <el-table-column width="100" label="评价状态">-->
+<!--                <template slot-scope="scope">-->
+<!--                    <div class="color-666 common-btn-box" v-if="orderDetail.status>0">-->
+<!--                        <span v-if="scope.row.comment_status==0">{{scope.row.comment_status_text}}</span>-->
+<!--                        <div class="theme-color cursor-pointer" v-if="scope.row.comment_status>=1"-->
+<!--                            @click="goComment(scope.row.id)">查看评价</div>-->
+<!--                    </div>-->
+<!--                    <div class="color-666" v-else>-</div>-->
+<!--                </template>-->
+<!--            </el-table-column>-->
         </el-table>
     </div>
     <!-- 发货 -->
@@ -1405,7 +1405,7 @@
                 style="width: 100%" @selection-change="deliverSelectionChange" border>
                 <el-table-column type="selection" width="40">
                 </el-table-column>
-                <el-table-column label="商品" width="280" align="left">
+                <el-table-column label="藏品" width="280" align="left">
                     <template slot-scope="scope">
                         <div class="display-flex">
                             <img class="table-img" :src="Fast.api.cdnurl(scope.row.goods_image)">
@@ -1523,13 +1523,13 @@
     <!-- 备货 -->
     <el-dialog :visible.sync="sendStoreDialog">
         <div slot="title">
-            备货商品<span style="color: #FFB333;">(请尽快通知该门店处理)</span>
+            备货藏品<span style="color: #FFB333;">(请尽快通知该门店处理)</span>
         </div>
         <div>
             <el-table :data="sendStoreList" style="width: 100%" @selection-change="sendStoreSelectionChange" border>
                 <el-table-column type="selection" width="40">
                 </el-table-column>
-                <el-table-column label="商品" width="280">
+                <el-table-column label="藏品" width="280">
                     <template slot-scope="scope">
                         <div class="display-flex">
                             <img class="table-img" :src="Fast.api.cdnurl(scope.row.goods_image)">

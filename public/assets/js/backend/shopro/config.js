@@ -33,31 +33,33 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                     background: '#F7EDDD',
                                     color: '#B07318'
                                 },
-                            }, {
-                                id: 'share',
-                                title: '分享配置',
-                                tip: '配置默认分享信息',
-                                message: '分享标题、图片、海报背景',
-                                icon: 'share-icon',
-                                leaf: '#915CF9',
-                                background: 'linear-gradient(180deg, #D5B8FA 0%, #8F62C9 100%)',
-                                button: {
-                                    background: '#E7DEF6',
-                                    color: '#6625CF'
-                                },
-                            }, {
-                                id: 'score',
-                                title: '积分配置',
-                                tip: '配置默认积分规则',
-                                message: '签到积分、连续签到规则',
-                                icon: 'score-icon',
-                                leaf: '#EC9371',
-                                background: 'linear-gradient(180deg, #FADDC0 0%, #E47F6D 100%)',
-                                button: {
-                                    background: '#F6E5E1',
-                                    color: '#D75125'
-                                },
-                            }, {
+                            },
+                            //     {
+                            //     id: 'share',
+                            //     title: '分享配置',
+                            //     tip: '配置默认分享信息',
+                            //     message: '分享标题、图片、海报背景',
+                            //     icon: 'share-icon',
+                            //     leaf: '#915CF9',
+                            //     background: 'linear-gradient(180deg, #D5B8FA 0%, #8F62C9 100%)',
+                            //     button: {
+                            //         background: '#E7DEF6',
+                            //         color: '#6625CF'
+                            //     },
+                            // }, {
+                            //     id: 'score',
+                            //     title: '积分配置',
+                            //     tip: '配置默认积分规则',
+                            //     message: '签到积分、连续签到规则',
+                            //     icon: 'score-icon',
+                            //     leaf: '#EC9371',
+                            //     background: 'linear-gradient(180deg, #FADDC0 0%, #E47F6D 100%)',
+                            //     button: {
+                            //         background: '#F6E5E1',
+                            //         color: '#D75125'
+                            //     },
+                            // },
+                                {
                                 id: 'withdraw',
                                 title: '充值提现',
                                 tip: '配置默认充值提现规则',
@@ -69,82 +71,87 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                     background: '#F3DCDE',
                                     color: '#D61226'
                                 },
-                            }, {
-                                id: 'order',
-                                title: '商城配置',
-                                tip: '配置默认商城规则',
-                                message: '库存预警，订单自动关闭，订单自动收货，订单自动评价',
-                                icon: 'order-icon',
-                                leaf: '#6991E7',
-                                background: 'linear-gradient(180deg, #AFCBFD 0%, #5A7CCF 100%)',
-                                button: {
-                                    background: '#DBE2F6',
-                                    color: '#1B5EE7'
-                                },
-                            }, {
-                                id: 'services',
-                                title: '第三方服务',
-                                tip: '配置物流及位置信息',
-                                message: '快递鸟物流、高德地图',
-                                icon: 'services-icon',
-                                leaf: '#14B0F3',
-                                background: 'linear-gradient(180deg, #A5E2FC 0%, #158CBF 100%)',
-                                button: {
-                                    background: '#DBE2F6',
-                                    color: '#00A3D7'
-                                },
-                            }, {
-                                id: 'chat',
-                                title: '客服配置',
-                                tip: '配置客服信息',
-                                message: '配置客服信息，快速沟通',
-                                icon: 'chat-icon',
-                                leaf: '#27C9C3',
-                                background: 'linear-gradient(180deg, #A1F3DE 0%, #3DA0A7 100%)',
-                                button: {
-                                    background: '#D6E9EA',
-                                    color: '#159198'
-                                },
-                            }, {
-                                id: 'store',
-                                title: '门店配置',
-                                tip: '配置门店协议',
-                                message: '配置门店协议',
-                                icon: 'store-icon',
-                                leaf: '#487EE5',
-                                background: 'linear-gradient(180deg, #84C4FF 0%, #3C68BE 100%)',
-                                button: {
-                                    background: '#DFE7EE',
-                                    color: '#1C54BD'
-                                },
-                            }],
-                            platform: [{
-                                id: 'wxOfficialAccount',
-                                title: '微信公众号',
-                                tip: '配置微信公众号',
-                                message: 'AppId、AppSecret、自动登录',
-                                icon: 'wxOfficialAccount-icon',
-                                leaf: '#6ACAA4',
-                                background: 'linear-gradient(180deg, #AAF0D7 0%, #5CC09F 100%)',
-                                buttonMessage: '公众号设置',
-                                button: {
-                                    background: '#DEF0EA',
-                                    color: '#0EA753'
-                                },
-                            }, {
-                                id: 'wxMiniProgram',
-                                title: '小程序',
-                                tip: '配置小程序',
-                                message: 'AppId、AppSecret、自动登录',
-                                icon: 'wxMiniProgram-icon',
-                                leaf: '#6962F7',
-                                background: 'linear-gradient(180deg, #C1BFFF 0%, #6563C9 100%)',
-                                buttonMessage: '小程序设置',
-                                button: {
-                                    background: '#D8D8F1',
-                                    color: '#3932BF'
-                                },
-                            }, {
+                            },
+                            //     {
+                            //     id: 'order',
+                            //     title: '商城配置',
+                            //     tip: '配置默认商城规则',
+                            //     message: '库存预警，订单自动关闭，订单自动收货，订单自动评价',
+                            //     icon: 'order-icon',
+                            //     leaf: '#6991E7',
+                            //     background: 'linear-gradient(180deg, #AFCBFD 0%, #5A7CCF 100%)',
+                            //     button: {
+                            //         background: '#DBE2F6',
+                            //         color: '#1B5EE7'
+                            //     },
+                            // },
+                            //     {
+                            //     id: 'services',
+                            //     title: '第三方服务',
+                            //     tip: '配置物流及位置信息',
+                            //     message: '快递鸟物流、高德地图',
+                            //     icon: 'services-icon',
+                            //     leaf: '#14B0F3',
+                            //     background: 'linear-gradient(180deg, #A5E2FC 0%, #158CBF 100%)',
+                            //     button: {
+                            //         background: '#DBE2F6',
+                            //         color: '#00A3D7'
+                            //     },
+                            // }, {
+                            //     id: 'chat',
+                            //     title: '客服配置',
+                            //     tip: '配置客服信息',
+                            //     message: '配置客服信息，快速沟通',
+                            //     icon: 'chat-icon',
+                            //     leaf: '#27C9C3',
+                            //     background: 'linear-gradient(180deg, #A1F3DE 0%, #3DA0A7 100%)',
+                            //     button: {
+                            //         background: '#D6E9EA',
+                            //         color: '#159198'
+                            //     },
+                            // }, {
+                            //     id: 'store',
+                            //     title: '门店配置',
+                            //     tip: '配置门店协议',
+                            //     message: '配置门店协议',
+                            //     icon: 'store-icon',
+                            //     leaf: '#487EE5',
+                            //     background: 'linear-gradient(180deg, #84C4FF 0%, #3C68BE 100%)',
+                            //     button: {
+                            //         background: '#DFE7EE',
+                            //         color: '#1C54BD'
+                            //     },
+                            // }
+                                ],
+                            platform: [
+                            //     {
+                            //     id: 'wxOfficialAccount',
+                            //     title: '微信公众号',
+                            //     tip: '配置微信公众号',
+                            //     message: 'AppId、AppSecret、自动登录',
+                            //     icon: 'wxOfficialAccount-icon',
+                            //     leaf: '#6ACAA4',
+                            //     background: 'linear-gradient(180deg, #AAF0D7 0%, #5CC09F 100%)',
+                            //     buttonMessage: '公众号设置',
+                            //     button: {
+                            //         background: '#DEF0EA',
+                            //         color: '#0EA753'
+                            //     },
+                            // }, {
+                            //     id: 'wxMiniProgram',
+                            //     title: '小程序',
+                            //     tip: '配置小程序',
+                            //     message: 'AppId、AppSecret、自动登录',
+                            //     icon: 'wxMiniProgram-icon',
+                            //     leaf: '#6962F7',
+                            //     background: 'linear-gradient(180deg, #C1BFFF 0%, #6563C9 100%)',
+                            //     buttonMessage: '小程序设置',
+                            //     button: {
+                            //         background: '#D8D8F1',
+                            //         color: '#3932BF'
+                            //     },
+                            // },
+                                {
                                 id: 'H5',
                                 title: 'H5',
                                 tip: '配置H5平台',
@@ -207,20 +214,22 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                     background: '#F7E6E1',
                                     color: '#D75E37'
                                 },
-                            }, {
-                                id: 'apple',
-                                title: 'Apple Pay',
-                                tip: '',
-                                message: '',
-                                icon: 'apple-icon',
-                                leaf: '#6962F7',
-                                background: 'linear-gradient(180deg, #C2C0FF 0%, #6563C9 100%) ',
-                                button: {
-                                    background: '#D8D8F1',
-                                    color: '#1E14E0',
-                                    cursor: 'auto'
-                                },
-                            }]
+                            },
+                            //     {
+                            //     id: 'apple',
+                            //     title: 'Apple Pay',
+                            //     tip: '',
+                            //     message: '',
+                            //     icon: 'apple-icon',
+                            //     leaf: '#6962F7',
+                            //     background: 'linear-gradient(180deg, #C2C0FF 0%, #6563C9 100%) ',
+                            //     button: {
+                            //         background: '#D8D8F1',
+                            //         color: '#1E14E0',
+                            //         cursor: 'auto'
+                            //     },
+                            // }
+                            ]
                         }
                     }
                 },
