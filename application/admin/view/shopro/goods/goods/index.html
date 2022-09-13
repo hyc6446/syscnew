@@ -543,54 +543,54 @@
                                 <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;">
                                     <p>{{scope.row.title}}</p>
                                 </div>
-                                <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;color:#7438D5 ">
-                                    <p>资产ID:{{scope.row.asset_id}}</p>
-                                </div>
+<!--                                <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;color:#7438D5 ">-->
+<!--                                    <p>资产ID:{{scope.row.asset_id}}</p>-->
+<!--                                </div>-->
                             </div>
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="goods_ids" label="合成品" min-width="200">
-                    <template slot-scope="scope">
-                        <div v-if="scope.row.children_list?.length>0" class="display-flex shopro-container-scrollbar" style="overflow: auto;">
-                            <div v-for="(ite,gindex) in scope.row.children_list">
-                                <el-popover placement="bottom" trigger="hover" width="240">
-                                    <div class="popover-container">
-                                        <div class="display-flex" style="align-items: flex-start;">
-                                            <div class="display-flex">
-                                                <div class="popover-tip">藏品ID</div>：
-                                            </div>
-                                            <div>{{ite.id}}</div>
-                                        </div>
-                                        <div class="display-flex" style="align-items: flex-start;">
-                                            <div class="display-flex" style="flex-shrink: 0;">
-                                                <div class="popover-tip">藏品标题</div>：
-                                            </div>
-                                            <div>{{ite.title}}</div>
-                                        </div>
-                                        <div class="display-flex" style="align-items: flex-start;">
-                                            <div class="display-flex">
-                                                <div class="popover-tip">资产ID</div>：
-                                            </div>
-                                            <div v-if="ite.issue && ite.asset_id">{{ite.asset_id}}</div>
-                                            <div v-else>未发行</div>
-                                        </div>
+<!--                <el-table-column prop="goods_ids" label="合成品" min-width="200">-->
+<!--                    <template slot-scope="scope">-->
+<!--                        <div v-if="scope.row.children_list?.length>0" class="display-flex shopro-container-scrollbar" style="overflow: auto;">-->
+<!--                            <div v-for="(ite,gindex) in scope.row.children_list">-->
+<!--                                <el-popover placement="bottom" trigger="hover" width="240">-->
+<!--                                    <div class="popover-container">-->
+<!--                                        <div class="display-flex" style="align-items: flex-start;">-->
+<!--                                            <div class="display-flex">-->
+<!--                                                <div class="popover-tip">藏品ID</div>：-->
+<!--                                            </div>-->
+<!--                                            <div>{{ite.id}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex" style="align-items: flex-start;">-->
+<!--                                            <div class="display-flex" style="flex-shrink: 0;">-->
+<!--                                                <div class="popover-tip">藏品标题</div>：-->
+<!--                                            </div>-->
+<!--                                            <div>{{ite.title}}</div>-->
+<!--                                        </div>-->
+<!--&lt;!&ndash;                                        <div class="display-flex" style="align-items: flex-start;">&ndash;&gt;-->
+<!--&lt;!&ndash;                                            <div class="display-flex">&ndash;&gt;-->
+<!--&lt;!&ndash;                                                <div class="popover-tip">资产ID</div>：&ndash;&gt;-->
+<!--&lt;!&ndash;                                            </div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                            <div v-if="ite.issue && ite.asset_id">{{ite.asset_id}}</div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                            <div v-else>未发行</div>&ndash;&gt;-->
+<!--&lt;!&ndash;                                        </div>&ndash;&gt;-->
 
-                                    </div>
-                                    <div class="activity-table-goods-image" slot="reference"
-                                         :style="{marginRight:gindex!=scope.row.children_list?.length-1?'6px':''}">
-                                        <el-image :src="Fast.api.cdnurl(ite.image)" fit="contain">
-                                            <div slot="error" class="image-slot">
-                                                <i class="el-icon-picture-outline"></i>
-                                            </div>
-                                        </el-image>
-                                    </div>
-                                </el-popover>
-                            </div>
-                        </div>
-                        <div v-else style="line-height: 36px;">无需合成</div>
-                    </template>
-                </el-table-column>
+<!--                                    </div>-->
+<!--                                    <div class="activity-table-goods-image" slot="reference"-->
+<!--                                         :style="{marginRight:gindex!=scope.row.children_list?.length-1?'6px':''}">-->
+<!--                                        <el-image :src="Fast.api.cdnurl(ite.image)" fit="contain">-->
+<!--                                            <div slot="error" class="image-slot">-->
+<!--                                                <i class="el-icon-picture-outline"></i>-->
+<!--                                            </div>-->
+<!--                                        </el-image>-->
+<!--                                    </div>-->
+<!--                                </el-popover>-->
+<!--                            </div>-->
+<!--                        </div>-->
+<!--                        <div v-else style="line-height: 36px;">无需合成</div>-->
+<!--                    </template>-->
+<!--                </el-table-column>-->
                 <el-table-column prop="price" label="价格" min-width="90">
                     <template slot="header" slot-scope="scope">
                         <div class="display-flex">
@@ -650,12 +650,12 @@
                             <div class="ellipsis-item" style="margin-top: 8px;line-height: 1;">
                                 <p>创建者:{{scope.row.admin_name}}</p>
                             </div>
-                            <div v-if="scope.row.issue">
-                                <span style="color:#67C23A">已发行上链</span>
-                            </div>
-                            <div v-else>
-                                <span style="color:#E6A23C">暂未发行</span>
-                            </div>
+<!--                            <div v-if="scope.row.issue">-->
+<!--                                <span style="color:#67C23A">已发行</span>-->
+<!--                            </div>-->
+<!--                            <div v-else>-->
+<!--                                <span style="color:#E6A23C">暂未发行</span>-->
+<!--                            </div>-->
                         </div>
 
                     </template>
@@ -667,6 +667,16 @@
                         </div>
                         <div v-else>
                             <span style="color:#E6A23C">正在发售</span>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="藏品类型" min-width="148">
+                    <template slot-scope="scope">
+                        <div v-if="scope.row.is_show=='1'">
+                            普通藏品
+                        </div>
+                        <div v-else>
+                            <span style="color:#50E3C2">盲盒藏品</span>
                         </div>
                     </template>
                 </el-table-column>

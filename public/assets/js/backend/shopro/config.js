@@ -284,6 +284,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                 user_protocol: '',
                                 privacy_protocol: '',
                                 about_us: '',
+                                box_limit: 0,
+                                goods_limit: 0,
                             },
                             user: {
                                 nickname: '',

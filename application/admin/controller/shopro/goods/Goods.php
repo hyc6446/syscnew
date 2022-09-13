@@ -2,15 +2,18 @@
 
 namespace app\admin\controller\shopro\goods;
 
+use addons\shopro\model\Category;
 use app\admin\model\Admin;
 use app\admin\model\shopro\activity\Activity;
 use app\common\controller\Backend;
 use app\common\model\Attachment;
+use fast\Tree;
 use think\Db;
 use think\exception\PDOException;
 use think\exception\ValidateException;
 use Exception;
 use addons\shopro\library\traits\StockWarning;
+use think\Model;
 
 /**
  * 商品
@@ -44,7 +47,141 @@ class Goods extends Backend
      */
     public function selectpage()
     {
-        return parent::selectpage();
+        //设置过滤方法
+        $this->request->filter(['trim', 'strip_tags', 'htmlspecialchars']);
+
+        //搜索关键词,客户端输入以空格分开,这里接收为数组
+        $word = (array)$this->request->request("q_word/a");
+        //当前页
+        $page = $this->request->request("pageNumber");
+        //分页大小
+        $pagesize = $this->request->request("pageSize");
+        //搜索条件
+        $andor = $this->request->request("andOr", "and", "strtoupper");
+        //排序方式
+        $orderby = (array)$this->request->request("orderBy/a");
+        //显示的字段
+        $field = $this->request->request("showField");
+        //主键
+        $primarykey = $this->request->request("keyField");
+        //主键值
+        $primaryvalue = $this->request->request("keyValue");
+        //搜索字段
+        $searchfield = (array)$this->request->request("searchField/a");
+        //自定义搜索条件
+        $custom = (array)$this->request->request("custom/a");
+        //是否返回树形结构
+        $istree = $this->request->request("isTree", 0);
+        $ishtml = $this->request->request("isHtml", 0);
+        if ($istree) {
+            $word = [];
+            $pagesize = 999999;
+        }
+        $order = [];
+        foreach ($orderby as $k => $v) {
+            $order[$v[0]] = $v[1];
+        }
+        $field = $field ? $field : 'name';
+        $is_show = $this->request->request('is_show');
+        $is_show = isset($is_show)?$is_show:'';
+
+        //如果有primaryvalue,说明当前是初始化传值
+        if ($primaryvalue !== null) {
+            $where = [$primarykey => ['in', $primaryvalue]];
+            $pagesize = 999999;
+        } else {
+            $where = function ($query) use ($word, $andor, $field, $searchfield, $custom,$is_show) {
+                $logic = $andor == 'AND' ? '&' : '|';
+                $searchfield = is_array($searchfield) ? implode($logic, $searchfield) : $searchfield;
+                $searchfield = str_replace(',', $logic, $searchfield);
+                $word = array_filter(array_unique($word));
+                if (count($word) == 1) {
+                    $query->where($searchfield, "like", "%" . reset($word) . "%");
+                } else {
+                    $query->where(function ($query) use ($word, $searchfield) {
+                        foreach ($word as $index => $item) {
+                            $query->whereOr(function ($query) use ($item, $searchfield) {
+                                $query->where($searchfield, "like", "%{$item}%");
+                            });
+                        }
+                    });
+                }
+                if ($custom && is_array($custom)) {
+                    foreach ($custom as $k => $v) {
+                        if (is_array($v) && 2 == count($v)) {
+                            $query->where($k, trim($v[0]), $v[1]);
+                        } else {
+                            $query->where($k, '=', $v);
+                        }
+                    }
+                }
+
+            };
+        }
+        $adminIds = $this->getDataLimitAdminIds();
+        if (is_array($adminIds)) {
+            $this->model->where($this->dataLimitField, 'in', $adminIds);
+        }
+        $list = [];
+        $where1 = [];
+        if($is_show==='0'){
+            $where1['is_show'] = 0;
+        }
+
+        $total = $this->model->where($where)->where($where1)->count();
+        if ($total > 0) {
+            if (is_array($adminIds)) {
+                $this->model->where($this->dataLimitField, 'in', $adminIds);
+            }
+
+            $fields = is_array($this->selectpageFields) ? $this->selectpageFields : ($this->selectpageFields && $this->selectpageFields != '*' ? explode(',', $this->selectpageFields) : []);
+
+            //如果有primaryvalue,说明当前是初始化传值,按照选择顺序排序
+            if ($primaryvalue !== null && preg_match("/^[a-z0-9_\-]+$/i", $primarykey)) {
+                $primaryvalue = array_unique(is_array($primaryvalue) ? $primaryvalue : explode(',', $primaryvalue));
+                //修复自定义data-primary-key为字符串内容时，给排序字段添加上引号
+                $primaryvalue = array_map(function ($value) {
+                    return '\'' . $value . '\'';
+                }, $primaryvalue);
+
+                $primaryvalue = implode(',', $primaryvalue);
+
+                $this->model->orderRaw("FIELD(`{$primarykey}`, {$primaryvalue})");
+            } else {
+                $this->model->order($order);
+            }
+
+            $datalist = $this->model->where($where)->where($where1)
+                ->page($page, $pagesize)
+                ->select();
+
+            foreach ($datalist as $index => $item) {
+                unset($item['password'], $item['salt']);
+                if ($this->selectpageFields == '*') {
+                    $result = [
+                        $primarykey => isset($item[$primarykey]) ? $item[$primarykey] : '',
+                        $field      => isset($item[$field]) ? $item[$field] : '',
+                    ];
+                } else {
+                    $result = array_intersect_key(($item instanceof Model ? $item->toArray() : (array)$item), array_flip($fields));
+                }
+                $result['pid'] = isset($item['pid']) ? $item['pid'] : (isset($item['parent_id']) ? $item['parent_id'] : 0);
+                $list[] = $result;
+            }
+            if ($istree && !$primaryvalue) {
+                $tree = Tree::instance();
+                $tree->init(collection($list)->toArray(), 'pid');
+                $list = $tree->getTreeList($tree->getTreeArray(0), $field);
+                if (!$ishtml) {
+                    foreach ($list as &$item) {
+                        $item = str_replace('&nbsp;', ' ', $item);
+                    }
+                    unset($item);
+                }
+            }
+        }
+        //这里一定要返回有list这个字段,total是可选的,如果total<=list的数量,则会隐藏分页按钮
+        return json(['list' => $list, 'total' => $total]);
     }
 
     /**
@@ -115,7 +252,7 @@ class Goods extends Backend
             // 恢复 sql mode
             recoverStrict($oldModes);
             foreach ($list  as $row) {
-                $row->visible(['id','admin_id','asset_id','admin_name', 'type','issue','issue_num', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
+                $row->visible(['id','is_show','admin_id','asset_id','admin_name', 'type','issue','issue_num', 'activity_id', 'children','activity_type', 'is_sku', 'app_type', 'title', 'status', 'weigh', 'category_ids', 'image', 'price', 'likes', 'views', 'sales', 'stock', 'show_sales', 'dispatch_type', 'updatetime']);
             }
             $list = collection($list)->toArray();
             foreach ($list  as $key => $row){
@@ -164,15 +301,15 @@ class Goods extends Backend
                 Db::startTrans();
                 try {
                     $params['issue_num'] = $params['stock'];
+                    $params['issue'] = 1;
                     $params['admin_id'] = $this->auth->id;
-                    $assetId =  $this->createAsset($params,'add');
-                    if (!$assetId) throw Exception('创建数字资产失败');
-                    $params['asset_id'] = $assetId;
-                    if ($params['issue']){
-                        //发行
-                        if (!$this->publishAsset($assetId)){
-                            $params['issue'] = 0;
-                        }
+                    $cate = Category::get($params['category_ids']);
+                    $params['asset_id'] =$cate ['class_id'];
+                    if ($cate['wcl_status']!=1){
+                        new Exception('该分类还未上链成功,请重新选择');
+                    }
+                    if ($params['is_show']==0){
+                        $params['sales_time'] = 0;
                     }
                     $result = $this->model->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.add')->allowField(true)->save($params);
                     if ($result) {
@@ -244,11 +381,17 @@ class Goods extends Backend
 
 
         $goods_ids_array = array_filter(explode(',', $row['children']));
+        $goods_nums_array = array_filter(explode(',', $row->children_num));
         $goodsList = [];
         foreach ($goods_ids_array as $k => $g) {
             $goods[$k] = $this->model->field('id,title,image')->where('id', $g)->find();
             if ($goods[$k]){
                 $goods[$k]['opt'] = 1;
+                if($goods_nums_array[$k]){
+                    $goods[$k]['nums'] = $goods_nums_array[$k];
+                }else{
+                    $goods[$k]['nums'] = 0;
+                }
                 $goodsList[] = $goods[$k];
             }
         }
@@ -272,9 +415,9 @@ class Goods extends Backend
         if (!$row) {
             $this->error(__('No Results were found'));
         }
-        if ($row['admin_id']!=$this->auth->id){
-            throw Exception('请勿操作他人创建的数字资产');
-        }
+//        if ($row['admin_id']!=$this->auth->id){
+//            throw Exception('请勿操作他人创建的数字资产');
+//        }
         $row->updatetime = time();
 
         $adminIds = $this->getDataLimitAdminIds();
@@ -288,42 +431,22 @@ class Goods extends Backend
             $sku = $this->request->post("sku/a");
 
             if ($params) {
+                // var_dump($params['children_num']);exit;
                 $this->excludeFields = ['is_sku', 'type'];
                 $params = $this->preExcludeFields($params);
                 $result = false;
                 Db::startTrans();
                 try {
-                    $assetId = $row['asset_id'];
-                    if (!$row['issue']){
-                        //未发行  发行数量
-                        $params['issue_num'] = $params['stock'];
-                    }else{
-                        //发行  不能修改发行数量和发行状态
-                        $params['issue_num'] = $row['issue_num'];
-                        $params['issue'] = 1;
+                    $params['issue'] = 1;
+                    $params['issue_num'] = $params['stock'];
+                    $cate = Category::get($params['category_ids']);
+                    $params['asset_id'] =$cate ['class_id'];
+                    if ($cate['wcl_status']!=1){
+                        new Exception('该分类还未上链成功,请重新选择');
                     }
-                    if (!$assetId){
-                        $assetId =  $this->createAsset($params,'add');
-
-                        if (!$assetId)throw Exception('创建数字资产失败');
-                        $params['asset_id'] = $assetId;
+                    if ($params['is_show']==0){
+                        $params['sales_time'] = 0;
                     }
-
-                    if (!$row['issue']){
-                        $params['issue_num'] = $params['stock'];
-                        //保存
-                        if ($assetId){
-                            $params['asset_id'] = $assetId;
-                            $res =  $this->createAsset($params,'edit');
-                            if (!$res)throw Exception('编辑数字资产失败');
-                        }
-                        if ($params['issue']){
-                            //发行
-                            $res = $this->publishAsset($assetId);
-                            if (!$res) throw Exception('数字资产发行失败,刷新重试');
-                        }
-                    }
-
                     $result = $row->validateFailException(true)->validate('\app\admin\validate\shopro\Goods.edit')->allowField(true)->save($params);
                     if ($result) {
                         $this->editSku($row, $sku, 'edit');

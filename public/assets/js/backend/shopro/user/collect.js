@@ -44,9 +44,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         }, function (ret, res) {
                             that.data = res.data.rows;
                             that.data.forEach(i => {
-                                i.images_arr = i.images.split(',').map(i => {
-                                    return Fast.api.cdnurl(i)
-                                })
+                                if (i.images){
+                                    i.images_arr = i.images.split(',').map(i => {
+                                        return Fast.api.cdnurl(i)
+                                    })
+                                }
                                 if(i.user.avatar){
                                     i.user.avatar_arr=i.user.avatar.split(',').map(i=>{
                                         return Fast.api.cdnurl(i)

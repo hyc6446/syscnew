@@ -13,12 +13,14 @@ trait TradeOrderStatus
 
     public function getPayTypeList()
     {
-        return ['wechat' => '微信', 'alipay' => "支付宝", 'wallet' => "钱包", 'score' => "积分"];
+//        return ['wechat' => '微信', 'alipay' => "支付宝", 'wallet' => "钱包", 'score' => "积分"];
+        return ['wechat' => '微信', 'alipay' => "支付宝", 'wallet' => "钱包"];
     }
 
     public function getPlatformList()
     {
-        return ['H5' => "H5", 'wxOfficialAccount' => "公众号", 'wxMiniProgram' => "小程序", 'App' => "App"];
+        return ['H5' => "H5",  'App' => "App"];
+//        return ['H5' => "H5", 'wxOfficialAccount' => "公众号", 'wxMiniProgram' => "小程序", 'App' => "App"];
     }
 
     /* -------------------------- 访问器 ------------------------ */

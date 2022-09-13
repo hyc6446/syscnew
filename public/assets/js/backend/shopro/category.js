@@ -125,6 +125,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                             status: 'normal',
                                             image: '',
                                             weigh: 0,
+                                            color: '',
                                             children: []
                                         })
                                     } else {
@@ -134,6 +135,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                                             status: 'normal',
                                             image: '',
                                             weigh: 0,
+                                            color: '',
                                             children: []
                                         })
                                     }
@@ -352,6 +354,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                             status: 'normal',
                             image: '',
                             weigh: 0,
+                            color: '',
                             children: []
                         };
                         if (!data.children) {
@@ -672,6 +675,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                             type: '',
                             name: '',
                             weigh: 0,
+                            color: '',
                             status: 'normal'
                         },
                         rulesForm: {
@@ -688,6 +692,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                             weigh: [{
                                 required: true,
                                 message: '请输入分类权重',
+                                trigger: 'blur'
+                            }],
+                            color: [{
+                                required: true,
+                                message: '请输入分类标签颜色值',
                                 trigger: 'blur'
                             }],
                             // status: [{

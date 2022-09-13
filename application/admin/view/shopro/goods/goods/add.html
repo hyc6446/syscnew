@@ -577,7 +577,12 @@
                             <el-radio label="down">下架</el-radio>
                         </el-radio-group>
                     </el-form-item>
-
+                    <el-form-item label="是否盲盒：" prop="is_show">
+                        <el-radio-group v-model="goodsDetail.is_show">
+                            <el-radio :label='1'>否</el-radio>
+                            <el-radio :label='0'>是</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
 
                     <el-form-item label="藏品分类：" prop="category_ids">
                         <div class="display-flex">
@@ -611,14 +616,14 @@
                                 </el-input>
                             </div>
                         </el-form-item>
-                        <el-form-item label="藏品编号：">
-                            <div class="display-flex">
-                                <el-input type="input" v-model="goodsDetail.sn" style="width:300px" size="small">
-                                </el-input>
-                            </div>
-                        </el-form-item>
+<!--                        <el-form-item label="藏品编号：">-->
+<!--                            <div class="display-flex">-->
+<!--                                <el-input type="input" v-model="goodsDetail.sn" style="width:300px" size="small">-->
+<!--                                </el-input>-->
+<!--                            </div>-->
+<!--                        </el-form-item>-->
                     </div>
-                    <el-form-item label="藏品创作方：">
+                    <el-form-item label="藏品品牌方：">
                         <div class="display-flex">
                             <div class="flex-1">
                                 <el-select v-model="timeData.brand_ids_arr" placeholder="请选择" multiple size="small"
@@ -629,10 +634,11 @@
                                 </el-select>
                             </div>
                             <div class="create-template" @click="createTemplate('brand')">
-                                新建创作方
+                                新建品牌方
                             </div>
                         </div>
                     </el-form-item>
+
                     <el-form-item label="是否合成：" prop="is_syn">
                         <el-radio-group v-model="goodsDetail.is_syn">
                             <el-radio :label='0'>否</el-radio>
@@ -681,6 +687,7 @@
                                                 </el-image>
                                             </div>
                                             <span class="ellipsis-item-2">{{scope.row.title}}</span>
+                                            <el-input type="number" min="1" v-model="scope.row.nums" style="width:100px;margin-left: 10px;" size="small"></el-input>
                                         </div>
                                     </template>
                                 </el-table-column>
@@ -700,7 +707,7 @@
 
                 </div>
                 <div v-if="stepActive==2">
-                    <el-form-item label="预售时间：" v-if="goodsDetail.can_sales == 1 || goodsDetail.is_syn == 0">
+                    <el-form-item label="预售时间：" v-if="(goodsDetail.can_sales == 1 || goodsDetail.is_syn == 0)&&goodsDetail.is_show==1">
                         <div class="display-flex">
                             <el-date-picker
                                     v-model="goodsDetail.sales_time"
@@ -726,10 +733,9 @@
                     <el-form-item label="标志：">
                         <div class="display-flex">
                             <div class="flex-1">
-                                <el-select v-model="timeData.tag_arr" placeholder="请选择" multiple size="small"
-                                           @change="tagChange">
-                                    <el-option v-for="item in tagOptions" :key="item.value" :label="item.name"
-                                               :value="item.value">
+                                <el-select v-model="timeData.tag_arr" placeholder="请选择" multiple size="small" @change="tagChange">
+                                    <el-option v-for="items in tagOptions" :key="items.value" :label="items.name"
+                                               :value="items.value">
                                     </el-option>
                                 </el-select>
                             </div>
@@ -781,7 +787,7 @@
     <span slot="footer" class="dialog-footer">
         <div class="back-btn" v-if="stepActive>1" @click="gonextback">上一步</div>
         <div class="btn-common sub-btn" v-if="stepActive<2" @click="gotoback('goodsDetail')">下一步</div>
-        <div class="btn-common sub-btn" v-if="stepActive==2" @click="submitForm('goodsDetail',0)">保存</div>
-        <div class="btn-common sub-btn" style="margin-left: 10px;background-color: #F56C6C" v-if="stepActive==2" @click="submitForm('goodsDetail',1)">发行</div>
+        <div class="btn-common sub-btn" v-if="stepActive==2" @click="submitForm('goodsDetail',1)">创建</div>
+<!--        <div class="btn-common sub-btn" style="margin-left: 10px;background-color: #F56C6C" v-if="stepActive==2" @click="submitForm('goodsDetail',1)">发行</div>-->
     </span>
 </div>

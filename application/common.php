@@ -169,12 +169,10 @@ if (!function_exists('copydirs')) {
         if (!is_dir($dest)) {
             mkdir($dest, 0755, true);
         }
-        foreach (
-            $iterator = new RecursiveIteratorIterator(
+        foreach ($iterator = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($source, RecursiveDirectoryIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::SELF_FIRST
-            ) as $item
-        ) {
+            ) as $item) {
             if ($item->isDir()) {
                 $sontDir = $dest . DS . $iterator->getSubPathName();
                 if (!is_dir($sontDir)) {
@@ -425,6 +423,7 @@ if (!function_exists('check_cors_request')) {
     /**
      * 跨域检测
      */
+
     function check_cors_request()
     {
         if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN']) {
@@ -520,7 +519,7 @@ if (!function_exists('recoverStrict')) {
      * @ApiParams $string 需要进行截取的富文本字符串
      * @ApiParams $int 需要截取多少位
      */
-    function StringToText($string='', $num=200)
+    function StringToText($string = '', $num = 200)
     {
         if ($string) {
             // 把一些预定义的 HTML 实体转换为字符

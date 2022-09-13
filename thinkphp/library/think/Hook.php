@@ -115,7 +115,6 @@ class Hook
     public static function exec($class, $tag = '', &$params = null, $extra = null)
     {
         App::$debug && Debug::remark('behavior_start', 'time');
-
         $method = Loader::parseName($tag, 1, false);
 
         if ($class instanceof \Closure) {

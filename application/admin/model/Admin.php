@@ -2,6 +2,7 @@
 
 namespace app\admin\model;
 
+use nft\ChainAccount;
 use think\Model;
 use think\Session;
 
@@ -31,4 +32,22 @@ class Admin extends Model
         return $encrypt($password . $salt);
     }
 
+
+    public function setAdmin($id)
+    {
+        $admin = Admin::get($id);
+        //查询
+        if($admin->wcl_status==0){
+            $txRes = (new ChainAccount())->QueryChainAccount($admin->operation_id);
+            if (!empty($txRes['data']) &&!empty($txRes['data']['accounts'][0])){
+                $data = $txRes['data']['accounts'][0];
+                extract($data);
+                $admin->gas = $gas??'';
+                $admin->business = $business??'';
+                $admin->wcl_status = $status??'';
+                $admin->save();
+            }
+        }
+        return $admin;
+    }
 }

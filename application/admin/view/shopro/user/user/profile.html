@@ -343,30 +343,30 @@
             <el-col :xs="24" :sm="24" :md="12" :lg="12" :xl="12">
                 <div style="display: flex;flex-direction: column;justify-content: space-between;height: 100%;">
                     <div>
-                        <div class="message-item display-flex" v-if="data.hasOwnProperty('parent_user')">
-                            <div class="display-flex margin-right-20">
-                                <div class="message-tip-right">推荐人</div>:
-                            </div>
-                            <div class="message-con display-flex">
-                                <div v-if="data.parent_user_id"
-                                    class="message-money theme-color cursor-pointer display-flex"
-                                    @click="openAgentProfile(data.parent_user.id)">
-                                    <img class="avatar-img parent-user-avatar" v-if="data.parent_user.avatar"
-                                        :src="Fast.api.cdnurl(data.parent_user.avatar)">
-                                    <span class="ellipsis-item">{{data.parent_user.nickname}}</span>
-                                </div>
-                                <template v-if="data.parent_user_id==null">
-                                    暂无推荐人
-                                </template>
-                                <template v-if="data.parent_user_id==0">
-                                    平台直推
-                                </template>
-                                <!-- <div v-if="!data.parent_user">暂无推荐人</div> -->
-                                <div class="theme-color cursor-pointer" style="flex-shrink: 0;" @click="openDialog">
-                                    更换
-                                </div>
-                            </div>
-                        </div>
+<!--                        <div class="message-item display-flex" v-if="data.hasOwnProperty('parent_user')">-->
+<!--                            <div class="display-flex margin-right-20">-->
+<!--                                <div class="message-tip-right">推荐人</div>:-->
+<!--                            </div>-->
+<!--                            <div class="message-con display-flex">-->
+<!--                                <div v-if="data.parent_user_id"-->
+<!--                                    class="message-money theme-color cursor-pointer display-flex"-->
+<!--                                    @click="openAgentProfile(data.parent_user.id)">-->
+<!--                                    <img class="avatar-img parent-user-avatar" v-if="data.parent_user.avatar"-->
+<!--                                        :src="Fast.api.cdnurl(data.parent_user.avatar)">-->
+<!--                                    <span class="ellipsis-item">{{data.parent_user.nickname}}</span>-->
+<!--                                </div>-->
+<!--                                <template v-if="data.parent_user_id==null">-->
+<!--                                    暂无推荐人-->
+<!--                                </template>-->
+<!--                                <template v-if="data.parent_user_id==0">-->
+<!--                                    平台直推-->
+<!--                                </template>-->
+<!--                                &lt;!&ndash; <div v-if="!data.parent_user">暂无推荐人</div> &ndash;&gt;-->
+<!--                                <div class="theme-color cursor-pointer" style="flex-shrink: 0;" @click="openDialog">-->
+<!--                                    更换-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="message-item display-flex">
                             <div class="display-flex margin-right-20">
                                 <div class="message-tip-right">用户ID</div>:
@@ -464,19 +464,19 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="message-item display-flex">
-                            <div class="display-flex margin-right-20">
-                                <div class="message-tip-right">账户积分</div>:
-                            </div>
-                            <div class="message-con display-flex">
-                                <div class="message-score">
-                                    {{data.score}}
-                                </div>
-                                <div class="theme-color cursor-pointer" @click="operation('score')">
-                                    充值
-                                </div>
-                            </div>
-                        </div>
+<!--                        <div class="message-item display-flex">-->
+<!--                            <div class="display-flex margin-right-20">-->
+<!--                                <div class="message-tip-right">账户积分</div>:-->
+<!--                            </div>-->
+<!--                            <div class="message-con display-flex">-->
+<!--                                <div class="message-score">-->
+<!--                                    {{data.score}}-->
+<!--                                </div>-->
+<!--                                <div class="theme-color cursor-pointer" @click="operation('score')">-->
+<!--                                    充值-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
                         <div class="message-item display-flex">
                             <div class="display-flex margin-right-20">
                                 <div class="message-tip-right">加入IP</div>:
@@ -566,27 +566,27 @@
                     {if condition = "$auth->check('shopro/user/user/money_log')"}
                     <el-radio-button label="money_log">余额明细</el-radio-button>
                     {/if}
-                    {if condition = "$auth->check('shopro/user/user/score_log')"}
-                    <el-radio-button label="score_log">积分明细</el-radio-button>
-                    {/if}
+<!--                    {if condition = "$auth->check('shopro/user/user/score_log')"}-->
+<!--                    <el-radio-button label="score_log">积分明细</el-radio-button>-->
+<!--                    {/if}-->
                     {if condition = "$auth->check('shopro/user/user/order_log')"}
                     <el-radio-button label="order_log">订单记录</el-radio-button>
                     {/if}
                     <!-- {if condition = "$auth->check('shopro/user/user/login_log')"}
                     <el-radio-button label="login_log">登录记录</el-radio-button>
                     {/if} -->
-                    {if condition = "$auth->check('shopro/user/user/share_log')"}
-                    <el-radio-button label="share_log">分享记录</el-radio-button>
-                    {/if}
+<!--                    {if condition = "$auth->check('shopro/user/user/share_log')"}-->
+<!--                    <el-radio-button label="share_log">分享记录</el-radio-button>-->
+<!--                    {/if}-->
                     {if condition = "$auth->check('shopro/user/user/goods_favorite')"}
                     <el-radio-button label="goods_favorite">收藏商品</el-radio-button>
                     {/if}
-                    {if condition = "$auth->check('shopro/user/user/goods_view')"}
-                    <el-radio-button label="goods_view">浏览足迹</el-radio-button>
-                    {/if}
-                    {if condition = "$auth->check('shopro/user/user/coupon_log')"}
-                    <el-radio-button label="coupon_log">优惠券</el-radio-button>
-                    {/if}
+<!--                    {if condition = "$auth->check('shopro/user/user/goods_view')"}-->
+<!--                    <el-radio-button label="goods_view">浏览足迹</el-radio-button>-->
+<!--                    {/if}-->
+<!--                    {if condition = "$auth->check('shopro/user/user/coupon_log')"}-->
+<!--                    <el-radio-button label="coupon_log">优惠券</el-radio-button>-->
+<!--                    {/if}-->
                 </el-radio-group>
             </div>
         </div>

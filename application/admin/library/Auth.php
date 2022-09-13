@@ -6,6 +6,7 @@ use addons\xasset\library\Service;
 use app\admin\model\Admin;
 use fast\Random;
 use fast\Tree;
+use nft\ChainAccount;
 use think\Config;
 use think\Cookie;
 use think\Hook;
@@ -62,16 +63,12 @@ class Auth extends \fast\Auth
         $admin->logintime = time();
         $admin->loginip = request()->ip();
         $admin->token = Random::uuid();
-        if (!$admin->public_key){
+        if (!$admin->addr){
             //创建资产账户
-            $res = (new Service())->createAccount();
-            if (isset($res['public_key'])&&$res['public_key']) {
-                $admin->addr = $res['address'];
-                $admin->public_key = $res['public_key'];
-                $admin->private_key = $res['private_key'];
-            }else{
-                $this->setError('数字藏品账户登记失败:'.$res['errno']??'');
-            }
+            $res = (new ChainAccount())->CreateChainAccount($username);
+            $data = $res['data'];
+            $admin->addr = $data['account']??'';
+            $admin->operation_id = $data['operation_id']??'';
         }
         $admin->save();
         Session::set("admin", $admin->toArray());

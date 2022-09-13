@@ -198,6 +198,7 @@ class UserWalletApply extends Base
     {
         $successCount = 0;
         $failedCount = 0;
+        $lastErrorMessage='';
         $ids = explode(',', $ids);
         $applyList = $this->model->where('id', 'in', $ids)->select();
         if (!$applyList) {

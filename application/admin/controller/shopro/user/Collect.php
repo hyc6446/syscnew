@@ -27,7 +27,6 @@ class Collect extends Backend
     {
         parent::_initialize();
         $this->model = new \app\admin\model\shopro\user\Collect;
-
     }
 
 
@@ -62,9 +61,9 @@ class Collect extends Backend
             $list = $this->model
                 ->with(['user' => function ($query) {
                     return $query->withField('id, nickname, avatar');
-                },'give_user' => function ($query) {
-                return $query->withField('id, nickname, avatar');
-            },'goods'=>function($query){
+                }, 'give_user' => function ($query) {
+                    return $query->withField('id, nickname, avatar');
+                }, 'goods' => function ($query) {
                     return $query->withField('id, title, image');
                 }])
                 ->where($where)
@@ -153,32 +152,83 @@ class Collect extends Backend
 
     public function grantShard()
     {
-        $ids = $this->request->post('ids','');
-        $uid = $this->request->post('uid','');
-        if (!$ids)$this->error('请选择藏品');
-        if (!$uid)$this->error('请选择空投的用户');
+        $ids = $this->request->post('ids', '');
+        $uid = $this->request->post('uid', '');
+        if (!$ids) $this->error('请选择藏品');
+        if (!$uid) $this->error('请选择空投的用户');
         $user = \app\admin\model\User::get($uid);
-        if (!$user)$this->error('用户不存在,请确认后再输入');
-        if (!$user['addr'])$this->error('该用户未登录小程序注册数字资产账户');
-        $ids = explode(',',$ids);
-        foreach ($ids as $value){
+        if (!$user) $this->error('用户不存在,请确认后再输入');
+        if (!$user['addr']) $this->error('该用户未登录小程序注册数字资产账户');
+        $ids = explode(',', $ids);
+
+        foreach ($ids as $value) {
+            //库存判断
+            $sku = \app\admin\model\shopro\goods\SkuPrice::where('goods_id', $value)->field('stock,sales')->find();
+            if ($sku['stock'] < 1) {
+                $this->error('请想选择有库存的藏品');
+            }
             //空投 todo:上链
-            $res =\addons\shopro\model\UserCollect::edit([
-                'user_id'=>$user['id'],
-                'goods_id'=>$value,
-                'type'=>5,
-                'status'=>0,
+            // var_dump($user['id']);exit;
+            $res = \addons\shopro\model\UserCollect::edit([
+                'user_id' => $user['id'],
+                'goods_id' => $value,
+                'type' => 5,
+                'sn' => $sku['sales'] + 1,
+                'status' => 0,
             ]);
-            if (!$res){
+
+            // var_dump($res);exit;
+            if (!$res) {
                 $this->error('空投失败');
             }
-            $goodsSkuPrice = GoodsSkuPrice::where('goods_id',$value)->find();
+            $goodsSkuPrice = GoodsSkuPrice::where('goods_id', $value)->find();
             if ($goodsSkuPrice) {
                 $goodsSkuPrice->setDec('stock', 1);         // 减少库存
                 $goodsSkuPrice->setInc('sales', 1);         // 增加销量
             }
         }
+
         $this->success('空投成功');
     }
 
+    //锁定空投
+    public function grantShardHook()
+    {
+        $ids = $this->request->post('ids', '');
+        $uid = $this->request->post('uid', '');
+        if (!$ids) $this->error('请选择藏品');
+        if (!$uid) $this->error('请选择空投的用户');
+        $user = \app\admin\model\User::get($uid);
+        if (!$user) $this->error('用户不存在,请确认后再输入');
+        if (!$user['addr']) $this->error('该用户未登录小程序注册数字资产账户');
+        $ids = explode(',', $ids);
+
+        foreach ($ids as $value) {
+            //库存判断
+            $sku = \app\admin\model\shopro\goods\SkuPrice::where('goods_id', $value)->field('stock,sales')->find();
+            if ($sku['stock'] < 1) {
+                $this->error('请想选择有库存的藏品');
+            }
+            //空投 todo:上链
+
+            $res = \addons\shopro\model\UserCollect::edit([
+                'user_id' => $user['id'],
+                'goods_id' => $value,
+                'type' => 5,
+                'sn' => $sku['sales'] + 1,
+                'status' => 0,
+                'is_hook' => 1,
+            ]);
+            if (!$res) {
+                $this->error('空投失败');
+            }
+            $goodsSkuPrice = GoodsSkuPrice::where('goods_id', $value)->find();
+            if ($goodsSkuPrice) {
+                $goodsSkuPrice->setDec('stock', 1);         // 减少库存
+                $goodsSkuPrice->setInc('sales', 1);         // 增加销量
+            }
+        }
+
+        $this->success('空投成功');
+    }
 }

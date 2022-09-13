@@ -6,7 +6,7 @@ use fast\Random;
 use think\Hook;
 
 /**
- * 短信验证码类
+ * 短信验证码类 http://xiangyi.6014.cn/star/pages/blind/index?ref_code=753646
  */
 class Sms
 {
@@ -54,8 +54,22 @@ class Sms
         $time = time();
         $ip = request()->ip();
         $sms = \app\common\model\Sms::create(['event' => $event, 'mobile' => $mobile, 'code' => $code, 'ip' => $ip, 'createtime' => $time]);
-//        $result = Hook::listen('sms_send', $sms, null, true);
-        $result = true;
+        //7-16修改，短信发送
+        // $params['mobile'] = $mobile;
+        // $params['event'] = $event;
+        // $params['code'] = $code;
+        // $config = get_addon_config('alisms');
+        // if (!isset($config['template'][$params['event']])) {
+        //     return false;
+        // }
+        // $alisms = new \addons\alisms\library\Alisms();
+        // $result = $alisms->mobile($params['mobile'])
+        //     ->template($config['template'][$params['event']])
+        //     ->param(['code' => $params['code']])
+        //     ->send();
+        $result = Hook::listen('sms_send', $sms, null, true);
+//        $result = true;
+        // var_dump($result);exit;
         if (!$result) {
             $sms->delete();
             return false;

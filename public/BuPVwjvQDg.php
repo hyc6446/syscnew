@@ -31,7 +31,7 @@ require __DIR__ . '/../thinkphp/base.php';
 \think\App::route(false);
 
 // 设置根url
-\think\Url::root('');
+\think\Url::root('/');
 
 // 执行应用
 \think\App::run()->send();

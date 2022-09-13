@@ -3,25 +3,24 @@
 return [
     'autoload' => false,
     'hooks' => [
+        'sms_send' => [
+            'alisms',
+        ],
+        'sms_notice' => [
+            'alisms',
+        ],
+        'sms_check' => [
+            'alisms',
+        ],
         'app_init' => [
             'epay',
             'shopro',
         ],
-        'config_init' => [
-            'qcloudsms',
-            'ueditor',
-        ],
-        'sms_send' => [
-            'qcloudsms',
-        ],
-        'sms_notice' => [
-            'qcloudsms',
-        ],
-        'sms_check' => [
-            'qcloudsms',
-        ],
         'upgrade' => [
             'shopro',
+        ],
+        'config_init' => [
+            'ueditor',
         ],
     ],
     'route' => [],

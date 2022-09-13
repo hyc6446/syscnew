@@ -429,61 +429,76 @@
                         </div>
                     </template>
                 </el-table-column>
+
+                <el-table-column label="链账户信息" width="180">
+                    <template slot-scope="scope">
+                        <div>
+                            <el-tooltip placement="top">
+                                <div slot="content">账户:{{scope.row.addr}}<br/>操作ID:{{scope.row.operation_id}}</div>
+                                <div>
+                                    <div v-if="scope.row.wcl_status==1" style="color: #409EFF">链状态:{{scope.row.wcl_status_text}}</div>
+                                    <div v-else>链状态:{{scope.row.wcl_status_text}}</div>
+                                </div>
+                            </el-tooltip>
+
+                        </div>
+                    </template>
+                </el-table-column>
                 <!-- <el-table-column label="邀请人" min-width="120">
                     <template slot-scope="scope">
                         <div class="ellipsis-item" slot="reference">{{scope.row.nickname}}
                     </template>
                 </el-table-column> -->
-                <el-table-column label="第三方账号" prop="id" min-width="140">
-                    <template slot-scope="scope">
-                        <div class="platform-name display-flex-c">
-                            <template v-if="scope.row.third_platform.length>0">
-                                <el-popover placement="bottom" trigger="hover"
-                                    :title="operation('platformname',i.platform)" width="360"
-                                    v-for="(i,index) in scope.row.third_platform">
-                                    <div class="popover-container">
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">头像</div>：</div>
-                                            <img class="avatar-img"
-                                :src="Fast.api.cdnurl(i.headimgurl)">
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">性别</div>：</div>
-                                            <div class="color-7536D0">{{i.sex==2?'女':'男'}}</div>
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">国家</div>：</div>
-                                            <div class="color-7536D0">{{i.country}}</div>
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">省市</div>：</div>
-                                            <div class="color-7536D0">{{i.province}}-{{i.city}}</div>
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">OpenId</div>：</div>
-                                            <div class="color-7536D0">{{i.openid}}</div>
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">UnionId</div>：</div>
-                                            <div class="color-7536D0">{{i.unionid}}</div>
-                                        </div>
-                                        <div class="display-flex">
-                                            <div class="display-flex"><div class="popover-tip">创建时间</div>：</div>
-                                            <div class="color-7536D0">
-                                                {{moment(i.createtime*1000).format("YYYY-MM-DD HH:mm:ss")}}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="ellipsis-item cursor-pointer" slot="reference">
-                                        <img style="width: 30px;height: 30px;" :style="{'margin-right':index!=scope.row.third_platform.length-1?'5px':''}"
-                                            :src="'/assets/addons/shopro/img/user/'+i.provider+'-'+i.platform+'.png'">
-                                    </div>
-                                </el-popover>
-                            </template>
-                            <span v-else>-</span>
-                        </div>
-                    </template>
-                </el-table-column>
+<!--                <el-table-column label="第三方账号" prop="id" min-width="140">-->
+<!--                    <template slot-scope="scope">-->
+<!--                        <div class="platform-name display-flex-c">-->
+<!--                            <template v-if="scope.row.third_platform.length>0">-->
+<!--                                <el-popover placement="bottom" trigger="hover"-->
+<!--                                    :title="operation('platformname',i.platform)" width="360"-->
+<!--                                    v-for="(i,index) in scope.row.third_platform">-->
+<!--                                    <div class="popover-container">-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">头像</div>：</div>-->
+<!--                                            <img class="avatar-img"-->
+<!--                                :src="Fast.api.cdnurl(i.headimgurl)">-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">性别</div>：</div>-->
+<!--                                            <div class="color-7536D0">{{i.sex==2?'女':'男'}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">国家</div>：</div>-->
+<!--                                            <div class="color-7536D0">{{i.country}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">省市</div>：</div>-->
+<!--                                            <div class="color-7536D0">{{i.province}}-{{i.city}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">OpenId</div>：</div>-->
+<!--                                            <div class="color-7536D0">{{i.openid}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">UnionId</div>：</div>-->
+<!--                                            <div class="color-7536D0">{{i.unionid}}</div>-->
+<!--                                        </div>-->
+<!--                                        <div class="display-flex">-->
+<!--                                            <div class="display-flex"><div class="popover-tip">创建时间</div>：</div>-->
+<!--                                            <div class="color-7536D0">-->
+<!--                                                {{moment(i.createtime*1000).format("YYYY-MM-DD HH:mm:ss")}}-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+<!--                                    </div>-->
+<!--                                    <div class="ellipsis-item cursor-pointer" slot="reference">-->
+<!--                                        <img style="width: 30px;height: 30px;" :style="{'margin-right':index!=scope.row.third_platform.length-1?'5px':''}"-->
+<!--                                            :src="'/assets/addons/shopro/img/user/'+i.provider+'-'+i.platform+'.png'">-->
+<!--                                    </div>-->
+<!--                                </el-popover>-->
+<!--                            </template>-->
+<!--                            <span v-else>-</span>-->
+<!--                        </div>-->
+<!--                    </template>-->
+<!--                </el-table-column>-->
                 <el-table-column label="余额" prop="money" min-width="120">
                 </el-table-column>
 <!--                <el-table-column label="积分" prop="score" min-width="120">-->
@@ -510,8 +525,8 @@
                                 @click="operation('enable',scope.row.id)">启用</span>
                             <span v-if="scope.row.status!='hidden'" class="disable-text"
                                 @click="operation('disable',scope.row.id)">禁用</span> -->
-                            <span v-if="scope.row.addr" class="enable-text"
-                                  @click="goodsSelect(scope.row.id)">空投</span>
+                            <span v-if="scope.row.addr" class="enable-text" @click="goodsSelect(scope.row.id)">空投</span>
+                            <span v-if="scope.row.addr" class="enable-text" @click="goodsSelectHook(scope.row.id)">锁定空投</span>
                         </div>
                     </template>
                 </el-table-column>

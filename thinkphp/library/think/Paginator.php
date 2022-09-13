@@ -382,7 +382,6 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
                 'data'         => $this->items->toArray(),
             ];
         }
-
     }
 
     /**
@@ -405,5 +404,4 @@ abstract class Paginator implements ArrayAccess, Countable, IteratorAggregate, J
 
         return $result;
     }
-
 }

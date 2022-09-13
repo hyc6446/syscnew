@@ -3,9 +3,11 @@
 namespace addons\shopro\controller;
 
 use addons\xasset\library\Service;
+use nft\ChainAccount;
 use think\Db;
 use app\common\library\Sms;
 use fast\Random;
+use think\Log;
 use think\Validate;
 use addons\shopro\library\Wechat;
 use addons\shopro\model\UserOauth;
@@ -17,7 +19,7 @@ use addons\shopro\model\UserStore;
  */
 class User extends Base
 {
-    protected $noNeedLogin = ['accountLogin', 'smsLogin', 'register', 'forgotPwd', 'wxMiniProgramOauth', 'getWxMiniProgramSessionKey', 'wxOfficialAccountOauth', 'wxOfficialAccountBaseLogin', 'wxOpenPlatformOauth', 'appleIdOauth', 'logout'];
+    protected $noNeedLogin = ['accountLogin', "rankList", 'smsLogin', 'register', 'forgotPwd', 'wxMiniProgramOauth', 'getWxMiniProgramSessionKey', 'wxOfficialAccountOauth', 'wxOfficialAccountBaseLogin', 'wxOpenPlatformOauth', 'appleIdOauth', 'logout'];
     protected $noNeedRight = '*';
 
     public function _initialize()
@@ -31,11 +33,34 @@ class User extends Base
     public function index()
     {
         $auth = \app\common\library\Auth::instance();
-        $auth->setAllowFields(['id', 'nickname', 'mobile', 'avatar', 'money',  'total_consume','referral_code']);
+        $auth->setAllowFields(['id', 'nickname', 'mobile', 'avatar', 'money', "box_num", "gold_chest_num", "sliver_chest_num", "share_count", "curr_share_count", 'total_consume', 'referral_code', 'is_auth', 'identity_card', 'realname']);
         $data = $auth->getUserinfo();
         $data['avatar'] = $data['avatar'] ? cdnurl($data['avatar'], true) : '';
+
+        $data['share_link'] = $this->request->root(true) . '/star/pages/blind/index?ref_code=' . $data['referral_code'];
+
         $this->success('用户信息', $data);
     }
+
+    /**
+     * 推荐排行榜
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\ModelNotFoundException
+     * @throws \think\exception\DbException
+     */
+    public function rankList()
+    {
+        $userModel = new \addons\shopro\model\User();
+        $rankLists = $userModel->field('share_count,curr_share_count,nickname,mobile')
+            ->where('share_count', '>', 0)
+            ->order('share_count', 'desc')
+            ->limit(0, 100)
+            ->select();
+
+        $this->success('用户信息', $rankLists);
+    }
+
+
 
 
     /**
@@ -97,27 +122,33 @@ class User extends Base
     {
         $mobile = $this->request->post('mobile');
         $code = $this->request->post('code');
+        $ref_code  = $this->request->post('ref_code'); // 邀请码
         if (!$mobile || !$code) {
             $this->error(__('Invalid parameters'));
         }
         if (!Validate::regex($mobile, "^1\d{10}$")) {
             $this->error(__('Mobile is incorrect'));
         }
-        if (!Sms::check($mobile, $code, 'mobilelogin')) {
-            $this->error(__('Captcha is incorrect'));
-        }
+        // if (!Sms::check($mobile, $code, 'mobilelogin')) {
+        //     $this->error(__('Captcha is incorrect'));
+        // }
         $user = \app\common\model\User::getByMobile($mobile);
+        // var_dump($user);exit;
+        
         if ($user) {
             if ($user->status != 'normal') {
                 $this->error(__('Account is locked'));
             }
             //如果已经有账号则直接登录
             $ret = $this->auth->direct($user->id);
-        }else{
+        } else {
+           
+            // var_dump(1111);exit;
             $extend = $this->getUserDefaultFields();
             $invite = $this->auth->create_invite_code();
-            $ret = $this->auth->register($mobile, $invite, '', $mobile, $extend);
+            $ret = $this->auth->register($mobile, $invite, '', $mobile, $extend, $ref_code);
             if ($ret) {
+
                 $user = $this->auth->getUser();
                 $user->nickname = $user->nickname . $user->referral_code;
                 $verification = $user->verification;
@@ -127,8 +158,30 @@ class User extends Base
                 $userInfo = $this->auth->getUserinfo();
                 $userInfo['token'] = $this->auth->getToken();
                 $userInfo['avatar'] = $userInfo['avatar'] ? cdnurl($userInfo['avatar'], true) : '';
-                $data = ['userinfo' => $userInfo];
 
+                if (!$userInfo['addr']) {
+                    $user = $this->auth->getUser();
+                    //创建资产账户
+                    $res = (new ChainAccount())->CreateChainAccount($user->nickname);
+                    Log::info('数字藏品账户登记:::' . json_encode($res));
+                    if (isset($res['data']['account']) && $res['data']['account']) {
+                        $user->addr =  $userInfo['addr'] = $res['data']['account'];
+                        $user->operation_id =  $userInfo['operation_id'] = $res['data']['operation_id'];
+                        $user->save();
+                    } else {
+                        $this->error('数字藏品账户登记失败:' . $res['errno'] ?? '');
+                    }
+                }
+                //增加上级的邀请人数
+                // $parent_user = UserModel::where("referral_code",$ref_code)->field("share_count,box_num")->find();
+                // $data['share_count'] = $parent_user['share_count'] + 1;
+                // if($data['share_count']%3==0){
+                //     $data['box_num'] = $parent_user['box_num'] + 1;
+                // }
+                // $where['referral_code'] = $ref_code;
+                // UserModel::update($data,$where);
+
+                $data = ['userinfo' => $userInfo];
                 $this->success(__('登陆成功'), $data);
             } else {
                 $this->error($this->auth->getError());
@@ -140,16 +193,16 @@ class User extends Base
             $userInfo['token'] = $this->auth->getToken();
             $userInfo['avatar'] = $userInfo['avatar'] ? cdnurl($userInfo['avatar'], true) : '';
             $user = $this->auth->getUser();
-            if (!$userInfo['addr']){
+            if (!$userInfo['addr'] || !preg_match('/^iaa[\W\w+]/', $userInfo['addr'])) {
                 //创建资产账户
-                $res = (new Service())->createAccount();
-                if (isset($res['public_key'])&&$res['public_key']) {
-                    $user->addr =  $userInfo['addr'] = $res['address'];
-                    $user->public_key = $res['public_key'];
-                    $user->private_key = $res['private_key'];
+                $res = (new ChainAccount())->CreateChainAccount($mobile);
+                Log::info('数字藏品账户登记:::' . json_encode($res));
+                if (isset($res['data']['account']) && $res['data']['account']) {
+                    $user->addr =  $userInfo['addr'] = $res['data']['account'];
+                    $user->operation_id =  $userInfo['operation_id'] = $res['data']['operation_id'];
                     $user->save();
-                }else{
-                    $this->error('数字藏品账户登记失败:'.$res['errno']??'');
+                } else {
+                    $this->error('数字藏品账户登记失败:' . $res['errno'] ?? '');
                 }
             }
             $data = ['userinfo' => $userInfo];
@@ -297,15 +350,15 @@ class User extends Base
         if (!$newpassword || !$oldpassword) {
             $this->error(__('Invalid parameters'));
         }
-        if (!Validate::regex($newpassword, "^\d{6}$")) {
-            $this->error(__('密码必须为6位数字'));
+        if (!Validate::regex($newpassword, "^\d{6,9}$")) {
+            $this->error(__('密码必须为6-9位数字'));
         }
 
         $ret = $this->auth->changepwd($newpassword, $oldpassword);
 
         if ($ret) {
-//            $this->auth->direct($user->id);
-//            $data = ['userinfo' => $this->auth->getUserinfo()];
+            //            $this->auth->direct($user->id);
+            //            $data = ['userinfo' => $this->auth->getUserinfo()];
 
             $this->success(__('Change password successful'));
         } else {
@@ -596,7 +649,8 @@ class User extends Base
                     } else {         // 用户已被删除 重新执行登录
                         // throw \Exception('此用户已删除');
                         $userOauth->delete();
-                        $this->oauthLoginOrRegisterOrBindOrRefresh($event, $decryptData, $platform, $provider);                    }
+                        $this->oauthLoginOrRegisterOrBindOrRefresh($event, $decryptData, $platform, $provider);
+                    }
                 }
                 break;
             case 'refresh':
@@ -712,10 +766,10 @@ class User extends Base
     public function profile()
     {
         $user = $this->auth->getUser();
-        $username = $this->request->post('username','');
+        $username = $this->request->post('username', '');
         $nickname = $this->request->post('nickname');
         $bio = $this->request->post('bio', '');
-        $birthday = $this->request->post('birthday','');
+        $birthday = $this->request->post('birthday', '');
         $avatar = $this->request->post('avatar', '', 'trim,strip_tags,htmlspecialchars');
         if ($username) {
             $exists = \app\common\model\User::where('username', $username)->where('id', '<>', $this->auth->id)->find();
@@ -725,8 +779,8 @@ class User extends Base
             $user->username = $username;
         }
         if ($nickname) $user->nickname = $nickname;
-//        $user->bio = $bio;
-//        $user->birthday = $birthday;
+        //        $user->bio = $bio;
+        //        $user->birthday = $birthday;
         if (!empty($avatar)) {
             $user->avatar = $avatar;
         }

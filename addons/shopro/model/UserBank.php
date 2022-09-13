@@ -30,14 +30,14 @@ class UserBank extends Model
 
 
     // 提现账户详情
-    public static function info($type,$code, $encryptCardNo = true)
+    public static function info($type, $encryptCardNo = true)
     {
         $user = User::info();
         $bank = null;
 
         $bank = self::where(['user_id' => $user->id, 'type' => $type])->find();
-        
-        if(!$bank) {
+
+        if (!$bank) {
             throw \Exception('请完善您的账户信息');
         }
         if ($encryptCardNo) {
@@ -70,7 +70,7 @@ class UserBank extends Model
         return $bank;
     }
     // 编辑提现账户
-    public static function edit($userInfo,$type)
+    public static function edit($userInfo, $type)
     {
         $user = User::info();
 
@@ -78,13 +78,13 @@ class UserBank extends Model
 
         // 整理数据
         $real_name = '';
-        $bank_name ='';
+        $bank_name = '';
         $card_no = '';
-        if($type=='wechat'){
+        if ($type == 'wechat') {
             $real_name = $userInfo['nickname'];
             $bank_name = $userInfo['bank_name'];
             $card_no = $userInfo['open_id'];
-        }else{
+        } else {
             $real_name = $userInfo['nickname'];
             $bank_name = $userInfo['bank_name'];
             $card_no = $userInfo['user_id'];
@@ -108,5 +108,45 @@ class UserBank extends Model
         }
 
         return $bank;
+    }
+
+
+    public static function alipayEdit($user_id, $userinfo, $type)
+    {
+        $bank = self::where(['user_id' => $user_id, 'type' => $type])->find();
+
+        $real_name = $userinfo['nickname'];
+        $bank_name = $userinfo['bank_name'];
+        $card_no = $userinfo['user_id'];
+
+        if ($bank) {
+            $bank->real_name = $real_name;
+            $bank->bank_name = $bank_name;
+            $bank->card_no = $card_no;
+            $bank['type'] = $type;
+            $bank->save();
+        } else {
+            $bank = new self();
+            $bank->user_id = $user_id;
+            $bank['type'] = $type;
+            $bank->real_name = $real_name;
+            $bank->bank_name = $bank_name;
+            $bank->card_no = $card_no;
+            $bank->save();
+        }
+
+
+
+        return true;
+    }
+
+    public static function checkBank($user_id, $type)
+    {
+        $bank = self::where(['user_id' => $user_id, 'type' => $type])->find();
+        if ($bank) {
+            return true;
+        }
+
+        return  false;
     }
 }

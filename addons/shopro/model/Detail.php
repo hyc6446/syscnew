@@ -6,6 +6,7 @@ namespace addons\shopro\model;
 
 use think\Model;
 use traits\model\SoftDelete;
+use addons\shopro\exception\Exception;
 
 class Detail extends Model
 {
@@ -30,11 +31,14 @@ class Detail extends Model
      * @throws \Exception
      * @author fuyelk <fuyelk@fuyelk.com>
      */
-    public static function getOne(int $box_id, array $except = [])
+    public static function getOne(int $box_id,int $num,int $user_id, array $except = [])
     {
         // 查询该盲盒中的全部商品ID
         $goodsIds = self::where('box_id', $box_id)->column('goods_id');
 
+        // 获取商品库存，避免超卖的问题
+        $goodsIds = GoodsSkuPrice::whereIn('goods_id', $goodsIds)->where('stock','>',0)->column('goods_id');
+        
         // 找出这些商品中下架、缺货或已删除的商品
         $removeGoodsIds = Goods::withTrashed()->whereIn('id', $goodsIds)
             ->where(function ($query) use ($except) {
@@ -44,20 +48,19 @@ class Detail extends Model
         // 移除无效的商品，得到有效的商品ID
         $usefulGoodsIds = array_diff($goodsIds, $removeGoodsIds);
 
-        if (empty($usefulGoodsIds)) {
-            throw new \Exception('奖品不足');
+       if (empty($usefulGoodsIds)) {
+            return ['status'=>2,'txt'=>'奖品不足'];
         }
 
         // 查询有效商品的概率信息
         $prize = self::where('box_id', $box_id)->whereIn('goods_id', $usefulGoodsIds)->column('rate,goods_id', 'id');
-
         // 概率集合
         $prizeRate = array_column($prize, 'rate');
-
+        
         // 商品ID集合
         $goodsList = array_column($prize, 'goods_id');
-
-        return self::rand($prizeRate, $goodsList);
+        $rand = self::rand($prizeRate, $goodsList);
+        return ['status'=>1,'data'=>$rand];
     }
 
     /**
@@ -141,10 +144,8 @@ class Detail extends Model
         foreach ($rate as &$item) {
             $item = round($item, 2) * 100; // 扩大100倍避免小数
         }
-
         //奖项的设置和概率可以手动设置化;
         $total = array_sum($rate);
-
         foreach ($rate as $key => $value) {
             $randNumber = mt_rand(1, $total);
             if ($randNumber <= $value) {
@@ -154,7 +155,6 @@ class Detail extends Model
                 $total -= $value;
             }
         }
-
         return $notice;
     }
 

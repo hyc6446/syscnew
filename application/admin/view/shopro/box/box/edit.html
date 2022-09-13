@@ -6,6 +6,7 @@
             <input id="c-category_id" data-rule="required" data-source="shopro/box/category/selectpage" class="form-control selectpage" name="row[category_id]" type="text" value="{$row.category_id|htmlentities}">
         </div>
     </div>
+    
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">{:__('Box_name')}:</label>
         <div class="col-xs-12 col-sm-8">
@@ -46,15 +47,45 @@
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">{:__('Coin_price')}:</label>
         <div class="col-xs-12 col-sm-8">
-            <input id="c-price" class="form-control" name="row[coin_price]" type="number" data-rule="digits;range(0~)" value="{$row.coin_price|htmlentities}">
+            <input id="c-price" class="form-control" name="row[coin_price]" type="number"  value="{$row.coin_price|htmlentities}">
         </div>
     </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('预售卖数量（库存）')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-sales-num" class="form-control" name="row[sales_num]" type="number" data-rule="digits;range(0~)" value="{$row.sales_num|htmlentities}">
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('指定盲盒（商品id）')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-detail_id" class="form-control" name="row[detail_id]" type="number" data-rule="digits;range(0~)" value="{$row.detail_id|htmlentities}">
+        </div>
+    </div>
+
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">{:__('sort')}:</label>
         <div class="col-xs-12 col-sm-8">
             <input id="c-sort" class="form-control" name="row[sort]" type="number" data-rule="digits;range(0~)" value="{$row.sort|htmlentities}">
         </div>
     </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('开始时间')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-start_time" class="form-control datetimepicker" name="row[start_time]" type="text" data-use-current="true" value="{$row.start_time|datetime}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">{:__('结束时间')}:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input id="c-end_time" class="form-control datetimepicker" name="row[end_time]" type="text" data-use-current="true" value="{$row.end_time|datetime}">
+        </div>
+    </div>
+
     <div class="form-group">
         <label class="control-label col-xs-12 col-sm-2">{:__('Is_hot')}:</label>
         <div class="col-xs-12 col-sm-8">

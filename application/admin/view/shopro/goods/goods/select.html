@@ -272,24 +272,6 @@
                             <template slot-scope="scope">
                                 <div class="ellipsis-item">{{scope.row.sales}}</div>
                             </template>
-<!--                            <template slot-scope="scope">-->
-<!--                                <div v-if="scope.row.activity_type || scope.row.app_type" class="display-flex">-->
-<!--                                    <div class="activity-text score-activity" v-if="scope.row.app_type">-->
-<!--                                        {{scope.row.app_type_text}}-->
-<!--                                    </div>-->
-<!--                                    <template v-for="(b,a) in scope.row.activity_type_text_arr">-->
-<!--                                        <template v-if="a=='groupon'">-->
-<!--                                            <div class="activity-text groupon-activity">-->
-<!--                                                拼团-->
-<!--                                            </div>-->
-<!--                                        </template>-->
-<!--                                        <div v-if="a=='seckill'" class="activity-text seckill-activity">{{b}}</div>-->
-<!--                                        <div v-if="a=='full_reduce' || a=='full_discount' || a=='free_shipping'"-->
-<!--                                            class="activity-text full-activity">{{b}}</div>-->
-<!--                                    </template>-->
-<!--                                </div>-->
-<!--                                <div class="display-flex" v-else>-</div>-->
-<!--                            </template>-->
                         </el-table-column>
                         <el-table-column prop="stock" label="剩余库存" width="80">
                         </el-table-column>

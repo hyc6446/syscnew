@@ -29,15 +29,17 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'g2'], function ($, u
 							type: 'payAmount',
 							color: '#7299FF',
 							unit: '元'
-						}, {
-							title: '待发货订单',
-							num: 0,
-							checked: false,
-							id: 2,
-							type: 'noSent',
-							color: '#4BD067',
-							unit: '笔'
-						}, {
+						},
+						// 	{
+						// 	title: '待发货订单',
+						// 	num: 0,
+						// 	checked: false,
+						// 	id: 2,
+						// 	type: 'noSent',
+						// 	color: '#4BD067',
+						// 	unit: '笔'
+						// },
+							{
 							title: '支付人数',
 							num: 0,
 							checked: false,
@@ -46,15 +48,15 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'g2'], function ($, u
 							color: '#9682FF',
 							unit: '人'
 						},
-						{
-							title: '售后维权',
-							num: 0,
-							checked: false,
-							id: 3,
-							type: 'aftersale',
-							color: '#FFA800',
-							unit: '笔'
-						},
+						// {
+						// 	title: '售后维权',
+						// 	num: 0,
+						// 	checked: false,
+						// 	id: 3,
+						// 	type: 'aftersale',
+						// 	color: '#FFA800',
+						// 	unit: '笔'
+						// },
 						{
 							title: '退款订单',
 							num: 0,

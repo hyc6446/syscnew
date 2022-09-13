@@ -8,6 +8,7 @@ use think\Log;
 use think\Model;
 use addons\shopro\exception\Exception;
 use addons\shopro\library\traits\model\goods\GoodsActivity;
+use think\model\Collection;
 use traits\model\SoftDelete;
 
 /**
@@ -26,13 +27,13 @@ class Goods extends Model
     protected $updateTime = 'updatetime';
     protected $deleteTime = 'deletetime';
 
-    protected $hidden = ['createtime', 'updatetime', 'status','type','show_sales', 'params', 'images','dispatch_type','dispatch_ids','is_sku','original_price','likes','subtitle'];
+    protected $hidden = ['createtime', 'updatetime', 'status', 'type', 'show_sales', 'params', 'images', 'dispatch_type', 'dispatch_ids', 'is_sku', 'original_price', 'likes', 'subtitle'];
     //列表动态隐藏字段
-    public static $list_hidden = ['weigh','note'];
+    public static $list_hidden = ['weigh', 'note'];
 
     // 追加属性
     protected $append = [
-        'ser_tag_arr','brand_arr','sales_time_text','tag','category_name','syn_end_time_text','sale_sta'
+        'ser_tag_arr', 'brand_arr', 'sales_time_text', 'tag', 'category_name', 'syn_end_time_text', 'sale_sta'
     ];
 
     public static $list_field = '*';
@@ -41,87 +42,96 @@ class Goods extends Model
     public function getSerTagArrAttr($value, $data)
     {
         if (!isset($data['service_ids'])) return [];
-        $tag = GoodsService::where( 'id','in',explode(',',$data['service_ids']))->select();
-        $item = array_column($tag,'name');
+        $tag = GoodsService::where('id', 'in', explode(',', $data['service_ids']))->select();
+        $item = array_column($tag, 'name');
 
         return $item;
     }
 
     public function getTagAttr($value, $data)
     {
-        return isset($data['tag'])&&$data['tag']?explode(',',$data['tag']):[];
+        return isset($data['tag']) && $data['tag'] ? explode(',', $data['tag']) : [];
     }
 
-    public function getSalesTimeTextAttr($value,$data)
+    public function getSalesTimeTextAttr($value, $data)
     {
-        return isset($data['sales_time'])&&$data['sales_time'] && $data['sales_time']>time()?date('m月d日 H:i'):'';
+        return isset($data['sales_time']) && $data['sales_time'] && $data['sales_time'] > time() ? date('m月d日 H:i') : '';
     }
 
-    public function getSynEndTimeTextAttr($value,$data)
+    public function getSynEndTimeTextAttr($value, $data)
     {
-        return  isset($data['syn_end_time'])&&$data['syn_end_time']?date('m月d日 H:i'):'';
+        return  isset($data['syn_end_time']) && $data['syn_end_time'] ? date('m月d日 H:i') : '';
     }
 
     public function getBrandArrAttr($value, $data)
     {
         if (!isset($data['brand_ids'])) return [];
-        return GoodsBrand::where( 'id','in',explode(',',$data['brand_ids']))->select();
+        return GoodsBrand::where('id', 'in', explode(',', $data['brand_ids']))->select();
     }
 
     public function getStockSkuAttr($value, $data)
     {
-        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales')->find();
+        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id' => $data['id'], 'status' => 'up'])->field('stock,sales')->find();
         $sku['sell_out'] = 0;
         if (!$sku['stock']) $sku['sell_out'] = 1;
-        $sku['stock_limit'] = $sku['stock']+ $sku['sales'];//总库存
+        $sku['stock_limit'] = $sku['stock'] + $sku['sales']; //总库存
         unset($sku['sales']);
         return $sku;
     }
 
-    public function getCategoryNameAttr($value,$data)
+    public function getCategoryNameAttr($value, $data)
     {
-        if (!isset($data['category_ids']))return '';
-       return Category::where('id',$data['category_ids'])->value('name');
+        if (!isset($data['category_ids'])) return '';
+        return Category::where('id', $data['category_ids'])->value('name');
     }
 
-    public function getSaleStaAttr($value,$data)
+    public function getSaleStaAttr($value, $data)
     {
-        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id'=>$data['id'],'status'=>'up'])->field('stock,sales')->find();
-        if ($data['issue']==0) return ['status'=>0,'txt'=>'即将发售'];
-
-        if ($sku['stock']==0){
-            return ['status'=>2,'txt'=>'已售罄'];
-        }elseif ($data['sales_time']>time()){
-            return ['status'=>0,'txt'=>'即将发售'];
-        }elseif ($data['can_sales']==1 && $data['sales_time']<=time()){
-            return ['status'=>1,'txt'=>'正在发售'];
-        }else{
-            return ['status'=>0,'txt'=>'即将发售'];
+        $sku =  Db::name('shopro_goods_sku_price')->where(['goods_id' => $data['id'], 'status' => 'up'])->field('stock,sales,stock_warning')->find();
+        if ($data['issue'] == 0) return ['status' => 0, 'txt' => '即将发售'];
+        if ($sku['stock'] == 0 && $sku['stock_warning'] == 0) {
+            return ['status' => 2, 'txt' => '已售罄'];
+        } elseif ($data['sales_time'] > time()) {
+            return ['status' => 0, 'txt' => '即将发售'];
+        } elseif ($data['can_sales'] == 1 && $data['sales_time'] <= time()) {
+            return ['status' => 1, 'txt' => '正在发售'];
+        } else {
+            return ['status' => 0, 'txt' => '即将发售'];
         }
     }
 
+    // public function getPriorityAttr($value, $data)
+    // {
+
+    //     $user = User::info();
+    //     $sku =  Db::name('shopro_priority_buy')->where(['user_id' => $user->id, 'status' => '1'])->field('buy_num,beforehand_time,status')->find();
+    //     return $sku;
+    // }
     /**
      * 藏品列表
      * params 请求参数
      * is_page 是否分页
      * per_sale 是否是预售藏品
      */
-    public static function getGoodsList($params, $is_page = true,$per_sale=0)
+    public static function getGoodsList($params, $is_page = true, $per_sale = 0)
     {
         extract($params);
         $where = [
             'status' => ['in', ((isset($type) && $type == 'all') ? ['up', 'hidden'] : ['up'])],     // type = all 查询全部
-            'issue'=>1,
+            'issue' => 1,
         ];
-        if ((isset($islist) && $islist) && (isset($tag) && $tag != 'select')){
-            $where['can_sales'] = 1;
-            $where['sales_time'] = ['<=',time()];
+        if (isset($islist) && $islist) {
+            //islist  后台字段
+            $where['is_show'] = 1;
+            if ((isset($tag) && $tag != 'select')) {
+                $where['can_sales'] = 1;
+                // $where['sales_time'] = ['<=', time()];
+            }
         }
         //排序字段
         if (isset($order)) {
             $order = self::getGoodsListOrder($order);
-
-        }else{
+        } else {
             $order = 'weigh desc';
         }
 
@@ -135,20 +145,20 @@ class Goods extends Model
             $where['id'] = ['in', $goodsIdsArray];
         }
 
-        if (isset($is_syn) && $is_syn !== ''){
+        if (isset($is_syn) && $is_syn !== '') {
             //查询合成品列表
             $where['is_syn'] = $is_syn;
-            if ($is_syn == 1){
-                $where['syn_end_time'] = [['>',time()],['=',0],'or'];
-                $where['children'] = ['<>',''];
-                $goodsIdsArray = GoodsSkuPrice::where('stock','>',0)->column('goods_id');
+            if ($is_syn == 1) {
+                $where['syn_end_time'] = [['>', time()], ['=', 0], 'or'];
+                $where['children'] = ['<>', ''];
+                $goodsIdsArray = GoodsSkuPrice::where('stock', '>', 0)->column('goods_id');
                 $where['id'] = ['in', $goodsIdsArray];
             }
         }
 
-        $per_sale = $per_sale??0;
-        if ($per_sale){
-            $where['sales_time'] = ['>',time()];
+        $per_sale = $per_sale ?? 0;
+        if ($per_sale) {
+            $where['sales_time'] = ['>', time()];
         }
 
         $category_ids = [];
@@ -158,7 +168,7 @@ class Goods extends Model
         }
         $goods = self::where($where)->where(function ($query) use ($category_ids) {
             // 所有子分类使用 find_in_set or 匹配，亲测速度并不慢
-            foreach($category_ids as $key => $category_id) {
+            foreach ($category_ids as $key => $category_id) {
                 $query->whereOrRaw("find_in_set($category_id, category_ids)");
             }
         });
@@ -174,18 +184,23 @@ class Goods extends Model
 
         //标志
         if (isset($tag) && $tag !== '') {
-            $goods = $goods->where("find_in_set('".$tag."',tag)");
+            $goods = $goods->where("find_in_set('" . $tag . "',tag)");
         }
 
 
-        $goods = $goods->field(self::$list_field.',(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
-
+        $goods = $goods->field(self::$list_field . ',(sales + show_sales) as total_sales')->orderRaw($order)->order('id desc');
+        $auth = Auth::instance();
+        $priority = null;
+        Log::info("authid", $auth->id);
+        if (isset($auth->id)) {
+            $priority = \addons\shopro\model\PriorityBuy::buyerList($auth->id);
+        }
 
         $hidden = self::$list_hidden;
-        if (!$is_page||$per_sale){
+        if (!$is_page || $per_sale) {
             //发售日历
             $goods = $goodsData = $goods->select();
-        }else{
+        } else {
             $hidden[] = 'content';
             $goods = $goods->paginate($limit ?? 10);
             $goodsData = $goods->items();
@@ -197,44 +212,50 @@ class Goods extends Model
             $data = $collection->hidden($hidden);
         }
 
-        if (!$is_page||$per_sale){
+        if (!$is_page || $per_sale) {
             $sales = [];
-            foreach ($data as $val){
-                $date = date('m月d日 H:i',$val['sales_time']);
-                $val['desc'] = StringToText($val['content'],100);
+            foreach ($data as $val) {
+                $date = date('m月d日 H:i', $val['sales_time']);
+                $val['desc'] = StringToText($val['content'], 100);
                 unset($val['content']);
                 $sales[$date][] = $val;
             }
-            if ($per_sale){
+            if ($per_sale) {
                 //发售日历
                 $goods = [];
                 $auth = Auth::instance();
-                foreach ($sales as $key=>$value){
+                foreach ($sales as $key => $value) {
                     //是否订阅
                     $timestamp = strtotime($key);
-                    $ding =  GoodsDing::where(['user_id'=>$auth->id??0,'ding_time'=>$timestamp])->find();
+                    $ding =  GoodsDing::where(['user_id' => $auth->id ?? 0, 'ding_time' => $timestamp])->find();
                     $goods[] = [
-                        'date'=>mb_substr($key,0,6),
-                        'time'=>mb_substr($key,7),
-                        'ding_time'=>$value[0]['sales_time'],
-                        'status'=>$ding?1:0,
-                        'list'=>$value
+                        'date' => mb_substr($key, 0, 6),
+                        'time' => mb_substr($key, 7),
+                        'ding_time' => $value[0]['sales_time'],
+                        'status' => $ding ? 1 : 0,
+                        'list' => $value
                     ];
                 }
-            }else{
+            } else {
                 $goods = $data;
             }
-
         } else {
-            foreach ($data as &$val){
-                //简述
-                $val['desc'] = StringToText($val['content'],100);
+            foreach ($data as &$val) {
+                //简述 
+                #TODO  假的售卖数量
+                // $va_data = json_decode($val);
+                // if ($va_data->sale_sta->status == 2) {
+                //     $val['total_sales'] = $va_data->issue_num;
+                //     $val['sales'] = $va_data->issue_num;
+                // }
+                $val['desc'] = StringToText($val['content'], 100);
                 unset($val['content']);
             }
             $goods->data = $data;
         }
-
-        return $goods;
+        $result['data'] = $goods;
+        $result['priority'] = $priority;
+        return $result;
     }
 
     public static function getGoodsListByIds($goodsIds)
@@ -279,12 +300,12 @@ class Goods extends Model
             $goods->data = $data;
         }
         return $goods;
-
     }
 
 
     // 获取秒杀藏品列表
-    public static function getSeckillGoodsList($params) {
+    public static function getSeckillGoodsList($params)
+    {
         extract($params);
         $type = $type ?? 'all';
 
@@ -324,7 +345,8 @@ class Goods extends Model
 
 
     // 获取拼团藏品列表
-    public static function getGrouponGoodsList($params) {
+    public static function getGrouponGoodsList($params)
+    {
         extract($params);
         $type = 'ing';
 
@@ -367,19 +389,19 @@ class Goods extends Model
      * @throws \think\db\exception\ModelNotFoundException
      * @throws \think\exception\DbException
      */
-    public static function getGoodsDetail($id,$withTrashed=false)
+    public static function getGoodsDetail($id, $withTrashed = false)
     {
         $user = User::info();
         $model = (new self());
-        if ($withTrashed){
+        if ($withTrashed) {
             //获取包括软删除的数据
             $model = self::withTrashed();
         }
-        $detail =$model->field('*')
+        $detail = $model->field('*')
             ->where('id', $id)->with(['favorite' => function ($query) use ($user) {
-            $user_id = empty($user) ? 0 : $user->id;
-            return $query->where(['user_id' => $user_id]);
-        }])->find();
+                $user_id = empty($user) ? 0 : $user->id;
+                return $query->where(['user_id' => $user_id]);
+            }])->find();
 
         if (!$detail || ($detail->status === 'down' && !$withTrashed)) {
             new Exception('藏品不存在或已下架');
@@ -387,21 +409,25 @@ class Goods extends Model
         if (!$detail->issue) {
             new Exception('藏品暂未发行');
         }
-        
-//        $detail = $detail->append(['sku', 'coupons']);
 
+
+        // 优先购
+        $detail['priority'] = null;
+        if (json_decode($detail)->sale_sta->status == 0) {
+            $detail['priority'] = Db::name('shopro_priority_buy')->where(['user_id' => $user->id, 'status' => '1'])->field('buy_num,beforehand_time,status')->find();
+        }
         // 处理活动规格
         $detail = self::operActivity($detail, $detail->sku_price);
 
-//        $detail['sku_price'] = $detail->sku_price;
-        $detail['is_favorite']  =  $detail['favorite']?1:0;
+        //        $detail['sku_price'] = $detail->sku_price;
+        $detail['is_favorite']  =  $detail['favorite'] ? 1 : 0;
         $detail['is_while_sales']  = 1;
-        if (!$detail['sales_time'] || $detail['sales_time']<= time() || $withTrashed == true){
+        if (!$detail['sales_time'] || $detail['sales_time'] <= time() || $withTrashed == true) {
             $detail['is_while_sales'] = 0;
             $detail['sales_time'] = 0;
             $detail['can_sales'] = 1;
         }
-        if ($detail['sales_time'] && $detail['sales_time']> time()){
+        if ($detail['sales_time'] && $detail['sales_time'] > time()) {
             $detail['can_sales'] = 0;
         }
         unset($detail['favorite']);
@@ -412,7 +438,8 @@ class Goods extends Model
     /**
      * 获取自提点
      */
-    public static function getGoodsStore($params) {
+    public static function getGoodsStore($params)
+    {
         $user = User::info();
 
         $id = $params['id'] ?? 0;
@@ -440,7 +467,7 @@ class Goods extends Model
         if (!$dispatchSelfetch) {
             new Exception('自提模板不存在');
         }
-        
+
         // 查询自提点
         $selfetch = Store::show()->where('selfetch', 1);
         if ($dispatchSelfetch['store_ids']) {
@@ -468,7 +495,8 @@ class Goods extends Model
      * @param integer $activity_id
      * @return array
      */
-    protected static function getGoodsBuyers($goods_id = 0, $activity_id = 0) {
+    protected static function getGoodsBuyers($goods_id = 0, $activity_id = 0)
+    {
         $where = [
             'goods_id' => $goods_id
         ];
@@ -510,7 +538,7 @@ class Goods extends Model
         ];
         $coupons = Coupons::where(function ($query) use ($goods_id) {
             $query->where('find_in_set(' . $goods_id . ',goods_ids)')
-            ->whereOr('goods_ids', 0);
+                ->whereOr('goods_ids', 0);
         });
 
         if ($user) {
@@ -538,7 +566,7 @@ class Goods extends Model
     protected function getSkuAttr($value, $data)
     {
         $sku = GoodsSku::all([
-            'goods_id'=>$data['id'],
+            'goods_id' => $data['id'],
             'pid' => 0,
         ]);
         foreach ($sku as $s => &$k) {
@@ -583,7 +611,6 @@ class Goods extends Model
     public function getImageAttr($value, $data)
     {
         if (!empty($value)) return cdnurl($value, true);
-
     }
 
     public function getImagesAttr($value, $data)
@@ -606,7 +633,6 @@ class Goods extends Model
         $content = str_replace("<img src=\"/uploads", "<img style=\"width: 100%;!important\" src=\"" . cdnurl("/uploads", true), $content);
         $content = str_replace("<video src=\"/uploads", "<video style=\"width: 100%;!important\" src=\"" . cdnurl("/uploads", true), $content);
         return $content;
-
     }
 
 
@@ -631,7 +657,7 @@ class Goods extends Model
     public function skuPrice()
     {
         return $this->hasMany(\addons\shopro\model\GoodsSkuPrice::class, 'goods_id', 'id')
-                ->order('id', 'asc');
+            ->order('id', 'asc');
     }
 
     //藏品列表排序
@@ -645,93 +671,120 @@ class Goods extends Model
         }
         if (isset($priceOrder) && $priceOrder === 1) {
             $order = "convert(`price`, DECIMAL(10, 2)) asc";
-        }elseif (isset($priceOrder) && $priceOrder === 2) {
+        } elseif (isset($priceOrder) && $priceOrder === 2) {
             $order = "convert(`price`, DECIMAL(10, 2)) desc";
         }
-        if (isset($salesOrder) && $salesOrder === 1){
+        if (isset($salesOrder) && $salesOrder === 1) {
             $order = 'total_sales desc';
         }
-        if (isset($newProdcutOrder) && $newProdcutOrder === 1){
+        if (isset($newProdcutOrder) && $newProdcutOrder === 1) {
             $order = 'id desc';
         }
         return $order;
-
     }
 
 
-    public  function composeList($params,$uid)
+    public  function composeList($params, $uid)
     {
-        $goodsList = self::getGoodsList(array_merge($params, ['is_syn' => 1]));
-        $collection = collection($goodsList->items());
-        $goodsList->data = $collection->visible(['id','children','title','image','list','syn_end_time']);
-        foreach ($goodsList as &$val){
-            if (!$val['children']){
+        $goodsList = self::where("is_syn", 1)->select();
+        //        $collection = collection($goodsList->items());
+
+        foreach ($goodsList as &$val) {
+            if (!$val['children']) {
                 unset($val);
                 continue;
             }
-            $val->append = ['category_name','syn_end_time_text'];
-            $list = self::alias('a')
-                ->field('a.id,a.title,a.image,ifnull(sa.id,0) own')
-                ->join('shopro_user_collect sa','a.id=sa.goods_id and sa.status<2 and sa.user_id='.$uid,'left')
-                ->whereIn('a.id',explode(',',$val['children']))
-                ->where('a.status','up')
-                ->select();
-            foreach ($list as &$v){
-                $v['own'] = $v['own']?1:0;
-                $v->unsetAppend();
+            $children_num = explode(',', $val['children_num']);
+            $children = explode(',', $val['children']);
+            $val->append = ['category_name', 'syn_end_time_text'];
+            $list = [];
+            foreach ($children as $key => $v) {
+                $list[] = self::alias('a')
+                    ->field('a.id,a.title,a.image,ifnull(sa.id,0) own')
+                    ->join('shopro_user_collect sa', 'a.id=sa.goods_id and sa.status<2 and sa.user_id=' . $uid, 'left')
+                    ->where('a.id', $v)
+                    ->find();
+                $list[$key]['own'] = $list[$key]['own'] ? 1 : 0;
+                $list[$key]['nums'] = $children_num[$key];
+                $list[$key]->unsetAppend();
             }
             $val->list = $list;
         }
         return $goodsList;
     }
 
-    public function compose($goodsId,$uid)
+    public function compose($goodsId, $uid)
     {
-        $goods =self::alias('a')
+        $goods = self::alias('a')
             ->field('a.*,sa.stock')
-            ->join('shopro_goods_sku_price sa','a.id=sa.goods_id','left')
-            ->where('a.id',$goodsId)
-            ->where('a.status','up')
+            ->join('shopro_goods_sku_price sa', 'a.id=sa.goods_id', 'left')
+            ->where('a.id', $goodsId)
             ->find();
-        if (!$goods){
+        if (!$goods) {
             new Exception('藏品不存在或已下架');
         }
-        if ($goods['stock']<1){
+        if ($goods['stock'] < 1) {
             new Exception('藏品已售罄');
         }
-        if ($goods['syn_end_time']<time() && $goods['syn_end_time']>0){
+        if ($goods['syn_end_time'] < time() && $goods['syn_end_time'] > 0) {
             new Exception('已超过合成期限');
         }
-
-        $children = self::whereIn('id',explode(',',$goods['children']))->where('status','up')->column('id');
-        if (!$children){
+        Db::startTrans();
+        $children_num = explode(',', $goods['children_num']);
+        $children = explode(',', $goods['children']);
+        $childrenGoods = [];
+        $detailChildren = [];
+        $childrenId = [];
+        foreach ($children as $key => $val) {
+            $childrenGoods[] = self::where('id', $val)->column('id');
+            $nums = UserCollect::where(['status' => ['<', 2], 'user_id' => $uid])->where('goods_id', $val)->count();
+            if ($nums < intval($children_num[$key])) {
+                new Exception('请先收集完所需藏品');
+            }
+            $goodsChildren = UserCollect::where(['status' => ['<', 2], 'user_id' => $uid])->where('goods_id', $val)->select();
+            $num = 0;
+            foreach ($goodsChildren as $k => $v) {
+                if ($num < $children_num[$key]) {
+                    $childrenId[] = $v['id'];
+                    $detailChildren[] = $v;
+                    $num++;
+                }
+            }
+        }
+        if (!$childrenGoods) {
             new Exception('该藏品无需子藏品合成');
         }
-
-        $goodsChildren = UserCollect::where(['status'=>['<',2],'user_id'=>$uid])->whereIn('goods_id',$children)->select();
-        if (count($goodsChildren)!=count($children)){
-            new Exception('请先收集完所需藏品');
-        }
-
         //合成 todo::上链
         //销毁链上子集产品
         $resArr = [];
-        foreach ($goodsChildren as $v){
-            if (!$v['asset_id']||!$v['shard_id'])continue;
-            $res = UserCollect::consume($v,$uid,$v['asset_id'],$v['shard_id']);
-            $resArr[] =['msg'=>json_encode($res)];
+
+        foreach ($detailChildren as $v) {
+            if (!$v['asset_id'] || !$v['shard_id']) continue;
+            $res = UserCollect::consume($v, $uid, $v['asset_id'], $v['shard_id']);
+            $resArr[] = ['msg' => json_encode($res)];
         }
-        Log::info('销毁合成藏品:::::'.json_encode($resArr));
+        Log::info('销毁合成藏品:::::' . json_encode($resArr));
+        $sku = GoodsSkuPrice::where('goods_id', $goodsId)->field('sales')->find();
         $res = UserCollect::edit([
-            'user_id'=>$uid,
-            'goods_id'=>$goodsId,
-            'original_price'=>$goods['price'],
-            'type'=>2,
+            'user_id' => $uid,
+            'goods_id' => $goodsId,
+            'original_price' => $goods['price'],
+            'type' => 2,
+            'sn' => $sku['sales'] + 1,
         ]);
         if (!$res) new Exception('合成失败');
-        $collectIds = array_column($goodsChildren,'id');
-        UserCollect::whereIn('id',$collectIds)->update(['status'=>3,'status_time'=>time()]);
+        $goodsSkuPrice = GoodsSkuPrice::where('goods_id', $goodsId)->find();
+        if ($goodsSkuPrice) {
+            $goodsSkuPrice->setDec('stock', 1);         // 减少库存
+            $goodsSkuPrice->setInc('sales', 1);         // 增加销量
+        }
+        $result = UserCollect::whereIn('id', $childrenId)->update(['status' => 3, 'status_time' => time()]);
+        if ($result) {
+            Db::commit();
+        } else {
+            Db::rollback();
+            return false;
+        }
         return true;
-
     }
 }

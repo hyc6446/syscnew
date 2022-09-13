@@ -5,7 +5,9 @@ namespace addons\shopro\model;
 use think\Db;
 use think\Model;
 use traits\model\SoftDelete;
+use addons\shopro\model\UserBank;
 use addons\shopro\exception\Exception;
+use think\Log;
 
 /**
  * 钱包
@@ -67,6 +69,7 @@ class UserWalletApply extends Model
     public static function apply($type, $money)
     {
         $user = User::info();
+        // Log::info($user);
         $config = self::getWithdrawConfig();
         if (!in_array($type, $config['methods'])) {
             throw \Exception('暂不支持该提现方式');
@@ -86,11 +89,12 @@ class UserWalletApply extends Model
         }
 
         // 计算手续费
-        $charge = $money * $service_fee;
+        // $charge = $money * $service_fee;
+        $charge = 0;
         if ($user->money < $charge + $money) {
             throw \Exception('可提现余额不足');
         }
-        
+
         // 检查每日最大提现次数
         if (isset($config['perday_num']) && $config['perday_num'] > 0) {
             $num = self::where(['user_id' => $user->id, 'createtime' => ['egt', strtotime(date("Y-m-d", time()))]])->count();
@@ -182,6 +186,8 @@ class UserWalletApply extends Model
         return $apply;
     }
 
+
+
     // 同意
     public static function handleAgree($apply)
     {
@@ -206,10 +212,64 @@ class UserWalletApply extends Model
             $withDrawStatus = true;
         }
         if ($withDrawStatus) {
-            $apply->status = 2;
-            $apply->actual_money = $apply->money;
-            $apply->save();
-            return self::handleLog($apply, '已打款');
+            $datalist = [];
+            $withDraw = UserBank::where(["user_id" => $apply->user_id])->field("card_no,real_name")->find();
+            $body['accNo'] = $withDraw['card_no'];
+            $body['accName'] = $withDraw['real_name'];
+            $body['tranAmt'] = $apply->money;
+            //调用杉德接口
+            $datalist['body'] = array(
+                'version'     => '01',
+                'productId'   => "00000004",
+                'tranTime'     => date('YmdHis', time()),
+                'orderCode'     => date('YmdHis', time()),
+                'tranAmt' => sprintf("%012d", $body['tranAmt'] * 100),
+                'currencyCode'  => "156",
+                'accAttr'  => "0",
+                'accType'  => "4",
+                'accNo'  => $body['accNo'],
+                'accName'  => $body['accName'],
+                'remark'         => "",
+            );
+
+            $sf = (new self());
+
+            $AESKey = $sf->aes_generate(16);
+            $pubKey = $sf->publicKey();
+            $priKey = (new self())->privateKey();
+            $encryptKey = $sf->RSAEncryptByPub($AESKey, $pubKey);
+            // step3: 使用AESKey加密报文
+            $encryptData = $sf->AESEncrypt($datalist['body'], $AESKey);
+            // step4: 使用私钥签名报文
+            $postData = array(
+                'encryptKey' => $encryptKey,
+                'encryptData' => $encryptData,
+                'transCode' => 'RTPM',
+                'accessType' => '0',
+                'merId' => '6888805045868',
+                'sign'     => $sf->sign($datalist['body']),
+            );
+            $datalist['head'] = $postData;
+            $postData = $sf->postData($body);
+            $url = "https://caspay.sandpay.com.cn/agent-main/openapi/agentpay";
+            $ret = $sf->post_wx($url, $postData);
+            Log::info("提现回执", json_encode($ret));
+            parse_str($ret, $arr);
+            // step7: 使用私钥解密AESKey
+            $decryptAESKey = $sf->RSADecryptByPri($arr['encryptKey'], $priKey);
+            // step8: 使用解密后的AESKey解密报文
+            $decryptPlainText = $sf->AESDecrypt($arr['encryptData'], $decryptAESKey);
+            // step9: 使用公钥验签报文
+            $sf->verify($decryptPlainText, $arr['sign'], $pubKey);
+            $plain = json_decode($decryptPlainText, true);
+            if ($plain['respCode'] == "000000") {
+                $apply->status = 2;
+                $apply->actual_money = $apply->money;
+                $apply->save();
+                return self::handleLog($apply, '操作成功');
+            } else {
+                throw \Exception($plain['respDesc']);
+            }
         }
         return $apply;
     }
@@ -250,18 +310,20 @@ class UserWalletApply extends Model
                     'trans_amount' => $apply->money,
                     'product_code' => 'TRANS_ACCOUNT_NO_PWD',
                     'biz_scene' => 'DIRECT_TRANSFER',
-                    // 'order_title' => '余额提现到',
+                    'order_title' => '用户提现',
                     'remark' => '用户提现',
                     'payee_info' => [
-                        'identity' => $apply->apply_info['支付宝账户'],
+                        //                        'identity' => $apply->apply_info['支付宝账户'],
+                        'identity' => '2088812987759790',
                         'identity_type' => 'ALIPAY_USER_ID',
-                        'name' => $apply->apply_info['真实姓名'],
+                        //                        'name' => $apply->apply_info['真实姓名'],
                     ]
                 ];
             }
         } catch (\Exception $e) {
             throw \Exception('提现信息不正确');
         }
+
 
         // 3.发起付款 
         try {
@@ -365,5 +427,185 @@ class UserWalletApply extends Model
     {
         $value = is_object($value) || is_array($value) ? json_encode($value, JSON_UNESCAPED_UNICODE) : $value;
         return $value;
+    }
+
+
+    //以post方式提交xml到对应的接口url
+    private function post_wx($url, $post_data, $header = [])
+    {
+        $post_data = http_build_query($post_data);
+        try {
+
+            $ch = curl_init(); //初始化curl
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded'));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            //正式环境时解开注释
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            $data = curl_exec($ch); //运行curl
+            curl_close($ch);
+
+            if (!$data) {
+                throw new \Exception('请求出错');
+            }
+
+            return $data;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+    // 私钥加签
+    protected function sign($plainText)
+    {
+        $plainText = json_encode($plainText);
+        try {
+            $resource = openssl_pkey_get_private($this->privateKey());
+            $result   = openssl_sign($plainText, $sign, $resource);
+            openssl_free_key($resource);
+            if (!$result) throw new \Exception('sign error');
+            return base64_encode($sign);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    // 公钥验签
+    public function verify($plainText, $sign)
+    {
+        $resource = openssl_pkey_get_public($this->publicKey());
+        $result   = openssl_verify($plainText, base64_decode($sign), $resource);
+        openssl_free_key($resource);
+
+        if (!$result) {
+            throw new \Exception('签名验证未通过,plainText:' . $plainText . '。sign:' . $sign);
+        }
+        return $result;
+    }
+
+    // 公钥
+    private function publicKey()
+    {
+        try {
+            $file = file_get_contents("/www/wwwroot/nft/addons/shopro/cert/sand.cer");
+            if (!$file) {
+                throw new \Exception('getPublicKey::file_get_contents ERROR 公钥文件读取有误,config文件夹中进行修改');
+            }
+            $cert   = chunk_split(base64_encode($file), 64, "\n");
+            $cert   = "-----BEGIN CERTIFICATE-----\n" . $cert . "-----END CERTIFICATE-----\n";
+            $res    = openssl_pkey_get_public($cert);
+            $detail = openssl_pkey_get_details($res);
+            openssl_free_key($res);
+            if (!$detail) {
+                throw new \Exception('getPublicKey::openssl_pkey_get_details ERROR 公钥文件解析有误');
+            }
+            return $detail['key'];
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    // 私钥
+    private function privateKey()
+    {
+        try {
+            $file = file_get_contents("/www/wwwroot/nft/addons/shopro/cert/mid_new.pfx");
+            if (!$file) {
+                throw new \Exception('getPrivateKey::file_get_contents 私钥文件读取有误,config文件夹中进行修改');
+            }
+            if (!openssl_pkcs12_read($file, $cert, "xiangyi888")) {
+                throw new \Exception('getPrivateKey::openssl_pkcs12_read ERROR 私钥密码错误，config文件夹中进行修改');
+            }
+            return $cert['pkey'];
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * 公钥加密AESKey
+     * @param $plainText
+     * @param $puk
+     * @return string
+     * @throws Exception
+     */
+    function RSAEncryptByPub($plainText, $puk)
+    {
+        if (!openssl_public_encrypt($plainText, $cipherText, $puk, OPENSSL_PKCS1_PADDING)) {
+            throw new \Exception('AESKey 加密错误');
+        }
+
+        return base64_encode($cipherText);
+    }
+
+    /**
+     * 私钥解密AESKey
+     * @param $cipherText
+     * @param $prk
+     * @return string
+     * @throws Exception
+     */
+    function RSADecryptByPri($cipherText, $prk)
+    {
+        if (!openssl_private_decrypt(base64_decode($cipherText), $plainText, $prk, OPENSSL_PKCS1_PADDING)) {
+            throw new \Exception('AESKey 解密错误');
+        }
+
+        return (string)$plainText;
+    }
+
+    /**
+     * AES加密
+     * @param $plainText
+     * @param $key
+     * @return string
+     * @throws \Exception
+     */
+    function AESEncrypt($plainText, $key)
+    {
+        $plainText = json_encode($plainText);
+        $result = openssl_encrypt($plainText, 'AES-128-ECB', $key, 1);
+
+        if (!$result) {
+            throw new \Exception('报文加密错误');
+        }
+
+        return base64_encode($result);
+    }
+
+    /**
+     * AES解密
+     * @param $cipherText
+     * @param $key
+     * @return string
+     * @throws \Exception
+     */
+    function AESDecrypt($cipherText, $key)
+    {
+        $result = openssl_decrypt(base64_decode($cipherText), 'AES-128-ECB', $key, 1);
+
+        if (!$result) {
+            throw new \Exception('报文解密错误', 2003);
+        }
+
+        return $result;
+    }
+
+    /**
+     * 生成AESKey
+     * @param $size
+     * @return string
+     */
+    function aes_generate($size)
+    {
+        $str = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $arr = array();
+        for ($i = 0; $i < $size; $i++) {
+            $arr[] = $str[mt_rand(0, 61)];
+        }
+
+        return implode('', $arr);
     }
 }

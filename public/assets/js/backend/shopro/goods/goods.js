@@ -674,6 +674,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             sales_time:'',
                             tag:'',
                             is_syn:0,
+                            is_show:1,
                             can_sales:0,
                             syn_end_time:'',
                             goods_list:[],
@@ -699,6 +700,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             service_ids: [{required: true, message: '请选择藏品标签', trigger: 'blur'}],
                             brand_ids: [{required: true, message: '请选择藏品创作方', trigger: 'blur'}],
                             is_syn: [{required: true, message: '请选择是否合成', trigger: 'blur'}],
+                            is_show: [{required: true, message: '请选择是否盲盒藏品', trigger: 'blur'}],
                             goods_list: [{required: true, message: '请选择藏品', trigger: 'blur'}],
                         },
                         mustDel: ['express_ids', 'store_ids', 'selfetch_ids', 'autosend_ids'],
@@ -897,10 +899,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             url: 'shopro/goods/goods/detail/ids/' + that.editId,
                             loading: true,
                         }, function (ret, res) {
+
                             for (key in that.goodsDetail) {
                                 if (res.data.detail[key]) {
                                     that.goodsDetail[key] = res.data.detail[key]
                                 } else {
+                                    that.goodsDetail.is_show = res.data.detail.is_show
                                     that.goodsDetail.express_ids = res.data.detail.dispatch_group_ids_arr.express ? res.data.detail.dispatch_group_ids_arr.express : '';
 
                                     that.goodsDetail.store_ids = res.data.detail.dispatch_group_ids_arr.store ? res.data.detail.dispatch_group_ids_arr.store : '';
@@ -916,6 +920,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 }
 
                             }
+
                             that.handleCategoryIds(res.data.detail.category_ids, res.data.detail.category_ids_arr)
 
                             that.timeData.dispatch_type_arr.forEach(i => {
@@ -1008,6 +1013,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         this.selectedcatArr.splice(index, 1)
                     },
                     submitForm(formName,issue) {
+                        // console.log(formName)
                         this.$refs[formName].validate((valid) => {
                             if (valid) {
                                 let that = this;
@@ -1026,6 +1032,20 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     return false;
                                 }
                                 arrForm.params = JSON.stringify(arrForm.params_arr);
+                                var test = []
+                                var is_error = 0;
+                                arrForm.goods_list.forEach((i, d) => {
+                                    if(i.nums==null){
+                                        is_error = 1;
+                                    }
+                                    test.push(i.nums)
+                                })
+                                if(is_error==1){
+                                    Toastr.error('请填写合成藏品数量');
+                                    return false;
+                                }
+                                arrForm.children_num = test.join(',')
+                                
                                 arrForm.content = $("#c-content").val();
                                 if (arrForm.sales_time) arrForm.sales_time = arrForm.sales_time/1000;
                                 if (arrForm.syn_end_time) arrForm.syn_end_time = arrForm.syn_end_time/1000;

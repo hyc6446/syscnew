@@ -59,6 +59,35 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         })
                     },
                     goodsSelect(id) {
+                        let that  = this;
+                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&issue=1", "选择商品", {
+                            callback: function (data) {
+                                let goodsIds = [];
+                                if (data.data.length==0){
+                                    that.$message({
+                                        type: 'info',
+                                        message: '请至少选择一项商品'
+                                    });
+                                    return false;
+                                }
+                                data.data.forEach(item=>{
+                                   goodsIds.push(item.id);
+                                });
+                                Fast.api.ajax({
+                                    url: 'shopro/user/collect/grantShard',
+                                    loading: true,
+                                    type: 'POST',
+                                    data:{ids:goodsIds.join(),uid:id}
+                                }, function (ret, res) {
+                                    that.getData();
+                                })
+                                return false;
+                            }
+                        });
+                    },
+                    
+                    //锁定空投查询
+                    goodsSelectHook(id) {
                         console.log(id);
                         let that  = this;
                         parent.Fast.api.open("shopro/goods/goods/select?multiple=true&issue=1", "选择商品", {
@@ -73,11 +102,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     return false;
                                 }
                                 data.data.forEach(item=>{
-                                   goodsIds.push(item.id);
+                                    goodsIds.push(item.id);
                                 });
                                 console.log(goodsIds.join());
                                 Fast.api.ajax({
-                                    url: 'shopro/user/collect/grantShard',
+                                    url: 'shopro/user/collect/grantShardHook',
                                     loading: true,
                                     type: 'POST',
                                     data:{ids:goodsIds.join(),uid:id}

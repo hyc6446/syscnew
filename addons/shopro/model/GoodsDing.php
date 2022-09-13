@@ -33,6 +33,7 @@ class GoodsDing extends Model
         if ($time>3600){
             \think\Queue::later(($params['ding_time']-time()-3600), '\addons\shopro\job\GoodsDing@ding', ['id'=>$res->id], 'shopro');
         }
+        \think\Queue::later(($params['ding_time']-60), '\addons\shopro\job\GoodsDing@ding', ['id'=>$res->id], 'shopro');
         return true;
     }
 }

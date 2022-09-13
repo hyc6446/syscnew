@@ -237,7 +237,8 @@ trait OrderOperSendGet
             $ext = array_merge($ext, $data['ext']);
         }
         $item->ext = json_encode($item->setExt($item, $ext));
-        $item->dispatch_status = \addons\shopro\model\OrderItem::DISPATCH_STATUS_SENDED;    // 已发货状态
+//        $item->dispatch_status = \addons\shopro\model\OrderItem::DISPATCH_STATUS_SENDED;    // 已发货状态
+        $item->dispatch_status = \addons\shopro\model\OrderItem::DISPATCH_STATUS_GETED;    // 已发货状态
 
         $item->save();
 

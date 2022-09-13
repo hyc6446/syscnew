@@ -8,6 +8,7 @@ use app\admin\model\AdminLog;
 use app\common\controller\Backend;
 use think\Config;
 use think\Hook;
+use think\Model;
 use think\Session;
 use think\Validate;
 
@@ -60,6 +61,9 @@ class Index extends Backend
         $this->view->assign('fixedmenu', $fixedmenu);
         $this->view->assign('referermenu', $referermenu);
         $this->view->assign('title', __('Home'));
+        $admin = (new Admin())->setAdmin((int)session('admin.id'));
+
+        $this->view->assign('wcl_status', $admin['wcl_status']==1?'已上链':"上链中");
         return $this->view->fetch();
     }
 

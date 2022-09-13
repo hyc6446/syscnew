@@ -10,7 +10,7 @@ class Collect extends Model
 {
     // 表名
     protected $name = 'shopro_user_collect';
-    
+
     // 自动写入时间戳字段
     protected $autoWriteTimestamp = 'int';
 
@@ -23,7 +23,7 @@ class Collect extends Model
 
     // 追加属性
     protected $append = [
-        'status_text','type_text','is_consume_text'
+        'status_text','type_text','is_consume_text','wcl_status_text'
     ];
 
 
@@ -39,6 +39,10 @@ class Collect extends Model
     public function getIsConsumeList()
     {
         return ['1' => __('Is_consume 1'), '0' => __('Is_consume 0')];
+    }
+    public function getWclStatusList()
+    {
+        return ['处理中','成功','失败','未处理'];
     }
     public function getStatusTextAttr($value, $data)
     {
@@ -57,6 +61,12 @@ class Collect extends Model
     {
         $value = $value ? $value : (isset($data['is_consume']) ? $data['is_consume'] : '');
         $list = $this->getIsConsumeList();
+        return isset($list[$value]) ? $list[$value] : '';
+    }
+    public function getWclStatusTextAttr($value, $data)
+    {
+        $value = $value ? $value : (isset($data['wcl_status']) ? $data['wcl_status'] : '');
+        $list = $this->getWclStatusList();
         return isset($list[$value]) ? $list[$value] : '';
     }
 

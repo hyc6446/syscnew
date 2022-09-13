@@ -16,13 +16,13 @@ return [
     // 数据库类型
     'type'            => Env::get('database.type', 'mysql'),
     // 服务器地址
-    'hostname'        => Env::get('database.hostname', '1.14.124.137'),
+    'hostname'        => Env::get('database.hostname', 'localhost'),
     // 数据库名
     'database'        => Env::get('database.database', 'nft_collect'),
     // 用户名
-    'username'        => Env::get('database.username', 'nft_collect'),
+    'username'        => Env::get('database.username', 'root'),
     // 密码
-    'password'        => Env::get('database.password', 'xx8PdFTWYxWxmscy'),
+    'password'        => Env::get('database.password', '123456'),
     // 端口
     'hostport'        => Env::get('database.hostport', '3306'),
     // 连接dsn

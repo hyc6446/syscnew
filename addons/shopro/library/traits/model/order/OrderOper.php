@@ -15,6 +15,7 @@ use addons\shopro\model\Store;
 use addons\shopro\model\Verify;
 use app\admin\model\shopro\order\RefundLog;
 use think\Db;
+use think\Log;
 
 trait OrderOper
 {
@@ -269,6 +270,7 @@ trait OrderOper
             $orderData['activity_discount_money'] = $activity_discount_money;
             $orderData['dispatch_discount_money'] = $dispatch_discount_money;
             $orderData['goods_original_amount'] = $goods_original_amount;
+            $orderData['last_total_fee'] = 0;
 
             if ($user_address) {
                 $orderData['phone'] = $user_address->phone;
@@ -283,15 +285,15 @@ trait OrderOper
             }
 
             // 处理发票申请 
-            if($invoice_amount > 0) {
-                if(!empty($invoice) && $invoice['amount'] == $invoice_amount) {
+            if ($invoice_amount > 0) {
+                if (!empty($invoice) && $invoice['amount'] == $invoice_amount) {
                     $orderData['invoice_status'] = 1;   // 已申请
-                }else {
+                } else {
                     $orderData['invoice_status'] = 0;   // 未申请
                 }
-            }else {
+            } else {
                 $orderData['invoice_status'] = -1;  // 不可开具发票
-                
+
             }
             $orderData['status'] = 0;
             $orderData['remark'] = $remark;
@@ -318,9 +320,9 @@ trait OrderOper
                     'order_sn' => $order->order_sn,
                 ]);
             }
-            
+
             // 添加发票数据
-            if($order->invoice_status == 1) {
+            if ($order->invoice_status == 1) {
                 \addons\shopro\model\OrderInvoice::create([
                     'order_id' => $order->id,
                     'user_id' => $order->user_id,
@@ -335,7 +337,7 @@ trait OrderOper
             // 添加 订单 item
             foreach ($new_goods_list as $key => $buyinfo) {
                 $detail = $buyinfo['detail'];
-                $current_sku_price = $detail['current_sku_price']??[];
+                $current_sku_price = $detail['current_sku_price'] ?? [];
 
                 $orderItem = new OrderItem();
 
@@ -348,21 +350,21 @@ trait OrderOper
                 $item_activity_type = (isset($current_sku_price['activity_type']) && $current_sku_price['activity_type']) ? $current_sku_price['activity_type'] : '';
                 $item_activity_type .= $buyinfo['activity_type'] ? ',' . $buyinfo['activity_type'] : '';
                 $item_activity_type = trim($item_activity_type, ',');
-
+                $type = $activity_type ?: $item_activity_type;
                 $orderItem->activity_id = $current_sku_price['activity_id'] ?? 0;     // 商品当前的活动类型
-                $orderItem->activity_type = $item_activity_type ?: null;     // 商品当前的活动类型
+                $orderItem->activity_type = $type ?: null;     // 商品当前的活动类型
                 // 当前商品规格对应的 活动下对应商品规格的 id
                 $orderItem->item_goods_sku_price_id = isset($current_sku_price['item_goods_sku_price']) ?
                     $current_sku_price['item_goods_sku_price']['id'] : 0;
-                $orderItem->goods_sku_text = $current_sku_price['goods_sku_text']??'';
+                $orderItem->goods_sku_text = $current_sku_price['goods_sku_text'] ?? '';
                 $orderItem->goods_title = $detail->title;
                 $orderItem->goods_image = empty($current_sku_price['image']) ? $detail->image : $current_sku_price['image'];
                 $orderItem->goods_original_price = $detail->original_price;
                 $orderItem->discount_fee = $buyinfo['discount_fee'];        // 平均计算单件商品所享受的折扣
                 $orderItem->pay_price = $buyinfo['pay_price'];        // 平均计算单件商品不算运费，算折扣时候的金额
-                $orderItem->goods_price = (isset($detail->current_sku_price))?$detail->current_sku_price->price:($detail['price']);
+                $orderItem->goods_price = (isset($detail->current_sku_price)) ? $detail->current_sku_price->price : ($detail['price']);
                 $orderItem->goods_num = $buyinfo['goods_num'] ?? 1;
-                $orderItem->goods_weight = (isset($detail->current_sku_price))?$detail->current_sku_price->weight:'';
+                $orderItem->goods_weight = (isset($detail->current_sku_price)) ? $detail->current_sku_price->weight : '';
                 $orderItem->dispatch_status = 0;
                 $orderItem->dispatch_fee = $buyinfo['dispatch_amount'];
                 $orderItem->dispatch_type = $buyinfo['dispatch_type'];
@@ -371,7 +373,7 @@ trait OrderOper
                 $orderItem->aftersale_status = 0;
                 $orderItem->comment_status = 0;
                 $orderItem->refund_status = 0;
-                $orderItem->user_collect_id = $buyinfo['user_collect_id']??0;
+                $orderItem->user_collect_id = $buyinfo['user_collect_id'] ?? 0;
 
                 $ext = [];
                 if (isset($buyinfo['dispatch_date'])) {
@@ -413,7 +415,7 @@ trait OrderOper
         extract($params);
 
         $order = (new self())->field('id,type,order_sn,total_amount,status,pay_type,paytime,createtime,ext,activity_type')->where('user_id', $user->id)->with('item');
-        $type = $type??'all';
+        $type = $type ?? 'all';
         switch ($type) {
             case 'all':
                 $order = $order;
@@ -435,9 +437,9 @@ trait OrderOper
                 break;
         }
 
-        $orders = $order->order('id', 'desc')->paginate($limit??10);
+        $orders = $order->order('id', 'desc')->paginate($limit ?? 10);
         $goodsCate = Category::all();
-        $goodsCate = array_column($goodsCate,null,'id');
+        $goodsCate = array_column($goodsCate, null, 'id');
 
         // 处理未支付订单 item status_code
         $orders = $orders->toArray();
@@ -447,10 +449,10 @@ trait OrderOper
                 $data[$key] = self::setOrderItemStatusByOrder($od);
                 $item = $od['item'];
                 $arr = [];
-                    foreach ($item as $k=>$v){
-                        $goods = Goods::get($v['goods_id']);
-                        $arr[] = ['id' => $v['id'],'goods_num'=>$v['goods_num'], 'image' => $v['goods_image'], 'title' => $v['goods_title'],'category'=>$goodsCate[$goods['category_ids']]['name']??''];
-                    }
+                foreach ($item as $k => $v) {
+                    $goods = Goods::get($v['goods_id']);
+                    $arr[] = ['id' => $v['id'], 'goods_num' => $v['goods_num'], 'image' => $v['goods_image'], 'title' => $v['goods_title'], 'category' => $goodsCate[$goods['category_ids']]['name'] ?? ''];
+                }
                 $data[$key]['item'] = $arr;
             }
 
@@ -750,8 +752,13 @@ trait OrderOper
         $user = User::where('id', $order->user_id)->find();
         OrderAction::operAdd($order, null, $user, 'user', '用户支付成功');
 
+
+        try {
+            \think\Queue::push('\addons\shopro\job\OrderPayed@payed', ['order' => $order, 'user' => $user], 'shopro-high');
+        } catch (\think\Exception $exception) {
+            Log::info('sdfsdfsdfsd:::' . $exception->getMessage());
+        }
         // 支付成功后续使用异步队列处理
-        \think\Queue::push('\addons\shopro\job\OrderPayed@payed', ['order' => $order, 'user' => $user], 'shopro-high');
         return $order;
     }
 

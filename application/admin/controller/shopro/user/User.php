@@ -3,6 +3,7 @@
 namespace app\admin\controller\shopro\user;
 
 use app\common\controller\Backend;
+use app\common\library\Auth;
 use think\Db;
 use app\admin\model\shopro\user\Oauth;
 use Exception;
@@ -79,7 +80,7 @@ class User extends Backend
      */
     public function profile($id)
     {
-        $row = $this->model->get($id);
+        $row = $this->model->setWclUser($id);
         if (!$row) {
             $this->error('未找到用户');
         }
@@ -315,8 +316,10 @@ class User extends Backend
     {
         if ($this->request->isAjax()) {
 
-            $model = new \app\admin\model\shopro\user\Favorite;
-            $data = $model->where('user_id', $user_id)->order('id desc')->with([
+            $model = new \app\admin\model\shopro\user\Collect;
+            $where['user_id'] = $user_id;
+            // $where['status'] = 0;
+            $data = $model->where($where)->order('id desc')->with([
                 'goods' => function ($query) {
                     return $query->withField('id,title,image');
                 }

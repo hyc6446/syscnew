@@ -30,9 +30,11 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'box_name', title: __('Box_name'), operate: 'LIKE'},
                         {field: 'box_banner_images', title: __('Box_banner_images'), operate: false, events: Table.api.events.image, formatter: Table.api.formatter.images},
                         {field: 'coin_price', title: __('Coin_price')},
-                        {field: 'box.is_hot', title: __('Is_hot'), searchList: {"1":__('Is_hot 1'),"0":__("Is_hot 0")}, visible: false},
-                        {field: 'is_hot', title: __('Is_hot'), searchList: {"1":__('Is_hot 1'),"0":""}, custom: {1:"warning"}, formatter: Table.api.formatter.flag, operate: false},
-                        {field: 'box.is_cheap', title: __('Is_cheap'), searchList: {"1":__('Is_cheap 1'),"0":__("Is_cheap 0")}, visible: false},
+                        // {field: 'box.is_hot', title: __('Is_hot'), searchList: {"1":__('Is_hot 1'),"0":__("Is_hot 0")}, visible: false},
+                        {field: 'sales_num', title: __('库存')},
+                        {field: 'start_time', title: __('开始时间'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
+                        {field: 'end_time', title: __('结束时间'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
+                        // {field: 'box.is_cheap', title: __('Is_cheap'), searchList: {"1":__('Is_cheap 1'),"0":__("Is_cheap 0")}, visible: false},
                         {field: 'is_cheap', title: __('Is_cheap'), searchList: {"1":__('Is_cheap 1'),"0":""}, custom: {1:"warning"}, formatter: Table.api.formatter.flag, operate: false},
                         {field: 'box.is_try', title: __('Is_try'), searchList: {"1":__('Is_try 1'),"0":__('Is_try 0')}, formatter: Table.api.formatter.flag, visible: false},
                         {field: 'switch', title: __('开关'), searchList: {"1":__('显示'),"0":__('隐藏')}, formatter: Table.api.formatter.toggle},
@@ -54,6 +56,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                             ],
                             formatter: Table.api.formatter.buttons
                         },
+                        {field: 'detail_id', title: __('指定商品id')},
                         {field: 'update_time', title: __('Update_time'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
                     ]

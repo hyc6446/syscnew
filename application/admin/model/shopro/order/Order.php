@@ -150,18 +150,22 @@ class Order extends Model
 
                 // 已支付的
             case 'commented':
-                $status_name = '已评价';
-                $status_desc = '买家已评价';
+                $status_name = '已完成';
+//                $status_desc = '买家已评价';
+                $status_desc = '';
                 $btns[] = 'refund';        // 全部退款  直接不申请退款
                 break;
             case 'nocomment':
-                $status_name = '未评价';
-                $status_desc = '等待买家评价';
+                $status_name = '已完成';
+//                $status_name = '未评价';
+//                $status_desc = '等待买家评价';
+                $status_desc = '';
                 $btns[] = 'refund';        // 全部退款  直接不申请退款
                 break;
             case 'noget':
                 $status_name = '商家已发货';
-                $status_desc = '买家若在设置天数内未确认收货，系统将自动确认收货完成订单';
+                $status_desc = '';
+//                $status_desc = '买家若在设置天数内未确认收货，系统将自动确认收货完成订单';
                 $btns[] = 'refund';        // 全部退款  直接不申请退款
                 break;
             case 'nosend':

@@ -278,7 +278,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
 
         // 全局作用域
         if ($useBaseQuery && method_exists($this, 'base')) {
-            call_user_func_array([$this, 'base'], [ & $query]);
+            call_user_func_array([$this, 'base'], [&$query]);
         }
 
         // 返回当前模型的数据库查询对象
@@ -487,11 +487,12 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
                     $value = time();
                     break;
             }
-        } elseif (is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
-            'datetime',
-            'date',
-            'timestamp',
-        ])
+        } elseif (
+            is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
+                'datetime',
+                'date',
+                'timestamp',
+            ])
         ) {
             $value = $this->formatDateTime(time(), $this->dateFormat);
         } else {
@@ -574,7 +575,6 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             case 'serialize':
                 $value = serialize($value);
                 break;
-
         }
         return $value;
     }
@@ -604,11 +604,12 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             // 类型转换
             $value = $this->readTransform($value, $this->type[$name]);
         } elseif (in_array($name, [$this->createTime, $this->updateTime])) {
-            if (is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
-                'datetime',
-                'date',
-                'timestamp',
-            ])
+            if (
+                is_string($this->autoWriteTimestamp) && in_array(strtolower($this->autoWriteTimestamp), [
+                    'datetime',
+                    'date',
+                    'timestamp',
+                ])
             ) {
                 $value = $this->formatDateTime(strtotime($value), $this->dateFormat);
             } else {
@@ -1157,7 +1158,6 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
 
             // 更新回调
             $this->trigger('after_update', $this);
-
         } else {
             // 自动写入
             $this->autoCompleteData($this->insert);
@@ -1639,7 +1639,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         if (isset(self::$event[$this->class][$event])) {
             foreach (self::$event[$this->class][$event] as $callback) {
                 if (is_callable($callback)) {
-                    $result = call_user_func_array($callback, [ & $params]);
+                    $result = call_user_func_array($callback, [&$params]);
                     if (false === $result) {
                         return false;
                     }
@@ -1741,7 +1741,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             $result = $result->where($data);
             $data   = null;
         } elseif ($data instanceof \Closure) {
-            call_user_func_array($data, [ & $result]);
+            call_user_func_array($data, [&$result]);
             $data = null;
         } elseif ($data instanceof Query) {
             $result = $data->with($with)->cache($cache);
@@ -1766,7 +1766,7 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
             $query->where($data);
             $data = null;
         } elseif ($data instanceof \Closure) {
-            call_user_func_array($data, [ & $query]);
+            call_user_func_array($data, [&$query]);
             $data = null;
         }
         $resultSet = $query->select($data);
@@ -2248,7 +2248,6 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
         } catch (InvalidArgumentException $e) {
             return false;
         }
-
     }
 
     /**
@@ -2352,14 +2351,13 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * 删除附加属性
      * @author     xchen
      */
-    public function unsetAppend($name = null){
-        if(is_null($name)){
+    public function unsetAppend($name = null)
+    {
+        if (is_null($name)) {
             $this->append = [];
-        }
-        else if(array_key_exists($name, $this->append)){
+        } else if (array_key_exists($name, $this->append)) {
             unset($this->append[$name]);
-        }
-        else{
+        } else {
             return;
         }
     }
@@ -2368,16 +2366,15 @@ abstract class Model implements \JsonSerializable, \ArrayAccess
      * 删除关联附加属性
      * @author     xchen
      */
-    public function unsetRelationAppend($name = null){
-        if(is_null($name)){
-            foreach($this->relation as $k => $v){
+    public function unsetRelationAppend($name = null)
+    {
+        if (is_null($name)) {
+            foreach ($this->relation as $k => $v) {
                 $this->relation[$k]->append = [];
             }
-        }
-        else if(array_key_exists($name, $this->relation)){
+        } else if (array_key_exists($name, $this->relation)) {
             $this->relation[$name]->append = [];
-        }
-        else{
+        } else {
             return;
         }
     }

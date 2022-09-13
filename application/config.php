@@ -300,10 +300,17 @@ return [
         //插件纯净模式，插件启用后是否删除插件目录的application、public和assets文件夹
         'addon_pure_mode'       => true,
         //允许跨域的域名,多个以,分隔
-        'cors_request_domain'   => 'localhost,127.0.0.1',
+        'cors_request_domain'   => '*',
         //版本号
         'version'               => '1.3.3.20220121',
         //API接口地址
         'api_url'               => 'https://api.fastadmin.net',
     ],
+    'nft' => [
+        'domain'=>'https://apis.avata.bianjie.ai/',
+        // 'apiKey' => 'y2N2S0Z7v1i1W069C1c2J1Y5C301v3q',
+        'apiKey' => '6242u0I95181T15395o5m5r662E6Q1RM',
+        // 'apiSecret' => 'h2T2m0Q7A1j1J0i9Y1C2T1Q5u3q1O3Q',
+        'apiSecret' => '42p2B0s9A1L1l1q3A58555m6I2g6c120',
+    ]
 ];

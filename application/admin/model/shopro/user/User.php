@@ -6,6 +6,7 @@ namespace app\admin\model\shopro\user;
 use app\admin\model\shopro\user\MoneyLog;
 use app\admin\model\shopro\user\ScoreLog;
 use addons\shopro\library\notify\Notifiable;
+use nft\ChainAccount;
 use think\Model;
 use think\Db;
 
@@ -21,7 +22,18 @@ class User extends Model
     protected $updateTime = 'updatetime';
     // 追加属性
     protected $append = [
+        'wcl_status_text'
     ];
+    public function getWclStatusList()
+    {
+        return ['未授权','已授权'];
+    }
+    public function getWclStatusTextAttr($value, $data)
+    {
+        $value = $value ? $value : (isset($data['wcl_status']) ? $data['wcl_status'] : '');
+        $list = $this->getWclStatusList();
+        return isset($list[$value]) ? $list[$value] : '';
+    }
 
     public function getGenderList()
     {
@@ -65,6 +77,24 @@ class User extends Model
     {
         $value = is_object($value) || is_array($value) ? json_encode($value) : $value;
         return $value;
+    }
+
+    public function setWclUser($id)
+    {
+        $user = \app\common\model\User::get($id);
+        //查询
+        if($user->wcl_status==0){
+            $txRes = (new ChainAccount())->QueryChainAccount($user->operation_id);
+            if (!empty($txRes['data']) &&!empty($txRes['data']['accounts'][0])){
+                $data = $txRes['data']['accounts'][0];
+                extract($data);
+                $user->gas = $gas??'';
+                $user->business = $business??'';
+                $user->wcl_status = $status??'';
+                $user->save();
+            }
+        }
+        return $user;
     }
     
 }

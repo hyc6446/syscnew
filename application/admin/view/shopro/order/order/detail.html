@@ -843,21 +843,21 @@
                             <div class="all-refund-money-text" @click="openRefundDialog(orderDetail.id,null)"
                                 v-if="orderDetail.btns && orderDetail.btns.indexOf('refund')!=-1">全部退款</div>
                         </div>
-                        <div class="order-add-memo">
-                            <div v-if="!addMemoFlag">
-                                <span>{{(orderDetail.memo!=null &&
-                                    orderDetail.memo.length>42)?orderDetail.memo.substr(0,42)+'...':orderDetail.memo}}</span>
-                                <span v-if="orderDetail.memo" class="theme-color cursor-pointer"
-                                    @click="addMemo('add')">修改备注</span>
-                                <span v-else class="theme-color cursor-pointer" @click="addMemo('add')">添加备注</span>
-                            </div>
-                            <div v-if="addMemoFlag" class="display-flex memo-item">
-                                <el-input size="mini" v-model="orderDetail.memo" placeholder="请输入备注"></el-input>
-                                <span class="theme-color cursor-pointer" @click="reqEditMemo(orderDetail.id)">确定</span>
-                                <span class="theme-color cursor-pointer memo-item-cancel"
-                                    @click="addMemo('cancel')">取消</span>
-                            </div>
-                        </div>
+<!--                        <div class="order-add-memo">-->
+<!--                            <div v-if="!addMemoFlag">-->
+<!--                                <span>{{(orderDetail.memo!=null &&-->
+<!--                                    orderDetail.memo.length>42)?orderDetail.memo.substr(0,42)+'...':orderDetail.memo}}</span>-->
+<!--                                <span v-if="orderDetail.memo" class="theme-color cursor-pointer"-->
+<!--                                    @click="addMemo('add')">修改备注</span>-->
+<!--                                <span v-else class="theme-color cursor-pointer" @click="addMemo('add')">添加备注</span>-->
+<!--                            </div>-->
+<!--                            <div v-if="addMemoFlag" class="display-flex memo-item">-->
+<!--                                <el-input size="mini" v-model="orderDetail.memo" placeholder="请输入备注"></el-input>-->
+<!--                                <span class="theme-color cursor-pointer" @click="reqEditMemo(orderDetail.id)">确定</span>-->
+<!--                                <span class="theme-color cursor-pointer memo-item-cancel"-->
+<!--                                    @click="addMemo('cancel')">取消</span>-->
+<!--                            </div>-->
+<!--                        </div>-->
                     </div>
                 </el-col>
                 <el-col class="hidden-md-and-up" :xs="12" :sm="12">

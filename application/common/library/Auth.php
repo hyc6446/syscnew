@@ -5,12 +5,14 @@ namespace app\common\library;
 use app\common\model\User;
 use app\common\model\UserRule;
 use fast\Random;
+use nft\ChainAccount;
 use think\Config;
 use think\Db;
 use think\Exception;
 use think\Hook;
 use think\Request;
 use think\Validate;
+use think\Log;
 
 class Auth
 {
@@ -26,7 +28,7 @@ class Auth
     //默认配置
     protected $config = [];
     protected $options = [];
-    protected $allowFields = ['id', 'nickname', 'mobile', 'avatar','referral_code','money','addr'];
+    protected $allowFields = ['id', 'nickname', 'mobile', 'avatar', 'referral_code', 'money', 'addr'];
 
     public function __construct($options = [])
     {
@@ -121,8 +123,9 @@ class Auth
         }
     }
 
-    public function create_invite_code(){
-        $d = substr(base_convert(md5(uniqid(md5(microtime(true)),true)), 16, 10), 0, 6);
+    public function create_invite_code()
+    {
+        $d = substr(base_convert(md5(uniqid(md5(microtime(true)), true)), 16, 10), 0, 6);
         $w['referral_code'] = array('eq', $d);
         $user_info = Db::name('user')->field("id")->where($w)->find();
         if ($user_info) {
@@ -140,26 +143,34 @@ class Auth
      * @param string $email    邮箱
      * @param string $mobile   手机号
      * @param array  $extend   扩展参数
+     * @param string  $ref_code   扩展参数
      * @return boolean
      */
-    public function register($username, $password, $email = '', $mobile = '', $extend = [])
+    public function register($username, $password, $email = '', $mobile = '', $extend = [], $ref_code = '')
     {
         // 检测用户名、昵称、邮箱、手机号是否存在
-//        if (User::getByUsername($username)) {
-//            $this->setError('Username already exist');
-//            return false;
-//        }
-//        if (User::getByNickname($username)) {
-//            $this->setError('Nickname already exist');
-//            return false;
-//        }
-//        if ($email && User::getByEmail($email)) {
-//            $this->setError('Email already exist');
-//            return false;
-//        }
+        //        if (User::getByUsername($username)) {
+        //            $this->setError('Username already exist');
+        //            return false;
+        //        }
+        //        if (User::getByNickname($username)) {
+        //            $this->setError('Nickname already exist');
+        //            return false;
+        //        }
+        //        if ($email && User::getByEmail($email)) {
+        //            $this->setError('Email already exist');
+        //            return false;
+        //        }
         if ($mobile && User::getByMobile($mobile)) {
             $this->setError('Mobile already exist');
             return false;
+        }
+
+        $parent_user_id = 0;
+        if (!empty($ref_code)) {
+            // 根据 code 查找 用户
+            $parent_user = User::get(['referral_code' => $ref_code]);
+            $parent_user_id = $parent_user->id;
         }
 
         $ip = request()->ip();
@@ -173,9 +184,11 @@ class Auth
             'level'    => 1,
             'score'    => 0,
             'avatar'   => '',
+            'total_consume'   => '',
+            'parent_user_id'   => $parent_user_id,
         ];
         $params = array_merge($data, [
-            'nickname'  => preg_match("/^1[3-9]{1}\d{9}$/",$username) ? substr_replace($username,'****',3,4) : $username,
+            'nickname'  => preg_match("/^1[3-9]{1}\d{9}$/", $username) ? substr_replace($username, '****', 3, 4) : $username,
             'salt'      => Random::alnum(),
             'jointime'  => $time,
             'joinip'    => $ip,
@@ -183,7 +196,7 @@ class Auth
             'loginip'   => $ip,
             'prevtime'  => $time,
             'status'    => 'normal',
-            'referral_code'=>$password
+            'referral_code' => $password
         ]);
         $params['password'] = $this->getEncryptPassword($password, $params['salt']);
         $params = array_merge($params, $extend);
@@ -283,7 +296,7 @@ class Auth
                 $newpassword = $this->getEncryptPassword($newpassword, $salt);
                 $this->_user->save(['loginfailure' => 0, 'password' => $newpassword, 'salt' => $salt]);
 
-//                Token::delete($this->_token);
+                //                Token::delete($this->_token);
                 //修改密码成功的事件
                 Hook::listen("user_changepwd_successed", $this->_user);
                 Db::commit();
@@ -306,7 +319,10 @@ class Auth
             return false;
         }
         //判断旧密码是否正确
-        if ($this->_user->password == $this->getEncryptPassword($pwd, $this->_user->salt)) {
+        $user = User::get($this->_user->id);
+        $password = $user['password'];
+        $userPwd = $this->getEncryptPassword($pwd, $user['salt']);
+        if ($password == $userPwd) {
             return true;
         } else {
             $this->setError('Password is incorrect');
@@ -347,9 +363,7 @@ class Auth
 
                 $this->_token = Random::uuid();
                 Token::set($this->_token, $user->id, $this->keeptime);
-
                 $this->_logined = true;
-
                 //登录成功的事件
                 Hook::listen("user_login_successed", $this->_user);
                 Db::commit();
@@ -416,7 +430,32 @@ class Auth
         $allowFields = $this->getAllowFields();
         $userinfo = array_intersect_key($data, array_flip($allowFields));
         $userinfo = array_merge($userinfo, Token::get($this->_token));
+        $userinfo['wcl_status'] = $this->setWclUser($data['id'])['wcl_status'];
         return $userinfo;
+    }
+
+
+    public function setWclUser($id)
+    {
+        $user = User::get($id);
+        //查询
+        if ($user->wcl_status == 0) {
+            $txRes = (new ChainAccount())->QueryChainAccount($user->operation_id);
+            if (!empty($txRes['data']) && !empty($txRes['data']['accounts'][0])) {
+                $data = $txRes['data']['accounts'][0];
+                extract($data);
+                $user->gas = $gas ?? '';
+                $user->business = $business ?? '';
+                $user->wcl_status = $status ?? '';
+                $user->save();
+            }
+        }
+        return $user;
+    }
+
+    public function checkUserWcl()
+    {
+        return $this->setWclUser($this->_user->id)['wcl_status'];
     }
 
     /**

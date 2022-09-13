@@ -26,9 +26,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                     [
                         {checkbox: true},
                         {field: 'box_name', title: __('Box_name'), operate:false},
+                        {field: 'goods_id', title: __('商品ID'), operate:false},
                         {field: 'goods_name', title: __('Goods_name'), operate:false},
                         {field: 'goods_image', title: __('Goods_image'), operate: false, events: Table.api.events.image, formatter: Table.api.formatter.image},
-                        {field: 'rate', title: __('Rate'), operate:'BETWEEN'},
+                        {field: 'rate', title: __('商品概率（%）'), operate:'BETWEEN'},
+                        // {field: 'one_rate', title: __('拥有1个指定商品概率（%）'), operate:'BETWEEN'},
+                        // {field: 'two_rate', title: __('拥有2个指定商品概率（%）'), operate:'BETWEEN'},
                         {field: 'update_time', title: __('Update_time'), operate:'RANGE', addclass:'datetimerange', autocomplete:false, formatter: Table.api.formatter.datetime},
                         {field: 'weigh', title: __('Weigh'), operate: false},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}

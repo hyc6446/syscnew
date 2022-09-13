@@ -116,6 +116,9 @@ class Api
         // 检测是否需要验证登录
         if (!$this->auth->match($this->noNeedLogin)) {
             //初始化
+            if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+                exit();
+            }
             $this->auth->init($token);
             //检测是否登录
             if (!$this->auth->isLogin()) {

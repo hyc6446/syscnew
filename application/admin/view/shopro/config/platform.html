@@ -233,13 +233,23 @@
                     </template>
                 </el-input>
             </el-form-item>
-            <el-form-item label="关于我们：">
-                <el-input v-model="detailForm.about_us" placeholder="请选择关于我们" size="small">
-                    <template slot="append">
-                        <div class="theme-color cursor-pointer" @click="richtextSelect('about_us')">选择</div>
-                    </template>
-                </el-input>
+            <el-form-item label="盲盒限购：">
+                <el-input v-model="detailForm.box_limit" placeholder="不限制为0" size="small"></el-input>
             </el-form-item>
+            <el-form-item label="普通藏品限购：">
+                <el-input v-model="detailForm.goods_limit" placeholder="不限制为0" size="small"></el-input>
+            </el-form-item>
+            <el-form-item label="转赠开关（1：开  2：关）：">
+                <el-input v-model="detailForm.send_status" placeholder="不限制为0" size="small"></el-input>
+            </el-form-item>
+
+<!--            <el-form-item label="关于我们：">-->
+<!--                <el-input v-model="detailForm.about_us" placeholder="请选择关于我们" size="small">-->
+<!--                    <template slot="append">-->
+<!--                        <div class="theme-color cursor-pointer" @click="richtextSelect('about_us')">选择</div>-->
+<!--                    </template>-->
+<!--                </el-input>-->
+<!--            </el-form-item>-->
         </div>
         <div v-if="type=='user'">
             <el-form-item label="默认昵称：">

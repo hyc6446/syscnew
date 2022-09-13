@@ -7,6 +7,7 @@ use addons\shopro\model\Order;
 use addons\shopro\model\OrderAction;
 use addons\shopro\model\OrderItem;
 use addons\shopro\model\Config;
+use think\Log;
 use think\queue\Job;
 
 
@@ -21,8 +22,8 @@ class OrderAutoOper extends BaseJob
      */
     public function autoClose(Job $job, $data){
         try {
+            Log::info('订单自动关闭::::queue::::'.json_encode($data));
             $order = $data['order'];
-
             // 重新查询订单
             $order = Order::get($order['id']);
 

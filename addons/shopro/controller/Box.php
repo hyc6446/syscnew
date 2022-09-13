@@ -7,16 +7,142 @@ namespace addons\shopro\controller;
 use addons\shopro\model\BoxOrder;
 use addons\shopro\model\Detail;
 use addons\shopro\model\Box as BoxModel;
+use addons\shopro\model\UserCollect as CollectModel;
 use addons\shopro\model\Goods;
 use addons\shopro\model\GoodsSkuPrice;
 use addons\shopro\model\PrizeRecord;
+use addons\shopro\controller\Bank as BankModel;
 use think\Db;
 use think\Exception;
 
 class Box extends Base
 {
-    protected $noNeedLogin = ['recommend','boxDetail','getPrizeRecord'];
+    protected $noNeedLogin = ['recommend','getUserCollectSn','boxDetail','getPrizeRecord','test','grantShardAll','getGoodsUsers','cancelNum'];
     protected $noNeedRight = ['*'];
+    
+    //统计藏品没有的编号
+    public function getUserCollectSn()
+    {
+        $collect = CollectModel::where(['goods_id'=>45,'status'=>array("in",[0,1])])->field("sn")->select();
+        $sn = [];
+        foreach ($collect as $key => $value){
+            $sn[] = $value['sn'];
+        }
+        $num = "";
+        for ($i=1;$i<500;$i++){
+            if(!in_array($i,$sn)){
+                $num = $num.$i.",";
+            }
+        }
+        $this->success('空投成功',$num);
+    }
+    
+    //查询创世勋章的所有用户
+    public function getGoodsUsers()
+    {
+        $collect = CollectModel::where(['goods_id'=>37,'status'=>0])->field("user_id")->group("user_id")->select();
+        // $this->success('空投成功',$collect);
+        $mobile = "";
+        foreach ($collect as $key => $value){
+            $user = \addons\shopro\model\User::where(['id'=>$value['user_id']])->field("mobile")->find();
+            $mobile = $mobile.$user['mobile'].",";
+        }
+        $this->success('空投成功',$mobile);
+    }
+    
+    //判断用户是否拥有创世
+    public function selectGoodsHave()
+    {
+        $collect = CollectModel::where(['goods_id'=>37,'status'=>0,"user_id"=>$this->auth->id])->field("id")->find();
+        if($collect){
+            $result = 1;
+        }else{
+            $result = 0;
+        }
+        $this->success('空投成功',$result);
+    }
+    
+    //清除编号重复藏品，并重新空投
+    public function cancelNum()
+    {
+        $collect = CollectModel::where(['goods_id'=>37,'status'=>0])->group('sn')->order("sn asc")->select();
+        $count = "";
+        foreach ($collect as $key => $value){
+            $res = CollectModel::where(['goods_id'=>37,'status'=>0,"sn"=>$value['sn'],"id"=>array("not in",[$value['id']])])->count();
+            if($res>0){
+                $count = $count.$value['sn'].",";
+                // $num++;
+            }
+            // $count[] = $value['sn'];
+        }
+        var_dump($count);exit;
+        $se = "";
+        $num = 0;
+        for($i=0;$i<631;$i++){
+            if(!in_array($i,$count)){
+                $se = $se.$i.",";
+                $num++;
+            }
+        }
+        var_dump($se);
+        var_dump($num);
+        exit;
+        $this->success('空投成功',$count);
+    }
+    
+    //全部空投
+    public function grantShardAll()
+    {
+        $ids = input('ids/d');
+        if (!$ids)$this->error('请选择藏品');
+        $box = input('mobile');
+        $user = explode(",",$box);
+        // var_dump(count($user));exit;
+        foreach ($user as $key => $value){
+            $order = \addons\shopro\model\User::where(['mobile'=>$value])->field("id")->find();
+            if($order){
+                $sku = GoodsSkuPrice::where('goods_id', $ids)->field('sales')->find();
+                //空投 todo:上链
+                $res = \addons\shopro\model\UserCollect::edit([
+                    'user_id' => $order['id'],
+                    'goods_id' => $ids,
+                    'type' => 5,
+                    'status' => 0,
+                    'sn' => $sku['sales'] + 1,
+                    'is_hook'=>1,
+                ]);
+                if (!$res) {
+                    $this->error('空投失败');
+                }
+    
+                $goodsSkuPrice = GoodsSkuPrice::where('goods_id', $ids)->find();
+                if ($goodsSkuPrice) {
+                    $goodsSkuPrice->setDec('stock', 1);         // 减少库存
+                    $goodsSkuPrice->setInc('sales', 1);         // 增加销量
+                }
+            }
+        }
+        $this->success('空投成功');
+    }
+    
+    public function test()
+    {
+        $order = BoxOrder::where(['status'=>'unused', 'box_id'=>30])->order('id','asc')->limit(0,10)->select();
+
+//        $order_ids = array_column($order,'id');
+
+        // 根据订单查找对应的 盲盒开奖记录
+        foreach ($order as $item){
+            $result = PrizeRecord::where(['user_id'=>$item['user_id'],'order_id'=>$item['id']])->find();
+            // 如果没有开奖记录,执行开盲盒
+            if(empty($result)){
+                $this->open($item);
+            }else{
+                continue;
+            }
+        }
+    }
+  
 
     public function recommend()
     {
@@ -34,10 +160,10 @@ class Box extends Base
 
 
         $list = BoxModel::alias('box')->alias('a')
-            ->field('a.id box_id,a.box_name,a.coin_price,b.name cate_name,b.weigh,a.category_id,b.color')
+            ->field('a.id box_id,a.box_name,a.coin_price,b.name cate_name,b.weigh,a.category_id,b.color,a.sales_num,a.start_time,a.end_time')
             ->join('shopro_box_category b','a.category_id=b.id')
             ->whereNotIn('a.id', $emptyBoxIds)
-            ->order('sort', 'asc')
+            ->order('sort', 'desc')
             ->where($where)
             ->paginate($pagesize, false, ['page' => $page])
             ->each(function ($item) {
@@ -185,6 +311,87 @@ class Box extends Base
     }
 
 
+    public function boxOrderList($params)
+    {
+
+        $page = $params['page'];
+        $pagesize = $params['limit'];
+
+        $order = BoxOrder::alias('a')
+            ->field('a.id,a.box_id,a.box_name,a.pay_method,a.image,a.pay_rmb,a.create_time,a.pay_time,a.num,a.status,a.coin_amount,a.rmb_amount,a.out_trade_no,a.select,a.user_id,b.goods_id,b.goods_name,b.goods_image')
+            ->join('shopro_prize_record b','b.order_id=a.id','left')
+            ->where('a.user_id', $this->auth->id)
+            ->group('a.id')
+            ->paginate($pagesize, false, ['page' => $page])->toArray();
+
+        $data = [];
+        foreach ($order['data'] as $key => $item){
+            if($item['status']=='unpay'){
+                $status_code = 'nopay';
+                $status_name = '待支付';
+                $status = 0;
+                $status_desc = '订单待支付';
+                $btn = ["cancel", "pay"];
+            }else if($item['status']=='unused'){
+                $status_code = 'nosend';
+                $status_name = '已支付';
+                $status = 1;
+                $status_desc = '订单已支付';
+                $btn=[];
+            }else if($item['status']=='used'){
+                $status_code = 'used';
+                $status_name = '已开奖';
+                $status = 1;
+                $status_desc = '订单已支付';
+                $btn=[];
+            }else{
+                $status_code = 'used';
+                $status = 1;
+                $status_name = '已完成';
+                $status_desc = '订单已支付';
+                $btn=[];
+            }
+
+            $data[$key] = [
+                "id"=>$item['id'],
+                "type"=>'box',
+                "order_sn"=> $item['out_trade_no'],
+                "total_amount"=> $item['rmb_amount'],
+                "status"=> $status,
+                "pay_type"=> $item['pay_method'],
+                "paytime"=> $item['pay_time'],
+                "createtime"=> $item['create_time'],
+                "ext"=> "",
+                "activity_type"=>"",
+                "item"=> [
+                    [
+                        "goods_num"=> 1,
+                        "image"=>$item['goods_image']?$item['goods_image']:$item['image'],
+                        "title"=> $item['goods_name']?$item['goods_name']:$item['box_name'],
+                        "category"=> ""
+                    ]
+                ],
+                "status_code"=>$status_code,
+                "status_name"=> $status_name,
+                "status_desc"=> $status_desc,
+                "btns"=> $btn,
+                "ext_arr"=>[
+                    "buy_type"=> "alone",
+                    "groupon_id"=> 0,
+                    "expired_time"=> 1657529816,
+                    "cancel_time"=> 1657637213
+                ]
+            ];
+
+        }
+        $order['data'] = $data;
+
+        return $order;
+
+
+    }
+
+
     /**
      * 获取盲盒的开奖记录
      * @throws \think\db\exception\DataNotFoundException
@@ -227,6 +434,7 @@ class Box extends Base
      */
     public function createOrder()
     {
+        $this->error('已售罄');
         $box_id = input('box_id/d');
         $num = input('num/d');
         $select = input('select', '');
@@ -240,9 +448,23 @@ class Box extends Base
         }
 
         // 检查盲盒
-        $box = BoxModel::field('id,box_name,box_banner_images,coin_price')->where('id', $box_id)->find();
+        $box = BoxModel::field('id,box_name,box_banner_images,coin_price,sales_num,start_time,end_time')->where('id', $box_id)->lock()->find();
         if (empty($box)) {
             $this->error('选择的盲盒有误');
+        }
+
+        if($box->sales_num<$num){
+            $this->error('盲盒已售罄');
+        }
+
+        $this->limitBuy($box_id);
+
+        if($box->start_time>time()){
+            $this->error('盲盒还未开始售卖');
+        }
+
+        if($box->end_time<time()){
+            $this->error('盲盒售卖已结束');
         }
 
         // 检查盲盒奖品
@@ -279,6 +501,7 @@ class Box extends Base
 
             $ret = [
                 'order_id' => intval($res->id),
+                'order_sn' => $res->out_trade_no,
                 'box_name' => $res->box_name,
                 'images' => $goodsImages,
                 'coin_amount' => $res->coin_amount,
@@ -296,32 +519,50 @@ class Box extends Base
         $this->success('创建订单成功', $ret);
     }
 
+    public function limitBuy($box_id)
+    {
+
+        $configModel = new \addons\shopro\model\Config;
+        $config = $configModel->where('name', '=', 'shopro')->value('value');
+        $shoproConfig = json_decode($config, true);
+        if ((int)$shoproConfig['box_limit']>0){
+            //限购
+            $count = \addons\shopro\model\BoxOrder::where(['status'=>'used','user_id'=>$this->auth->id,'box_id'=>$box_id])->count();
+            if ($count>=$shoproConfig['box_limit'])$this->error('相同盲盒每人只能限购'.$shoproConfig['box_limit'].'件');
+        }
+        return true;
+
+    }
 
     /**
      * 支付订单
      */
     public function payOrder()
     {
-        //
         $order_id = input('order_id/d');
-        $pay_method = input('pay_method/row','wallet');// wallet=金币,wechat=微信,alipay=支付宝'
+        $pay_method = input('pay_method/row','wallet');// wallet=金币,wechat=微信,alipay=支付宝,bankpay=绑卡支付'
 
         $platform = request()->header('platform');
         if (!$platform) $this->error("请确认平台信息");
 
-        if (!$pay_method || !in_array($pay_method, ['wechat', 'alipay', 'wallet'])) {
+        if (!$pay_method || !in_array($pay_method, ['wechat', 'alipay', 'wallet',"box_num","bankpay"])) {
             $this->error("支付类型不能为空");
         }
-
-        $order_id = input('order_id/d');
-        if (empty($order_id)) {
-            $this->error('请选择支付订单');
+        $order_sn = input('order_sn');
+        if(isset($order_id)){
+            $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
+                ->where('id', $order_id)
+                ->where('user_id', $this->auth->id)
+                ->find();
         }
 
-        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
-            ->where('id', $order_id)
-            ->where('user_id', $this->auth->id)
-            ->find();
+        if($order_sn){
+            $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
+                ->where('out_trade_no', $order_sn)
+                ->where('user_id', $this->auth->id)
+                ->find();
+        }
+
 
         if (empty($order)) {
             $this->error('订单不存在');
@@ -331,15 +572,40 @@ class Box extends Base
             $this->error('该订单已支付，请勿重复支付');
         }
 
-        // 查询用户余额
-        if (intval($this->auth->money) < $order->coin_amount) {
-            $this->error('您的金币不足');
-        }
+        $this->limitBuy($order['box_id']);
 
         if($pay_method == 'wallet'){
-            $this->coinPay($order_id);
+            // 查询用户余额
+            if (($this->auth->money*100) < ($order->rmb_amount*100)) {
+                $this->error('您的金币不足');
+            }
+            $this->coinPay($order->id,"coin");
         }
 
+        if($pay_method == 'box_num'){
+            // 查询用户余额
+            if ($this->auth->box_num<1) {
+                $this->error('您的盲盒购买次数不足');
+            }
+            $this->coinPay($order->id,"box_num");
+            // var_dump($result);exit;
+        }
+
+        //绑卡支付
+        if($pay_method == 'bankpay'){
+            //验证支付密码
+            $password = input('password/d');
+            $bank_id= input('bank_id/d');
+            $code= input('code');
+            $password = $this->auth->getEncryptPassword($password,$this->auth->salt);
+            if($password!=$this->auth->password){
+                $this->error('支付密码不正确');
+            }
+            $bank = new BankModel();
+            $bank->bankPay($order->id,$bank_id,$code,"box");
+            // var_dump($res);exit;
+        }
+        
         $order_data = [
             'order_id' => $order->id,
             'out_trade_no' => $order->out_trade_no,
@@ -347,26 +613,26 @@ class Box extends Base
         ];
 
         if($pay_method == 'wechat'){
-            if (in_array($platform, ['wxOfficialAccount', 'wxMiniProgram'])) {
-                if (isset($openid) && $openid) {
-                    // 如果传的有 openid
-                    $order_data['openid'] = $openid;
-                } else {
-                    // 没有 openid 默认拿下单人的 openid
-                    $oauth = \addons\shopro\model\UserOauth::where([
-                        'user_id' => $order->user_id,
-                        'provider' => 'Wechat',
-                        'platform' => $platform
-                    ])->find();
+            // if (in_array($platform, ['wxOfficialAccount', 'wxMiniProgram'])) {
+            //     if (isset($openid) && $openid) {
+            //         // 如果传的有 openid
+            //         $order_data['openid'] = $openid;
+            //     } else {
+            //         // 没有 openid 默认拿下单人的 openid
+            //         $oauth = \addons\shopro\model\UserOauth::where([
+            //             'user_id' => $order->user_id,
+            //             'provider' => 'Wechat',
+            //             'platform' => $platform
+            //         ])->find();
 
-                    $order_data['openid'] = $oauth ? $oauth->openid : '';
-                }
+            //         $order_data['openid'] = $oauth ? $oauth->openid : '';
+            //     }
 
-                if (empty($order_data['openid'])) {
-                    // 缺少 openid
-                    return $this->error('缺少 openid', 'no_openid');
-                }
-            }
+            //     if (empty($order_data['openid'])) {
+            //         // 缺少 openid
+            //         return $this->error('缺少 openid', 'no_openid');
+            //     }
+            // }
             $order_data['body'] = '商城订单支付';
         }
 
@@ -376,9 +642,9 @@ class Box extends Base
 
         $notify_url = $this->request->root(true) . '/addons/shopro/pay/notifyx/payment/' . $pay_method . '/platform/' . $platform. '/order_type/box_order';
         $pay = new \addons\shopro\library\PayService($pay_method, $platform, $notify_url);
-
+        // var_dump($pay);exit;
         try {
-            $result = $pay->create($order_data);
+            $result = $pay->create($order_data,'boxOrder');
         } catch (\Yansongda\Pay\Exceptions\Exception $e) {
             $this->error("支付配置错误：" . $e->getMessage());
         }
@@ -398,37 +664,78 @@ class Box extends Base
     }
 
 
-
-
-    public function coinPay($order_id)
+    public function coinPay($order_id,$pay_method)
     {
-        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
+        $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,rmb_price,out_trade_no,select,user_id')->lock(true)
             ->where('id', $order_id)
             ->where('user_id', $this->auth->id)
             ->find();
 
+        if($order->status == 'unused' || $order->status=='used'){
+            $this->error("订单已支付，请勿重复支付" );
+        }
+
+        $box = \addons\shopro\model\Box::get($order->box_id);
 
         Db::startTrans();
         try {
             // 更新订单信息
-            $order->pay_method = 'coin';
+            $order->pay_method = $pay_method;
             $order->pay_coin = $order->coin_amount;
+            $order->pay_rmb = $order->rmb_price;
             $order->pay_time = time();
             $order->status = 'unused';// 状态:unpay=待支付,unused=待抽奖,used=已使用
             $order->backend_read = 0;
             $order->save();
 
             $coin_before = $this->auth->money;
-
-            // 减少金币余额
             $user = $this->auth->getUser();
-            $user->setDec('money', $order->pay_coin);
+            if($pay_method=="coin"){
+                // 减少金币余额
+                
+                // 创建余额支付记录
+                \addons\shopro\model\User::money(-$order->pay_rmb, $user->id, 'box_pay', $order->id, '',[
+                    'order_id' => $order->id,
+                    'box_id' => $order->box_id,
+                ]);
+            }
+            
+            //扣除盲盒购买次数
+            if($pay_method=="box_num"){
+                $num = $user->box_num - 1;
+                \addons\shopro\model\User::update(["box_num"=>$num],["id"=>$this->auth->id]);
+            }
 
-            // 创建余额支付记录
-            \addons\shopro\model\User::money(-$order->pay_coin, $user->id, 'box_pay', $order->id, '',[
-                'order_id' => $order->id,
-                'box_id' => $order->box_id,
-            ]);
+            // 支付成功，扣除库存
+            $box->setDec('sales_num',$order->num);
+            
+            //查询user的父级ID,新增一个推荐
+            // return $user;
+            if($user->parent_user_id>0){
+                
+                $shareModel = new \addons\shopro\model\Share();
+                
+                $share = $shareModel->where(['user_id'=>$user->id,'share_id'=>$user->parent_user_id])->find();
+                
+                if(!$share){
+                    $shareData = [
+                        'user_id'=>$user->id,
+                        'share_id'=>$user->parent_user_id
+                    ];
+                    $shareModel->insert($shareData);
+
+                    //查询父级用户,并且增加推广人数
+                    // 查询一下 分享人ID 是否存在,不存在就+1
+                    $p_user = \addons\shopro\model\User::where(['id'=>$user->parent_user_id])->find();
+                    $p_user->curr_share_count +=1;
+                    $p_user->share_count +=1;
+                    // if($p_user->share_count%4==0 && $p_user->share_count<41){
+                    //     $p_user->box_num +=1;
+                    // }
+                    $p_user->save();
+                }
+            }
+            
 
         } catch (\Exception $e) {
             Db::rollback();
@@ -445,13 +752,13 @@ class Box extends Base
 
     public function getSuccessData()
     {
-        $order_id = input('out_trade_no/row');
+        $order_id = input('order_id/row');
 
         $order = BoxOrder::field('id,box_id,num,status,coin_amount,rmb_amount,out_trade_no,select,user_id')->lock(true)
-            ->where('out_trade_no', $order_id)
+            ->where('id', $order_id)
             ->where('user_id', $this->auth->id)
             ->find();
-
+        // var_dump($order_id);exit;
         if($order->status=='unused'){
             $prize = $this->open($order);
             $this->success('开盲盒成功',['prize'=>$prize]);
@@ -503,129 +810,107 @@ class Box extends Base
         if ('unused' != $order->status) { // 状态:unpay=待支付,unused=待抽奖,used=已使用
             return false;
         }
+        
+        Db::startTrans();
+        //执行订单更新操作
+        $notify = ['status' => 'used'];
+        $orderresult =  $order->save($notify);
+        if($orderresult){
+            Db::commit();
+        }else{
+            Db::rollback();
+            return false;
+        }
+        $order = $order->where('out_trade_no', $order->out_trade_no)->find();
+        if($order->status!="used"){
+            return false;
+        }
 
         if (empty($order->box_id)) {
             $this->error('请选择盲盒');
         }
-        if (!in_array($order->num, [1, 5, 9])) {
-            $this->error('开箱数量有误');
-        }
+//        if (!in_array($order->num, [1, 5, 9])) {
+//            $this->error('开箱数量有误');
+//        }
 
         // 检查盲盒是否可以试玩
-        $box = BoxModel::where('id', $order->box_id)->value('id');
-        if (empty($box)) {
+        // $box = BoxModel::where('id', $order->box_id)->value('id');
+        $box = BoxModel::where('id', $order->box_id)->field('id,detail_id')->find();
+        if (empty($box['id'])) {
             $this->error('盲盒有误');
         }
-
+        //用户拥有指定藏品的数量
+        $num = CollectModel::where("goods_id",$box['detail_id'])->where("user_id",$this->auth->id)->count();
         try {
             // 抽奖 begin
-            if (1 == $order->num) {
-                $goodsIds = [Detail::getOne($order->box_id)];
-            } else {
-                $goodsIds = Detail::getMore($order->box_id, $order->num);
-            }
+//                $goodsIds = [Detail::getOne($order->box_id,$num)];
+            $result = Detail::getOne($order->box_id,$num,$this->auth->id);
+           
         } catch (\Exception $e) {
 
-            // 退款
-//            if (!$this->refund($order)) {
-//                $logID = "";
-//                try {
-//                    $logID = dta($order->toArray(), '用户退款失败');
-//                } catch (Exception $e) {
-//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
-//                }
-//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
-//            }
-
-            $this->error('抽奖失败，已退款');
+            $this->error('抽奖失败');
         }
         // 抽奖 end
 
-        // 查询抽中的奖品信息
-        foreach ($goodsIds as $goodsId) {
-            $goodsInfo[] = Goods::alias('a')
-                ->field('a.*,b.name as cate_name,b.color')
-                ->join('shopro_category b','b.id=a.category_ids')
-                ->where('a.id', $goodsId)->find();
+        if($result['status']==2){
+            $this->error($result['txt']);
         }
-
-
+        
+        $goods = Goods::alias('a')
+                ->field('a.*,b.name as cate_name,b.color,a.sales')
+                ->join('shopro_category b','b.id=a.category_ids')
+                ->where('a.id', $result['data'])->find();
+        
         // 抽奖失败
-        if (empty($goodsInfo)) {
-            // 退款
-//            if (!$this->refund($order)) {
-//                $logID = "";
-//                try {
-//                    $logID = dta($order->toArray(), '用户退款失败');
-//                } catch (Exception $e) {
-//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
-//                }
-//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
-//            }
+        if (empty($goods)) {
 
-            $this->error('抽奖失败，已退款');
+            $this->error('抽奖失败');
         }
 
         $prizeInfo = [];
-
         Db::startTrans();
         try {
-            foreach ($goodsInfo as &$goods) {
 
-                // 创建开箱记录
-                $prize = Prizerecord::create([
-                    'box_id' => $order->box_id,
-                    'order_id' => $order->id,
-                    'out_trade_no' => $order->out_trade_no,
-                    'user_id' => $this->auth->id,
-                    'goods_id' => $goods->id,
-                    'goods_name' => $goods->title,
-                    'goods_image' => $goods->image,
-                    'goods_coin_price' => $goods->price,
-                    'goods_rmb_price' => round($goods->price, 2),
-                    'status' => 'bag', // 奖品状态:bag=盒柜,exchange=已回收,delivery=申请发货,received=已收货
-                ]);
+            // 创建开箱记录
+            $prize = Prizerecord::create([
+                'box_id' => $order->box_id,
+                'order_id' => $order->id,
+                'out_trade_no' => $order->out_trade_no,
+                'user_id' =>  $this->auth->id?$this->auth->id:$order->user_id,
+                'goods_id' => $goods->id,
+                'goods_name' => $goods->title,
+                'goods_image' => $goods->image,
+                'goods_coin_price' => $goods->price,
+                'goods_rmb_price' => round($goods->price, 2),
+                'status' => 'bag', // 奖品状态:bag=盒柜,exchange=已回收,delivery=申请发货,received=已收货
+            ]);
 
-                //添加到我的藏品中
-                \addons\shopro\model\UserCollect::create([
-                    'goods_id' => $goods->id,
-                    'user_id' => $this->auth->id,
-                    'original_price' => $goods->original_price,
-                    'price' => $goods->price,
-                    'from_type' => 4,
-                    'token' => md5($this->auth->id.'token-'.$this->auth->referral_code.time()),
-                    'up_brand' => "-",
-                    'auth_brand' => "-",
-                    'card_id' => md5($this->auth->id.'card_id-'.$this->auth->referral_code.time()),
-                    'trans_hash' => md5($this->auth->id.'trans_hash-'.$this->auth->referral_code.time()),
-                    'card_time' => time(),
-                    'add' => $this->auth->referral_code.time(),
-                    'up_num' => 1,
-                ]);
-                // 减少商品库存
-                GoodsSkuPrice::where('goods_id', $goods->id)->setDec('stock');
+            // 减少商品库存
+            GoodsSkuPrice::where('goods_id', $goods->id)->setDec('stock');
+            
+            $sku = GoodsSkuPrice::where('goods_id', $goods->id)->field('sales')->find();
+            //写入文昌链 上链
 
+            //购买 todo:上链
+            $data = [
+                'user_id'=>$this->auth->id?$this->auth->id:$order->user_id,
+                'original_price' => $order->rmb_amount,
+                'goods_id'=>$goods->id,
+                'type'=>4,
+                'status'=>0,
+                'sn' => $sku['sales'] + 1,
+            ];
+            $res =\addons\shopro\model\UserCollect::edit($data);
+            GoodsSkuPrice::where('goods_id', $goods->id)->setInc('sales');
 
-                //写入百度上链
-
-                //购买 todo:上链
-                $data = [
-                    'user_id'=>$this->auth->id,
-                    'goods_id'=>$goods->id,
-                    'type'=>4,
-                    'status'=>0,
-                ];
-                $res =\addons\shopro\model\UserCollect::edit($data);
-
-
-                $prizeInfo[] = [
-                    'prize_id' => intval($prize->id),
-                    'image' => $prize->goods_image ? cdnurl($prize->goods_image, true) : '',
-                    'goods_name' => $prize->goods_name,
-                    'cate_name' =>$goods->cate_name,
-                    'color' =>$goods->color,
-                ];
-            }
+            $prizeInfo[] = [
+                'prize_id' => intval($prize->id),
+                'image' => $prize->goods_image ? cdnurl($prize->goods_image, true) : '',
+                'goods_name' => $prize->goods_name,
+                'cate_name' =>$goods->cate_name,
+                'color' =>$goods->color,
+            ];
+            
 
             // 增加盲盒销量
             BoxModel::where('id', $order->box_id)->setInc('sales', $order->num);
@@ -634,23 +919,13 @@ class Box extends Base
 
             Db::rollback();
             // 退款
-//            if (!$this->refund($order)) {
-//                $logID = "";
-//                try {
-//                    $logID = dta($order->toArray(), '用户退款到金币失败');
-//                } catch (Exception $e) {
-//                    $logID = dta(['order_id' => $order->id], '用户退款失败');
-//                }
-//                $this->error('库存不足退款失败,请截屏联系平台:' . $logID);
-//            }
             $this->error($e->getMessage());
-            $this->error('抽奖失败，已退款');
+            $this->error('抽奖失败');
         }
-
-        Db::commit();
-
         // 订单状态改为已使用
         $order->save(['status' => 'used', 'backend_read' => 0]);
+
+        Db::commit();
 
         $ret = [
             'select' => $order->select,

@@ -3,11 +3,15 @@
 namespace addons\shopro\controller;
 
 use addons\shopro\exception\Exception;
+use addons\shopro\job\OrderAutoOper;
+use addons\shopro\job\OrderPayed;
+use app\common\library\Sms;
+use think\Log;
 
 class Goods extends Base
 {
 
-    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store','calendar','composeList'];
+    protected $noNeedLogin = ['index', 'detail', 'lists', 'activity', 'seckillList', 'grouponList', 'store', 'calendar', 'composeList', 'close'];
     protected $noNeedRight = ['*'];
 
     public function index()
@@ -28,14 +32,14 @@ class Goods extends Base
     {
         $id = $this->request->get('id');
         $detail = \addons\shopro\model\Goods::getGoodsDetail($id);
-        
+
         // 记录足记
         \addons\shopro\model\UserView::addView($detail);
 
-//        $sku_price = $detail['sku_price'];      // 处理过的规格
-//        // tp bug json_encode 或者 toArray 的时候 sku_price 会重新查询数据库，导致被处理过的规格又还原回去了
-//        $detail = json_decode(json_encode($detail), true);
-//        $detail['sku_price'] = $sku_price;
+        //        $sku_price = $detail['sku_price'];      // 处理过的规格
+        //        // tp bug json_encode 或者 toArray 的时候 sku_price 会重新查询数据库，导致被处理过的规格又还原回去了
+        //        $detail = json_decode(json_encode($detail), true);
+        //        $detail['sku_price'] = $sku_price;
 
         $this->success('商品详情', $detail);
     }
@@ -43,20 +47,18 @@ class Goods extends Base
     public function lists()
     {
         $params = $this->request->get();
-        $params['islist'] = $params['islist']??1;
-        $params['tag'] = $params['tag']??'';
+        $params['islist'] = $params['islist'] ?? 1;
+        $params['tag'] = $params['tag'] ?? '';
         $data = \addons\shopro\model\Goods::getGoodsList($params);
-
         $this->success('商品列表', $data);
     }
 
     public function calendar()
     {
         $params = $this->request->get();
-        $data = \addons\shopro\model\Goods::getGoodsList($params,false,true);
+        $data = \addons\shopro\model\Goods::getGoodsList($params, false, true);
 
         $this->success('商品列表', $data);
-
     }
 
 
@@ -73,7 +75,8 @@ class Goods extends Base
 
 
     // 秒杀列表
-    public function seckillList() {
+    public function seckillList()
+    {
         $params = $this->request->get();
 
         $this->success('秒杀商品列表', \addons\shopro\model\Goods::getSeckillGoodsList($params));
@@ -81,7 +84,8 @@ class Goods extends Base
 
 
     // 拼团列表
-    public function grouponList() {
+    public function grouponList()
+    {
         $params = $this->request->get();
 
         $this->success('拼团商品列表', \addons\shopro\model\Goods::getGrouponGoodsList($params));
@@ -95,10 +99,10 @@ class Goods extends Base
         if (!$activity) {
             $this->error('活动不存在', null, -1);
         }
-        
+
         $goods = \addons\shopro\model\Goods::getGoodsList(['goods_ids' => $activity->goods_ids]);
         $activity->goods = $goods;
-        
+
         $this->success('活动列表', $activity);
     }
 
@@ -111,9 +115,9 @@ class Goods extends Base
 
     public function favoriteList()
     {
-        $page = $this->request->get('page',1);
-        $limit = $this->request->get('limit',10);
-        $data = \addons\shopro\model\UserFavorite::getGoodsList($page,$limit);
+        $page = $this->request->get('page', 1);
+        $limit = $this->request->get('limit', 10);
+        $data = \addons\shopro\model\UserFavorite::getGoodsList($page, $limit);
         $this->success('收藏列表', $data);
     }
 
@@ -145,19 +149,28 @@ class Goods extends Base
     public function composeList()
     {
         $params = $this->request->get();
-        $data = (new \addons\shopro\model\Goods())->composeList($params,$this->auth->id?:0);
+        $data = (new \addons\shopro\model\Goods())->composeList($params, $this->auth->id ?: 0);
+        // var_dump($data);exit;
         $this->success('合成藏品列表', $data);
     }
 
     //藏品合成
     public function compose()
     {
-        $goodsId = $this->request->post('id',0);
-        $result = (new \addons\shopro\model\Goods())->compose($goodsId,$this->auth->id);
+        $goodsId = $this->request->post('id', 0);
+        $result = (new \addons\shopro\model\Goods())->compose($goodsId, $this->auth->id);
         if (isset($result['msg']) && $result['msg']) {
             $this->error($result['msg'], $result);
         } else {
             $this->success('合成成功', $result);
         }
+    }
+
+
+    public function close()
+    {
+        $res = Sms::notice('18302887308', '111111', 'SMS_222140179');
+        \think\Queue::later((0), '\addons\shopro\job\GoodsDing@ding', ['id' => 2], 'shopro');
+        $this->success('合成成功', $res);
     }
 }

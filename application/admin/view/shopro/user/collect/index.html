@@ -368,11 +368,15 @@
                         <div v-else>-</div>
                     </template>
                 </el-table-column>
-                <el-table-column label="链上资产信息" width="210">
+                <el-table-column label="链上资产信息" width="250">
                     <template slot-scope="scope">
                         <div>
-                            <div v-if="scope.row.asset_id">资产ID:{{scope.row.asset_id}}</div>
-                            <div v-if="scope.row.shard_id">碎片ID:{{scope.row.shard_id}}</div>
+                            <div v-if="scope.row.nft_id">nft_id:{{scope.row.nft_id}}</div>
+                            <div v-else>操作ID:{{scope.row.operation_id}}</div>
+                            <div v-if="scope.row.class_id">class_id:{{scope.row.class_id}}</div>
+                            <div v-if="scope.row.block_height">区块高度:{{scope.row.block_height}}</div>
+                            <div v-if="scope.row.wcl_status==1" style="color: #409EFF">链状态:{{scope.row.wcl_status_text}}</div>
+                            <div v-else>链状态:{{scope.row.wcl_status_text}}</div>
                         </div>
                     </template>
                 </el-table-column>

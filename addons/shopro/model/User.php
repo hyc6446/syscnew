@@ -24,7 +24,8 @@ class User extends Model
 
     // 追加属性
     protected $append = [
-        'nickname_hide'
+        'nickname_hide',
+        'mobile_hide',
     ];
 
     public static function info()
@@ -92,6 +93,20 @@ class User extends Model
                 $nickname = mb_substr($data['nickname'], 0, 2) . '***';
             } else {
                 $nickname = $data['nickname'];
+            }
+
+            return $nickname;
+        }
+        return null;
+    }
+
+    public function getMobileHideAttr($value, $data)
+    {
+        if (isset($data['mobile'])) {
+            if (mb_strlen($data['mobile']) > 2) {
+                $nickname = substr_replace($data['mobile'],'***',3,4);
+            } else {
+                $nickname = $data['mobile'];
             }
 
             return $nickname;

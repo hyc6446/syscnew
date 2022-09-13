@@ -49,7 +49,7 @@ class Box extends Backend
             list($where, $sort, $order, $offset, $limit) = $this->buildparams();
 
             $list = $this->model->alias('box')
-                ->field('box.box_name,box.id,box.box_banner_images,box.coin_price,box.update_time,box.is_hot,box.is_cheap,box.is_try,box.sort,box.switch')
+                ->field('box.box_name,box.id,box.box_banner_images,box.coin_price,box.start_time,box.end_time,box.update_time,box.is_hot,box.is_cheap,box.is_try,box.sort,box.switch,box.detail_id')
                 ->field('category.name category_name')
                 ->join('category category', 'category.id = box.category_id', 'left')
                 ->where($where)

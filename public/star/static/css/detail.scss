@@ -1,0 +1,146 @@
+.container {
+	background-size: 700upx 618upx;
+	background-position: 25upx -74upx;
+	background-repeat: no-repeat;
+	padding: 200upx 24upx calc(120upx + env(safe-area-inset-bottom));
+	background-color: #f2f2f2;
+	.buy-need-know {
+		position: fixed;
+		width: 750upx;
+		height: 92upx;
+		background: #171816;
+		background: rgba(0, 0, 0, 0.6);
+		left: 0;
+		bottom: 98upx;
+		display: flex;
+		align-items: center;
+		padding: 0 24upx;
+		.msg {
+			font-size: 28upx;
+			font-family: Source Han Sans CN-Regular, Source Han Sans CN;
+			font-weight: 400;
+			color: #FFFFFF;
+			margin: 0 93upx 0 10upx;
+		}
+		.btn {
+			width: 152upx;
+			height: 68upx;
+			background: #AFDC4A;
+			border-radius: 39upx;
+			opacity: 1;
+			border: 1px solid #707070;
+			font-size: 26upx;
+			font-family: Source Han Sans CN-Regular, Source Han Sans CN;
+			font-weight: 400;
+			color: #171816;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+	}
+
+	.nft-img {
+		// width: 500upx;
+		// height: 600upx;
+		width: 100%;
+		border-radius: 20upx;
+		margin: 0 auto;
+	}
+
+	.header {
+		padding: 80upx 0 12upx;
+
+		.header-icon {
+			width: 52upx;
+			height: 94upx;
+			margin: 0 10upx;
+		}
+
+		.left {
+			transform: rotateY(180deg);
+		}
+
+		.nft-name {
+			padding: 0 0 10upx;
+			text-align: center;
+		}
+
+		.tag {
+			line-height: 1;
+			padding: 6upx 16upx;
+			border-radius: 2upx;
+			margin: 0 10upx;
+		}
+
+		.num {
+			background: #36363A;
+			border-radius: 0px 3upx 3upx 0px;
+			margin-left: -10upx;
+			line-height: 1;
+			padding: 6upx 16upx;
+		}
+	}
+
+	.card {
+		background: #ededed;
+		box-shadow: 0px 4upx 7upx 1upx rgba(29, 28, 26, 0.4);
+		border-radius: 20upx;
+		padding: 20upx;
+		margin: 20upx auto 0;
+
+		.title {
+			padding: 0 0 20upx;
+			border-bottom: 1upx solid #151518;
+		}
+
+		.nft-author {
+			padding: 20upx 0 0;
+
+			.avatar {
+				width: 50upx;
+				height: 50upx;
+				border-radius: 50%;
+				margin-right: 20upx;
+			}
+
+			.and-next {
+				padding: 0 20upx;
+			}
+		}
+	}
+
+	.rich {
+		padding: 20upx 0 0;
+	}
+
+	.nft-user {
+		padding: 14upx 0;
+	}
+
+	.footer {
+		height: 98upx;
+		padding: 14upx 24upx calc(10upx + env(safe-area-inset-bottom));
+		background-color: #0A0B0C;
+		position: fixed;
+		width: 100%;
+		left: 0;
+		bottom: 0;
+
+		.price {
+			padding-left: 80upx;
+		}
+
+		.btn {
+			width: 300upx;
+			height: 70upx;
+			background: #EDBC5F;
+			border-radius: 35upx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 24upx;
+			font-weight: bold;
+			color: #fff;
+		}
+	}
+}
