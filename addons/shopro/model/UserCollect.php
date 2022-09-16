@@ -193,26 +193,26 @@ class UserCollect extends Model
 
         return $data;
     }
-    public static function setData($collect,$txRes)
+    public static function setData($collect, $txRes)
     {
-        if (!empty($txRes['data'])){
+        if (!empty($txRes['data'])) {
             $data = $txRes['data'];
             extract($data);
             // $collect->nft_id = $nft_id??'';
-            $collect->trans_hash = $tx_hash??'';
-            $collect->class_id = $class_id??'';
-            $collect->message = $message??'';
-            $collect->block_height = $block_height??'';
+            $collect->trans_hash = $tx_hash ?? '';
+            $collect->class_id = $class_id ?? '';
+            $collect->message = $message ?? '';
+            $collect->block_height = $block_height ?? '';
             $collect->timestamp = isset($timestamp) ? strtotime($timestamp) : '';
-            $collect->tag = $tag??'';
-            $collect->type = $type??'';
-            $collect->wcl_status = $status??'';
+            $collect->tag = $tag ?? '';
+            $collect->type = $type ?? '';
+            $collect->wcl_status = $status ?? '';
             //之前的字段
             // $collect->querysds = $type??'';
             // $collect->card_id = $nft_id??'';
             // $collect->shard_id = $nft_id??'';//链上 碎片id
-            $collect->card_time = isset($timestamp)?strtotime($timestamp):0;
-            $collect->add = $block_height??'';
+            $collect->card_time = isset($timestamp) ? strtotime($timestamp) : 0;
+            $collect->add = $block_height ?? '';
         }
         return $collect;
     }
@@ -264,7 +264,17 @@ class UserCollect extends Model
 
         return $list;
     }
-
+    // 盯链
+    public static function getHallList()
+    {
+        $list = self::alias('a')
+            ->field('a.price,sg.title as name,sg.image,a.from_type,a.status,a.status_time')
+            ->join('shopro_goods sg', 'a.goods_id=sg.id')
+            ->join('shopro_category sc', 'sg.category_ids=sc.id')
+            ->where(['a.is_consume' => 0, "a.status" => 1, 'a.is_status' => 1])
+            ->group('a.goods_id')->select();
+        return $list;
+    }
     /**
      * 销毁
      * @param $adminId

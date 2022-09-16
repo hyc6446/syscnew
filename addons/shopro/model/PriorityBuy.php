@@ -50,6 +50,18 @@ class PriorityBuy extends Model
             new Exception('优先购购买次数处理失败');
         }
     }
+    // 清除优先购买权
+    public static function deleteState($uid)
+    {
+        try {
+            self::update(['buy_num' => 0, 'status' => 0], ['user_id' => $uid, 'status' => 1]);
+            return true;
+        } catch (\Exception $e) {
+            new Exception('优先购购买权清除失败');
+        }
+    }
+
+
     public function getImageAttr($value, $data)
     {
         if (!empty($value)) return cdnurl($value, true);

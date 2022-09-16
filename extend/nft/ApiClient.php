@@ -56,7 +56,7 @@ class ApiClient
         $header = [
             "Content-Type:application/json",
             "X-Api-Key:{$this->apiKey}",
-            "X-Signature:{$hexHash}",
+            "X-Timestamp:{$hexHash}",
             "X-Timestamp:{$timestamp}",
         ];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);

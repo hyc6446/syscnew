@@ -12,7 +12,7 @@ use think\Log;
 
 class UserCollect extends Base
 {
-    protected $noNeedLogin = ['checkSendSwith', 'hall'];
+    protected $noNeedLogin = ['checkSendSwith', 'hallList'];
     protected $noNeedRight = ['*'];
 
 
@@ -23,6 +23,13 @@ class UserCollect extends Base
         $list = \addons\shopro\model\UserCollect::getList($params, $uid);
         $this->success('我的艺术品', $list);
     }
+    // 盯链
+    public function hallList()
+    {
+        $list = \addons\shopro\model\UserCollect::getHallList();
+        $this->success('执行成功', $list);
+    }
+
 
     public function detail()
     {

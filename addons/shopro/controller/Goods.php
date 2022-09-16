@@ -35,12 +35,6 @@ class Goods extends Base
 
         // 记录足记
         \addons\shopro\model\UserView::addView($detail);
-
-        //        $sku_price = $detail['sku_price'];      // 处理过的规格
-        //        // tp bug json_encode 或者 toArray 的时候 sku_price 会重新查询数据库，导致被处理过的规格又还原回去了
-        //        $detail = json_decode(json_encode($detail), true);
-        //        $detail['sku_price'] = $sku_price;
-
         $this->success('商品详情', $detail);
     }
 

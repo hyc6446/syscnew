@@ -130,7 +130,7 @@ class Order extends Base
         $config = $configModel->where('name', '=', 'shopro')->value('value');
         // 商城基本设置
         $shoproConfig = json_decode($config, true);
-        if ((int)$shoproConfig['goods_limit'] > 0) {
+        if (!$post['activity'] == "priority" && (int)$shoproConfig['goods_limit'] > 0) {
             //限购
             $order_ids = \addons\shopro\model\OrderItem::where(['goods_id' => $post['goods_id'], 'user_id' => $this->auth->id])->column('order_id');
             $count = \addons\shopro\model\Order::where(['id' => ['in', $order_ids], 'status' => ['>', 0]])->count();
@@ -142,25 +142,38 @@ class Order extends Base
 
         //验证藏品是否可购买
         $goods = \addons\shopro\model\Goods::getGoodsDetail($post['goods_id']);
-        if ($goods['sales_time'] && $goods['sales_time'] > time()) {
-            // TODO 判断当前用户是否有优先购的资格
-            $priority =  \addons\shopro\model\PriorityBuy::buyerList($this->auth->id);
-            if ($priority->status != 1) {
-                $this->error('预售藏品暂不支持购买');
+
+        // 判断库存
+        if($goods['issue_num'] == $goods['sales']){
+            $this->error('您没有该藏品当前库存不足');
+        }
+
+        // 处理优先购逻辑
+        if ($post['activity'] == "priority") {
+            if ($goods['sales_time'] && $goods['sales_time'] > time()) {
+                $priority =  \addons\shopro\model\PriorityBuy::buyerList($this->auth->id);
+                if ($priority->status != 1) {
+                    $this->error('您没有该藏品的购买资格');
+                }
+                $num = $params['goods_list'][0]['goods_num'];
+                if ($num > $priority->buy_num) {
+                    $this->error('无效的购买次数');
+                }
+            } else {
+                \addons\shopro\model\PriorityBuy::deleteState($this->auth->id);
+                $this->error('当前活动已截止');
             }
-            $num = $params['goods_list'][0]['goods_num'];
-            if ($num > $priority->buy_num) {
-                $this->error('无效的购买次数');
-                // $params['goods_list'][0]['goods_num'] = $priority->buy_num;
+        } else {
+            if ($goods['sales_time'] && $goods['sales_time'] > time()) {
+                $this->error('该藏品的售卖时间还未开始请稍等');
+            } else {
+                $this->error('该藏品的售卖时间已截止');
             }
         }
         $order = \addons\shopro\model\Order::createOrder($params);
 
         $this->success('订单添加成功', $order);
     }
-
-
-
     // 获取可用优惠券列表
     public function coupons()
     {

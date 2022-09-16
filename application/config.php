@@ -309,8 +309,8 @@ return [
     'nft' => [
         'domain'=>'https://apis.avata.bianjie.ai/',
         // 'apiKey' => 'y2N2S0Z7v1i1W069C1c2J1Y5C301v3q',
-        'apiKey' => '6242u0I95181T15395o5m5r662E6Q1RM',
         // 'apiSecret' => 'h2T2m0Q7A1j1J0i9Y1C2T1Q5u3q1O3Q',
+        'apiKey' => '6242u0I95181T15395o5m5r662E6Q1RM',
         'apiSecret' => '42p2B0s9A1L1l1q3A58555m6I2g6c120',
     ]
 ];
