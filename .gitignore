@@ -7,5 +7,5 @@
 .env
 .svn
 .vscode
-*.config.*
+config.*
 node_modules
