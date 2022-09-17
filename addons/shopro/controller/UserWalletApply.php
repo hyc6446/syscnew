@@ -31,8 +31,8 @@ class UserWalletApply extends Base
                 $this->error($e->getMessage());
             }
         });
-        if ($apply) {
-            $this->success('申请成功');
+        if($apply) {
+            $this->success('申请成功');            
         }
         $this->error('申请失败');
     }

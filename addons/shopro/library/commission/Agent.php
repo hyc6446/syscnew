@@ -252,14 +252,14 @@ class Agent
             ]);
 
             // 当分销商需审核并且绑定关系事件等于成为子分销商时，先不绑定用户关系
-            if ($this->_config->getInviteLockEvent() === 'agent' && $agentStatus === self::AGENT_STATUS_PENDING) {
+            if($this->_config->getInviteLockEvent() === 'agent' && $agentStatus === self::AGENT_STATUS_PENDING) {
                 $this->user->parent_user_id = 0;
                 $this->user->save();
-            } else {
+            }else {
                 $this->user->parent_user_id = $this->getParentAgentId();
                 $this->user->save();
             }
-            if ($this->user->parent_user_id !== 0) {
+            if($this->user->parent_user_id !== 0) {
                 Log::write($this->user->parent_user_id, 'share', ['user' => $this->user], ['oper_type' => 'user', 'oper_id' => $this->user->id]);
             }
 

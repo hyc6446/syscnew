@@ -4,7 +4,7 @@ namespace addons\shopro\controller;
 
 use addons\shopro\model\User;
 use think\Db;
-
+use think\Log;
 class Identity extends Base
 {
     protected $noNeedLogin = [];
@@ -22,12 +22,13 @@ class Identity extends Base
         $params=compact('key','realname','idcard','mobile','showid');//组合请求参数
 
         $ipSendTotal = Db::name('identity')->where(['ip' => $this->request->ip()])->whereTime('createtime', '-1 hours')->count();
-        if ($ipSendTotal >= 3) {
+        if ($ipSendTotal > 3) {
             $this->error(__('验证频繁'));
         }
-        Db::name('identity')->insert(['mobile' =>$mobile, 'ip' => $this->request->ip(),'createtime'=>time()]);
+        Db::name('identity')->insert(['mobile' =>$mobile,'ip' => $this->request->ip(),'createtime'=>time()]);
         $content=$this->juhecurl($apiurl,$params);//获取接口返回内容json字符串
         $result = json_decode($content,true);//解析成数组
+        
         if($result){
             if($result['error_code']=='0'){
                 $res = $result['result'];
@@ -43,6 +44,7 @@ class Identity extends Base
                     $this->error($res['resmsg'],[],$res['res']);
                 }
             }else{
+                Log::info("实名认证结果",json_encode($result));
                 $this->error($result['reason'],[],$result['error_code']);
             }
         }else{

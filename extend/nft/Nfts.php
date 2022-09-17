@@ -181,7 +181,7 @@ class Nfts extends ChainAccount
         if (!empty($goods['issue_num'])) $data .= 'issue_num' . $goods['issue_num'];
         if (!empty($goods['asset_id'])) $data .= 'asset_id' . $goods['asset_id'];
         $recipients = [
-            ['amount'=>$amount, 'recipient'=>$addr]
+            ['amount' => $amount, 'recipient' => $addr]
         ];
         $body = [
             "name" => $goods['title'],
@@ -235,6 +235,7 @@ class Nfts extends ChainAccount
             "recipient" => $addr,
             "operation_id" => Random::uuid(),
         ];
+
         $res = $this->request("/v1beta1/nft/nft-transfers/{$class_id}/{$owner}/{$nft_id}", [], $body, "POST");
         return $this->result($res);
     }
@@ -288,7 +289,7 @@ class Nfts extends ChainAccount
         交易标签, 自定义 key：支持大小写英文字母和汉字和数字，长度6-12位，自定义 value：长度限制在64位字符，支持大小写字母和数字
          */
         $res = $this->request("/v1beta1/tx/{$operation_id}", [], [], "GET");
-        Log::info('查询链交易状态：：：：：：'.json_encode($res));
+        Log::info('查询链交易状态：：：：：：' . json_encode($res));
         return $res;
     }
 }

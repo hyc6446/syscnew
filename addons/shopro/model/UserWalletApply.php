@@ -250,7 +250,7 @@ class UserWalletApply extends Model
                 'sign'     => $sf->sign($datalist['body']),
             );
             $datalist['head'] = $postData;
-            $postData = $sf->postData($body);
+            // $postData = $sf->postData($body);
             $url = "https://caspay.sandpay.com.cn/agent-main/openapi/agentpay";
             $ret = $sf->post_wx($url, $postData);
             Log::info("提现回执", json_encode($ret));

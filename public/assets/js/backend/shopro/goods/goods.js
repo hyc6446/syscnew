@@ -100,7 +100,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         switch (type) {
                             case 'create':
                                 Fast.api.open('shopro/goods/goods/add', '新增藏品', {
-                                    area:['50%','80%'],
+                                    area: ['50%', '80%'],
                                     callback() {
                                         that.getData();
                                     }
@@ -391,8 +391,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         multiple: new URLSearchParams(location.search).get('multiple'),
                         category_id: null,
                         selectedIds: [],
-                        self:0,
-                        type:'',
+                        self: 0,
+                        type: '',
                     }
                 },
                 mounted() {
@@ -421,8 +421,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 limit: 10,
                                 offset: that.offset,
                                 search: that.searchWhere,
-                                self:that.self,
-                                type:that.type,
+                                self: that.self,
+                                type: that.type,
                             },
                             type: 'GET'
                         }, function (ret, res) {
@@ -670,16 +670,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             stock_warning: null,
                             sn: '',
                             autosend_content: '',
-                            note:'',
-                            sales_time:'',
-                            tag:'',
-                            is_syn:0,
-                            is_show:1,
-                            can_sales:0,
-                            syn_end_time:'',
-                            goods_list:[],
-                            children:'',
-                            issue:0,
+                            note: '',
+                            sales_time: '',
+                            tag: '',
+                            is_syn: 0,
+                            is_show: 1,
+                            can_sales: 0,
+                            syn_end_time: '',
+                            goods_list: [],
+                            children: '',
+                            issue: 0,
                         },
                         timeData: {
                             images_arr: [],
@@ -691,17 +691,17 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             tag_arr: [],
                         },
                         rules: {
-                            title: [{required: true, message: '请输入藏品标题', trigger: 'blur'}],
-                            status: [{required: true, message: '请选择藏品状态', trigger: 'blur'}],
-                            image: [{required: true, message: '请上传藏品主图', trigger: 'change'}],
-                            category_ids: [{required: true, message: '请选择藏品分类', trigger: 'blur'}],
-                            price: [{required: true, message: '请输入价格', trigger: 'blur'}],
-                            stock: [{required: true, message: '请输入发行数量', trigger: 'blur'}],
-                            service_ids: [{required: true, message: '请选择藏品标签', trigger: 'blur'}],
-                            brand_ids: [{required: true, message: '请选择藏品创作方', trigger: 'blur'}],
-                            is_syn: [{required: true, message: '请选择是否合成', trigger: 'blur'}],
-                            is_show: [{required: true, message: '请选择是否盲盒藏品', trigger: 'blur'}],
-                            goods_list: [{required: true, message: '请选择藏品', trigger: 'blur'}],
+                            title: [{ required: true, message: '请输入藏品标题', trigger: 'blur' }],
+                            status: [{ required: true, message: '请选择藏品状态', trigger: 'blur' }],
+                            image: [{ required: true, message: '请上传藏品主图', trigger: 'change' }],
+                            category_ids: [{ required: true, message: '请选择藏品分类', trigger: 'blur' }],
+                            price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
+                            stock: [{ required: true, message: '请输入发行数量', trigger: 'blur' }],
+                            service_ids: [{ required: true, message: '请选择藏品标签', trigger: 'blur' }],
+                            brand_ids: [{ required: true, message: '请选择藏品创作方', trigger: 'blur' }],
+                            is_syn: [{ required: true, message: '请选择是否合成', trigger: 'blur' }],
+                            is_show: [{ required: true, message: '请选择是否盲盒藏品', trigger: 'blur' }],
+                            goods_list: [{ required: true, message: '请选择藏品', trigger: 'blur' }],
                         },
                         mustDel: ['express_ids', 'store_ids', 'selfetch_ids', 'autosend_ids'],
                         //选择分类
@@ -747,10 +747,10 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         selectedcatArr: [],
                         categoryTab: null,
                         category_ids_all: {},
-                        brandOptions:[],
-                        tagOptions:[
-                            {name:'热门',value:'hot'},
-                            {name:'精选',value:'select'},
+                        brandOptions: [],
+                        tagOptions: [
+                            { name: '热门', value: 'hot' },
+                            { name: '精选', value: 'select' },
                         ],
                     }
                 },
@@ -780,7 +780,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         selectedGoodsList.forEach(i => {
                             idsArr.push(i.id)
                         })
-                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&type=hecheng&ids=" + idsArr.join(',')+'&id='+that.editId, "选择藏品", {
+                        parent.Fast.api.open("shopro/goods/goods/select?multiple=true&type=hecheng&ids=" + idsArr.join(',') + '&id=' + that.editId, "选择藏品", {
                             callback: function (data) {
                                 let resData = []
                                 let goodsList = []
@@ -828,7 +828,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         let that = this;
                         if (type == 'service') {
                             Fast.api.open("shopro/goods/service/add", "新建");
-                        }else if(type == 'brand'){
+                        } else if (type == 'brand') {
                             Fast.api.open("shopro/goods/brand/add", "新建");
                         } else {
                             Fast.api.open("shopro/dispatch/" + type + "/add", "新建", {
@@ -932,7 +932,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                             $('#c-content').html(res.data.detail.content)
                             // 发行数量预警
                             that.goodsDetail.stock_warning = res.data.detail.stock_warning
-                            if (that.goodsDetail.stock_warning || that.goodsDetail.stock_warning == 0) {
+                            if (that.goodsDetail.stock_warning || that.goodsDetailgoodsDetail.stock_warning == 0) {
                                 that.goodsDetail.stock_warning_switch = true
                             }
                             return false;
@@ -1012,14 +1012,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                         this.category_ids_all[pid].splice(idx, 1);
                         this.selectedcatArr.splice(index, 1)
                     },
-                    submitForm(formName,issue) {
+                    submitForm(formName, issue) {
                         // console.log(formName)
                         this.$refs[formName].validate((valid) => {
                             if (valid) {
                                 let that = this;
                                 let arrForm = JSON.parse(JSON.stringify(that.goodsDetail));
                                 let params_arrflg = true;
-                                arrForm.issue = issue?issue:0;
+                                arrForm.issue = issue ? issue : 0;
                                 arrForm.params_arr.forEach(i => {
                                     for (key in i) {
                                         if (!i[key]) {
@@ -1035,31 +1035,31 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                 var test = []
                                 var is_error = 0;
                                 arrForm.goods_list.forEach((i, d) => {
-                                    if(i.nums==null){
+                                    if (i.nums == null) {
                                         is_error = 1;
                                     }
                                     test.push(i.nums)
                                 })
-                                if(is_error==1){
+                                if (is_error == 1) {
                                     Toastr.error('请填写合成藏品数量');
                                     return false;
                                 }
                                 arrForm.children_num = test.join(',')
-                                
+
                                 arrForm.content = $("#c-content").val();
-                                if (arrForm.sales_time) arrForm.sales_time = arrForm.sales_time/1000;
-                                if (arrForm.syn_end_time) arrForm.syn_end_time = arrForm.syn_end_time/1000;
+                                if (arrForm.sales_time) arrForm.sales_time = arrForm.sales_time / 1000;
+                                if (arrForm.syn_end_time) arrForm.syn_end_time = arrForm.syn_end_time / 1000;
                                 // 处理goods_ids
                                 let children = []
 
-                                if (arrForm.is_syn == 0){
+                                if (arrForm.is_syn == 0) {
                                     //不是和成品
-                                    that.goodsDetail.children ='';
+                                    that.goodsDetail.children = '';
                                     arrForm.children = '';
                                     that.goodsDetail.goods_list = [];
                                     arrForm.can_sales = 1;//能直接购买
                                     arrForm.syn_end_time = 0;//和成期限
-                                } else{
+                                } else {
                                     that.goodsDetail.goods_list.forEach(i => {
                                         if (i.id) {
                                             children.push(i.id)
@@ -1074,7 +1074,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'toastr'], function (
                                     that.goodsDetail.goods_list = [];
                                 }
 
-                            if(arrForm.can_sales == 0)arrForm.sales_time = 0;//不能直接购买那么就没有预售时间了
+                                if (arrForm.can_sales == 0) arrForm.sales_time = 0;//不能直接购买那么就没有预售时间了
 
                                 var arrids = []
                                 // 发货模板id

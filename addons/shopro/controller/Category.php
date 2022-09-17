@@ -19,8 +19,7 @@ class Category extends Base
 
 
 
-    public function detail()
-    {
+    public function detail () {
         $id = $this->request->get('id');
 
         $data = CategoryModel::getCategoryDetail($id);
@@ -29,14 +28,13 @@ class Category extends Base
 
     public function index()
     {
-        $id = $this->request->get('id', 1);
+        $id = $this->request->get('id',1);
         $data = CategoryModel::getCategory($id);
-        $this->success('藏品分类', $data ? $data['children'] : []);
+        $this->success('藏品分类', $data?$data['children']:[]);
     }
 
 
-    public function goods()
-    {
+    public function goods() {
         $params = $this->request->get();
         $category_id = $params['category_id'];
 
@@ -45,7 +43,7 @@ class Category extends Base
         // 获取这个分类下面的所有商品
         $goodsList = Goods::getGoodsList(array_merge($params, ['no_activity' => false]), false);
 
-        foreach ($categories as $key => $category) {
+        foreach($categories as $key => $category) {
             $categoryIds = ',' . $category['id'] . ',';
 
             $currentCategoryGoods = [];

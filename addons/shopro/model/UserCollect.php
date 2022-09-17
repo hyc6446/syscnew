@@ -99,11 +99,14 @@ class UserCollect extends Model
                 $collect['sn'] = $sn ?? 0; //编号
                 $collect['is_hook'] = $is_hook ?? 0; //是否锁定
                 //上链  转让nft和赠送nft  不在这里发行 ,单独接口处理
+                $activity_type=null;
                 if (!isset($notShard)  && $goods['asset_id'] && $user['addr']) {
                     if ($orderItem->activity_type == 'priority') {
                         // 批量铸造
+                        $activity_type=5;
                         $res = (new Nfts())->publishBatchNft($goods, $user['addr'], $orderItem->goods_num);
                     } else {
+                        $activity_type=0;
                         $res = (new Nfts())->publishNft($goods, $user['addr']);
                     }
                     Log::info('授予资产碎片:::::' . json_encode($res));
@@ -135,7 +138,7 @@ class UserCollect extends Model
                 $collect['asset_id'] = $goods['asset_id'] ?? 0; //链上 NFT类别id
                 $collect['give_user_id'] = $give_user_id ?? 0; //赠予人
                 $collect['order_sn'] = $order_sn ?? 0;
-                $collect['give_collect_id'] = $give_collect_id ?? 0; //赠予人
+                $collect['give_collect_id'] = $activity_type; //赠予人
                 $collect['to_user_id'] = $to_user_id ?? 0; //赠予人
                 $collect['is_consume'] = 0; //链上 资产是否销毁
                 $collect['owner_addr'] = $user['addr'] ?? ''; //资产账户地址
@@ -222,9 +225,7 @@ class UserCollect extends Model
             //寄售大厅
             $where = ['a.is_consume' => 0, 'a.status' => 1];
             if (isset($params['from']) && $params['from'] == 'hall') {
-                if (isset($uid)) {
                     $where['a.user_id'] = ['<>', $uid];
-                }
             }
             if (isset($params['from']) && $params['from'] == 'own') {
                 $where = ['a.is_consume' => 0, 'a.user_id' => $uid, 'a.status' => 1];

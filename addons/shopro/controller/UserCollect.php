@@ -9,10 +9,11 @@ use addons\shopro\exception\Exception;
 use addons\shopro\model\Config as configModel;
 use fast\Auth;
 use think\Log;
+use nft\Nfts;
 
 class UserCollect extends Base
 {
-    protected $noNeedLogin = ['checkSendSwith', 'hallList'];
+    protected $noNeedLogin = ['checkSendSwith', 'hallList', 'getOperationRes'];
     protected $noNeedRight = ['*'];
 
 
@@ -65,12 +66,17 @@ class UserCollect extends Base
             if (!$collect['nft_id']) $this->error('所选藏品正在上链中,请待会再试');
             if ($collect['wcl_status'] != 1) $this->error('所选藏品正在上链中,请待会再试');
             if ($value['sellPrice'] <= 0) $this->error('寄售藏品的价格必须大于零');
-            // $res =\addons\shopro\model\UserCollect::edit(['id'=>$value['id'],'user_id'=>$uid,'price'=>$value['sellPrice'],'status'=>1]);
             $res = \addons\shopro\model\UserCollect::update(['price' => $value['sellPrice'], 'status' => 1], ['id' => $value['id'], 'user_id' => $uid]);
         }
         $this->success('发起寄售成功');
     }
-
+    // 查询链交易结果
+    public function getOperationRes()
+    {
+        $params = $this->request->get();
+        $txRes = (new Nfts())->txOperationRes($params['operation_id']);
+        $this->success('查询链上交易信息', $txRes);
+    }
     //下架寄售藏品
     public function underCollect()
     {
@@ -91,7 +97,7 @@ class UserCollect extends Base
     {
         $ids = $this->request->post('ids', '');
         $mobile = $this->request->post('mobile', '');
-        $this->error('暂时无法转赠');
+        // $this->error('暂时无法转赠');
         $uid = $this->auth->id;
         if (!$this->auth->wcl_status) $this->error('您的账户正在上链中,暂时无法交易');
         if (!$ids) $this->error('请选择转赠的藏品');
@@ -117,7 +123,7 @@ class UserCollect extends Base
             if (!$collect['nft_id']) $this->error('所选藏品正在上链中,请待会再试');
 
             //链上转移资产
-            $result = \addons\shopro\model\UserCollect::transferShard($collect['asset_id'], $uid, $user['id'], $collect['nft_id']);
+            $result = \addons\shopro\model\UserCollect::transferShard($collect['class_id'], $uid, $user['id'], $collect['nft_id']);
             \think\Log::info('链上转移资产:::::' . json_encode($result));
 
             //转赠 todo:上链

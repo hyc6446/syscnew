@@ -91,7 +91,7 @@ class Order extends Model
                 $btns[] = 'pay';        // 支付
                 break;
 
-                // 已支付的
+            // 已支付的
             case 'commented':
                 $status_name = '已评价';
                 $status_desc = '订单已评价';
@@ -103,7 +103,7 @@ class Order extends Model
 
                 break;
             case 'nocomment':
-                //                $status_name = '待评价';
+//                $status_name = '待评价';
                 $status_name = '已完成';
                 $status_desc = '';
 
@@ -111,11 +111,11 @@ class Order extends Model
                 if (in_array('express', $dispatchType)) {
                     $btns[] = 'express';        // 查看物流
                 }
-
+                
                 break;
             case 'noget':
                 $dispatchType = $this->getItemDispatchType($this->item);
-
+                
                 $status_name = '待收货';
                 $status_desc = '等待买家收货';
                 if (in_array('express', $dispatchType)) {
@@ -125,7 +125,7 @@ class Order extends Model
                         // item 只有一种发货方式
                         $dispatch_type = $dispatchType[0] ?? '';
 
-                        switch ($dispatch_type) {
+                        switch($dispatch_type) {
                             case 'selfetch':
                                 $status_name = '待提货/到店';
                                 $status_desc = '等待买家提货/到店';
@@ -164,15 +164,15 @@ class Order extends Model
             case 'groupon_ing':
                 $status_name = '等待成团';
                 $status_desc = '等待拼团成功';
-
+                
                 break;
             case 'groupon_invalid':
                 $status_name = '拼团失败';
                 $status_desc = '拼团失败';
 
                 break;
-                // 已支付的结束
-
+            // 已支付的结束
+            
             case 'finish':
                 $status_name = '交易完成';
                 $status_desc = '交易完成';
@@ -194,8 +194,7 @@ class Order extends Model
 
 
 
-    private function getItemDispatchType($item = [])
-    {
+    private function getItemDispatchType($item = []) {
         $dispatchType = [];
         foreach ($this->item as $key => $item) {
             // 获取 item status
@@ -224,7 +223,7 @@ class Order extends Model
     public function itemSlim()
     {
         return $this->hasMany(\addons\shopro\model\OrderItem::class, 'order_id', 'id')
-            ->field('id,user_id,order_id,goods_id,goods_type,goods_sku_price_id,activity_id,activity_type,item_goods_sku_price_id,goods_sku_text,goods_title,goods_image,goods_original_price,discount_fee,goods_price,goods_num,dispatch_status,dispatch_type,dispatch_id,store_id,aftersale_status,comment_status,refund_status,ext');
+                    ->field('id,user_id,order_id,goods_id,goods_type,goods_sku_price_id,activity_id,activity_type,item_goods_sku_price_id,goods_sku_text,goods_title,goods_image,goods_original_price,discount_fee,goods_price,goods_num,dispatch_status,dispatch_type,dispatch_id,store_id,aftersale_status,comment_status,refund_status,ext');
     }
 
     // 拼团只有一个商品，可以使用这个
@@ -234,3 +233,4 @@ class Order extends Model
     }
     /* -------------------------- 模型关联 ------------------------ */
 }
+

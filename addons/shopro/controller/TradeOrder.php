@@ -27,6 +27,7 @@ class TradeOrder extends Base
     public function recharge()
     {
         $params = $this->request->post();
+        
         // $this->error("系统维护中");
         // 表单验证
         $this->shoproValidate($params, get_class(), 'recharge');

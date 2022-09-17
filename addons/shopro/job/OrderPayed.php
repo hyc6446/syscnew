@@ -31,7 +31,7 @@ class OrderPayed extends BaseJob
 
             $order = Order::with('item')->where('id', $order['id'])->find();
             Log::info("payed11", json_encode($order));
-            Log::info('订单支付完成:::::::queue::::::' . json_encode($data));
+            Log::info('订单支付完成:::::::queue::::::'.json_encode($data) );
             // 数据库删订单的问题常见，这里被删的订单直接把队列移除
             if ($order) {
                 \think\Db::transaction(function () use ($order, $user, $data) {
@@ -54,10 +54,10 @@ class OrderPayed extends BaseJob
                     // 处理消费返积分 TODO: 待测试
                     $scoreConfig = Config::where('name', 'score')->find();
                     $scoreConfig = json_decode($scoreConfig['value'], true);
-                    if (!empty($scoreConfig['consume_get_score']) && !empty($scoreConfig['consume_get_score_ratio'])) {
+                    if(!empty($scoreConfig['consume_get_score']) && !empty($scoreConfig['consume_get_score_ratio'])) {
                         $scoreRatio = intval($scoreConfig['consume_get_score_ratio']);
                         $score = intval($scoreRatio * 0.01 * $order->total_fee);
-                        if ($score > 0) {
+                        if($score > 0) {
                             \addons\shopro\model\User::score($score, $user['id'], 'consume_get_score', $order['id']);
                         }
                     }
@@ -80,7 +80,7 @@ class OrderPayed extends BaseJob
                 'c' => $e->getTrace(),
                 'd' => $e->getMessage()
             ], JSON_UNESCAPED_UNICODE);
-            \think\Log::error('queue-' . get_class() . '-' . '：执行失败，错误信息：' . $error);
+            \think\Log::error('queue-' . get_class() . '-payed' . '：执行失败，错误信息：' . $error);
         }
     }
 }

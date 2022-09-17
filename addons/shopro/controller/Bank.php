@@ -7,8 +7,9 @@ use addons\shopro\model\UserBank;
 use addons\shopro\model\BoxOrder;
 use addons\shopro\model\Order;
 use addons\shopro\model\TradeOrder;
-use think\Log;
+
 use think\Db;
+use think\Log;
 use think\Exception;
 
 class Bank extends Base
@@ -59,7 +60,7 @@ class Bank extends Base
                 $this->error("申请绑卡失败");
             }
         } else {
-            Log::info($dataxml['head']);
+            Log::info("respMsg",json_encode($dataxml));
             $this->error($dataxml['head']['respMsg']);
         }
     }
@@ -100,7 +101,7 @@ class Bank extends Base
         }
     }
 
-    //发送支付短信 "050005"
+    //发送支付短信
     public function sendPaySms()
     {
         $bank_id = input('bank_id');
@@ -117,7 +118,7 @@ class Bank extends Base
         } else {
             $order = Order::field('order_sn')->where('id', $order_id)->where('user_id', $this->auth->id)->find();
         }
-        $body['userId'] = $this->auth->id;
+        $body['userId'] = "xy".$this->auth->id;
         $body['orderCode'] = $order['order_sn'];
         $body['phoneNo'] = $bank['mobile'];
         $body['bid'] = $bank['sd_bid'];
@@ -181,7 +182,7 @@ class Bank extends Base
 
         Db::startTrans();
         try {
-            $body['userId'] = $this->auth->id;
+            $body['userId'] = "xy".$this->auth->id;
             $body['orderCode'] = $order['order_sn'];
             $body['phoneNo'] = $bank['mobile'];
             $body['bid'] = $bank['sd_bid'];

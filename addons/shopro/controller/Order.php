@@ -167,7 +167,7 @@ class Order extends Base
             if ($goods['sales_time'] && $goods['sales_time'] > time()) {
                 $this->error('该藏品的售卖时间还未开始请稍等');
             } else {
-                $this->error('该藏品的售卖时间已截止');
+                // $this->error('该藏品的售卖时间已截止');
             }
         }
         $order = \addons\shopro\model\Order::createOrder($params);

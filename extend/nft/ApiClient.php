@@ -7,11 +7,11 @@ use addons\shopro\exception\Exception;
 
 class ApiClient
 {
-//    private $apiKey = "g2d2K0r7O0I6Z1s0z3z5P5J8K3w8u7e";
-//    private $apiSecret = "o242x0e7Z096O1B0E3t5A5j823U8c7S";
+    //    private $apiKey = "g2d2K0r7O0I6Z1s0z3z5P5J8K3w8u7e";
+    //    private $apiSecret = "o242x0e7Z096O1B0E3t5A5j823U8c7S";
     private $apiKey;
     private $apiSecret;
-//    private $domain = "https://stage.apis.avata.bianjie.ai";//test
+    //    private $domain = "https://stage.apis.avata.bianjie.ai";//test
     private $domain;
     const EPOCH = 1641862815726;    //开始时间,固定一个小于当前时间的毫秒数
     const max12bit = 4095;
@@ -48,7 +48,7 @@ class ApiClient
         $hexHash = hash("sha256", "{$timestamp}" . $this->apiSecret);
         if (count($params) > 0) {
             // 序列化且不编码
-            $s = json_encode($params,JSON_UNESCAPED_UNICODE);
+            $s = json_encode($params, JSON_UNESCAPED_UNICODE);
             $hexHash = hash("sha256", stripcslashes($s . "{$timestamp}" . $this->apiSecret));
         }
         $ch = curl_init();
@@ -56,8 +56,8 @@ class ApiClient
         $header = [
             "Content-Type:application/json",
             "X-Api-Key:{$this->apiKey}",
-            "X-Timestamp:{$hexHash}",
             "X-Timestamp:{$timestamp}",
+            "X-Signature:{$hexHash}",
         ];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
         $jsonStr = $body ? json_encode($body) : ''; //转换为json格式
@@ -90,7 +90,6 @@ class ApiClient
         $response = json_decode($response, true);
 
         return $response;
-
     }
 
 
@@ -98,7 +97,7 @@ class ApiClient
         if (is_array($params)) {
             ksort($params);
         }
-        foreach ($params as &$v){
+        foreach ($params as &$v) {
             if (is_array($v)) {
                 $this->SortAll($v);
             }
@@ -129,13 +128,13 @@ class ApiClient
         // 二进制的 毫秒级时间戳
         $base = decbin(self::max41bit + $time);
         // 机器id  10 字节
-        if($machineId){
+        if ($machineId) {
             $machineId = str_pad(decbin($machineId), 10, "0", STR_PAD_LEFT);
         }
         // 序列数 12字节
         $random = str_pad(decbin(mt_rand(0, self::max12bit)), 12, "0", STR_PAD_LEFT);
         // 拼接
-        $base = $base.$machineId.$random;
+        $base = $base . $machineId . $random;
         // 转化为 十进制 返回
         return bindec($base);
     }
@@ -144,11 +143,11 @@ class ApiClient
 
     protected function result($result)
     {
-        if (isset($result['error'])){
-            new Exception('code:'.$result['error']['code'].'msg:'.$result['error']['message']);
+        if (isset($result['error'])) {
+            new Exception('code:' . $result['error']['code'] . 'msg:' . $result['error']['message']);
         }
-        if (isset($result['data'])){
-            return ['code'=>1,'data'=>$result['data'],'msg'=>''];
+        if (isset($result['data'])) {
+            return ['code' => 1, 'data' => $result['data'], 'msg' => ''];
         }
         new Exception('请求失败');
     }

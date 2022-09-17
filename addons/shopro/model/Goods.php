@@ -100,13 +100,6 @@ class Goods extends Model
         }
     }
 
-    // public function getPriorityAttr($value, $data)
-    // {
-
-    //     $user = User::info();
-    //     $sku =  Db::name('shopro_priority_buy')->where(['user_id' => $user->id, 'status' => '1'])->field('buy_num,beforehand_time,status')->find();
-    //     return $sku;
-    // }
     /**
      * 藏品列表
      * params 请求参数

@@ -35,7 +35,7 @@ class PayService
         }
 
         $this->config = $paymentConfig;
-        //        var_dump($this->config);die;
+//        var_dump($this->config);die;
         $this->config['notify_url'] = $this->notify_url;
 
         if ($this->payment === 'wechat') {
@@ -132,7 +132,7 @@ class PayService
         $this->method = $method[$this->payment][$this->platform];
     }
 
-    public function create($order, $order_type = null)
+    public function create($order,$order_type=null)
     {
         //        $order = [
         //            'out_trade_no' => time(),
@@ -147,18 +147,18 @@ class PayService
         $method = $this->method;
         switch ($this->payment) {
             case 'wechat':
-                if (!empty($order_type) && $order_type == 'boxOrder') {
-                    $pay = request()->domain() . '/addons/shopro/pay/wxPayOrder?order_sn=' . $order['out_trade_no'] . '&order_type=boxOrder';
-                } else {
+                if(!empty($order_type) && $order_type=='boxOrder'){
+                    $pay = request()->domain() . '/addons/shopro/pay/wxPayOrder?order_sn=' . $order['out_trade_no'].'&order_type=boxOrder';
+                }else{
                     $pay = request()->domain() . '/addons/shopro/pay/wxPayOrder?order_sn=' . $order['out_trade_no'];
                 }
                 break;
             case 'alipay':
                 if (in_array($this->platform, ['wxOfficialAccount', 'wxMiniProgram', 'H5'])) {
                     // 返回支付宝支付链接
-                    if (!empty($order_type) && $order_type == 'boxOrder') {
-                        $pay = request()->domain() . '/addons/shopro/pay/alipay?order_sn=' . $order['out_trade_no'] . '&order_type=boxOrder';
-                    } else {
+                    if(!empty($order_type) && $order_type=='boxOrder'){
+                        $pay = request()->domain() . '/addons/shopro/pay/alipay?order_sn=' . $order['out_trade_no'].'&order_type=boxOrder';
+                    }else{
                         $pay = request()->domain() . '/addons/shopro/pay/alipay?order_sn=' . $order['out_trade_no'];
                     }
                 } else {
@@ -206,8 +206,8 @@ class PayService
 
         return [$code, $response];
     }
-
-    public function find($out_trade_no)
+    
+     public function find($out_trade_no)
     {
         $order = [
             'out_trade_no' => $out_trade_no
